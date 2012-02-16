@@ -178,6 +178,9 @@ __global__ void scatter_Particle_Agents(xmachine_memory_Particle_list* agents_ds
 		agents_dst->xVel[output_index] = agents_src->xVel[index];
 		agents_dst->yVel[output_index] = agents_src->yVel[index];
 		agents_dst->zVel[output_index] = agents_src->zVel[index];
+		agents_dst->xAccn[output_index] = agents_src->xAccn[index];
+		agents_dst->yAccn[output_index] = agents_src->yAccn[index];
+		agents_dst->zAccn[output_index] = agents_src->zAccn[index];
 	}
 }
 
@@ -206,6 +209,9 @@ __global__ void append_Particle_Agents(xmachine_memory_Particle_list* agents_dst
 	    agents_dst->xVel[output_index] = agents_src->xVel[index];
 	    agents_dst->yVel[output_index] = agents_src->yVel[index];
 	    agents_dst->zVel[output_index] = agents_src->zVel[index];
+	    agents_dst->xAccn[output_index] = agents_src->xAccn[index];
+	    agents_dst->yAccn[output_index] = agents_src->yAccn[index];
+	    agents_dst->zAccn[output_index] = agents_src->zAccn[index];
     }
 }
 
@@ -221,9 +227,12 @@ __global__ void append_Particle_Agents(xmachine_memory_Particle_list* agents_dst
  * @param xVel agent variable of type float
  * @param yVel agent variable of type float
  * @param zVel agent variable of type float
+ * @param xAccn agent variable of type float
+ * @param yAccn agent variable of type float
+ * @param zAccn agent variable of type float
  */
 template <int AGENT_TYPE>
-__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel){
+__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, float xAccn, float yAccn, float zAccn){
 	
 	int index;
     
@@ -251,12 +260,15 @@ __device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id
 	agents->xVel[index] = xVel;
 	agents->yVel[index] = yVel;
 	agents->zVel[index] = zVel;
+	agents->xAccn[index] = xAccn;
+	agents->yAccn[index] = yAccn;
+	agents->zAccn[index] = zAccn;
 
 }
 
 //non templated version assumes DISCRETE_2D but works also for CONTINUOUS
-__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel){
-    add_Particle_agent<DISCRETE_2D>(agents, id, mass, isDark, x, y, z, xVel, yVel, zVel);
+__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, float xAccn, float yAccn, float zAccn){
+    add_Particle_agent<DISCRETE_2D>(agents, id, mass, isDark, x, y, z, xVel, yVel, zVel, xAccn, yAccn, zAccn);
 }
 
 /** reorder_Particle_agents
@@ -281,6 +293,9 @@ __global__ void reorder_Particle_agents(unsigned int* values, xmachine_memory_Pa
 	ordered_agents->xVel[index] = unordered_agents->xVel[old_pos];
 	ordered_agents->yVel[index] = unordered_agents->yVel[old_pos];
 	ordered_agents->zVel[index] = unordered_agents->zVel[old_pos];
+	ordered_agents->xAccn[index] = unordered_agents->xAccn[old_pos];
+	ordered_agents->yAccn[index] = unordered_agents->yAccn[old_pos];
+	ordered_agents->zAccn[index] = unordered_agents->zAccn[old_pos];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -480,6 +495,9 @@ __global__ void GPUFLAME_outputdata(xmachine_memory_Particle_list* agents, xmach
 	agent.xVel = agents->xVel[index];
 	agent.yVel = agents->yVel[index];
 	agent.zVel = agents->zVel[index];
+	agent.xAccn = agents->xAccn[index];
+	agent.yAccn = agents->yAccn[index];
+	agent.zAccn = agents->zAccn[index];
 
 	//FLAME function call
 	int dead = !outputdata(&agent, location_messages	);
@@ -497,6 +515,9 @@ __global__ void GPUFLAME_outputdata(xmachine_memory_Particle_list* agents, xmach
 	agents->xVel[index] = agent.xVel;
 	agents->yVel[index] = agent.yVel;
 	agents->zVel[index] = agent.zVel;
+	agents->xAccn[index] = agent.xAccn;
+	agents->yAccn[index] = agent.yAccn;
+	agents->zAccn[index] = agent.zAccn;
 }
 
 /**
@@ -522,6 +543,9 @@ __global__ void GPUFLAME_inputdata(xmachine_memory_Particle_list* agents, xmachi
 	agent.xVel = agents->xVel[index];
 	agent.yVel = agents->yVel[index];
 	agent.zVel = agents->zVel[index];
+	agent.xAccn = agents->xAccn[index];
+	agent.yAccn = agents->yAccn[index];
+	agent.zAccn = agents->zAccn[index];
 
 	//FLAME function call
 	int dead = !inputdata(&agent, location_messages);
@@ -539,6 +563,9 @@ __global__ void GPUFLAME_inputdata(xmachine_memory_Particle_list* agents, xmachi
 	agents->xVel[index] = agent.xVel;
 	agents->yVel[index] = agent.yVel;
 	agents->zVel[index] = agent.zVel;
+	agents->xAccn[index] = agent.xAccn;
+	agents->yAccn[index] = agent.yAccn;
+	agents->zAccn[index] = agent.zAccn;
 }
 
 	

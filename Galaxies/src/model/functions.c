@@ -19,8 +19,6 @@
 #define _FLAMEGPU_FUNCTIONS
 
 #include <header.h>
-#include <stdio.h>
-
 
 /**
  * outputdata FLAMEGPU Agent Function
@@ -44,19 +42,49 @@ __FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* xmemory, xmachine_me
 __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_message_location_list* location_messages){
 	float dt=0.1;
 
-    //float3 agent_position = make_float3(xmemory->xPos+1, xmemory->yPos, xmemory->zPos);
+    float3 agent_position = make_float3(xmemory->x, xmemory->y, xmemory->z);
 	float agent_mass = xmemory->mass;
+
+	float3 agent_accn=make_float3(0.0,0.0,0.0);
 
       xmachine_message_location* current_message = get_first_location_message(location_messages);
       while (current_message)
       {
-         current_message = get_next_location_message(current_message, location_messages);
+          float currentMessageMass=current_message->mass;
+		  
+		  float3 currentMessagePosition=make_float3(current_message->x, current_message->y, current_message->z);
+
+		  float3 positionDifference=agent_position - currentMessagePosition;
+
+		  float xLen=(xmemory->x)-(current_message->x);
+		  xLen=pow(xLen, 2);
+	
+		  float yLen=(xmemory->y)-(current_message->y);
+		  yLen=pow(yLen, 2);
+		  
+		  float zLen=(xmemory->z)-(current_message->z);
+		  zLen=pow(zLen, 2);
+
+		  float abs_distance=sqrt(xLen+yLen+zLen);
+
+		  float lowerHalfEqn=pow(abs_distance, 3);
+
+		  float3 accnProportional=((currentMessageMass*positionDifference)/lowerHalfEqn);
+
+		  agent_accn+=accnProportional;
+
+		  current_message = get_next_location_message(current_message, location_messages);
 	  }
 
-    //float3 dPos = make_float3((xmemory->xVel)*dt, (xmemory->yVel)*dt, (xmemory->zVel)*dt));
-    
-	xmemory->x =  xmemory->x+(xmemory->xVel)*dt;
-    
+	  float xComp = agent_accn.x;
+	  float yComp = agent_accn.y;
+	  float zComp = agent_accn.z;
+
+	  float abs=(xComp*xComp)+(yComp*yComp)+(zComp+zComp);
+	  float3 final = agent_accn/sqrt(abs);
+
+	  xmemory->x =  xmemory->x+(xmemory->xVel)*dt;
+
   
     return 0;
 }

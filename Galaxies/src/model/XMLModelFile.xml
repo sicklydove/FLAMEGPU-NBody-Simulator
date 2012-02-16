@@ -48,6 +48,18 @@
           <type>float</type>
           <name>zVel</name>
         </gpu:variable>
+        <gpu:variable>
+          <type>float</type>
+          <name>xAccn</name>
+        </gpu:variable>
+        <gpu:variable>
+          <type>float</type>
+          <name>yAccn</name>
+        </gpu:variable>
+        <gpu:variable>
+          <type>float</type>
+          <name>zAccn</name>
+        </gpu:variable>    
       </memory>
       <functions>
         <gpu:function>
