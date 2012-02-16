@@ -1,0 +1,27 @@
+<states>
+  <itno>0</itno>
+    <xagent>
+      <name>Particle</name>
+      <id>1</id>
+      <mass>1</mass>
+      <isDark>0</isDark>
+      <xPos>0</xPos>
+      <yPos>0</yPos>
+      <zPos>0</zPos>
+      <xVel>0.0</xVel>
+      <yVel>0.0</yVel>
+      <zVel>0.0</zVel>
+    </xagent>
+    <xagent>
+      <name>Particle</name>
+      <id>2</id>
+      <mass>1</mass>
+      <isDark>0</isDark>
+      <xPos>2</xPos>
+      <yPos>2</yPos>
+      <zPos>2</zPos>
+      <xVel>0.0</xVel>
+      <yVel>0.0</yVel>
+      <zVel>0.0</zVel>
+    </xagent>
+</states>

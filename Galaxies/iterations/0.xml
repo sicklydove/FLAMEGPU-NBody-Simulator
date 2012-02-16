@@ -1,0 +1,16 @@
+<states>
+  <itno>0</itno>
+    <xagent>
+      <name>Particle</name>
+      <id>1</id>
+      <mass>1</mass>
+      <isDark>0</isDark>
+      <x>10</x>
+      <y>10</y>
+      <z>10</z>
+      <xVel>1.0</xVel>
+      <yVel>0.0</yVel>
+      <zVel>0.0</zVel>
+    </xagent>
+</states>
+</states>
