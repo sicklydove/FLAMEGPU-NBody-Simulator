@@ -61,7 +61,7 @@ GLuint timer;
 const int average = 50;
 int frame_count;
 
-#ifdef SIMULATION_DELAY
+#ifdef SIMULATION_DELAY 
 //delay
 int delay_count = 0;
 #endif
@@ -213,6 +213,7 @@ void runVisualisation(){
 void runCuda()
 {
 #ifdef SIMULATION_DELAY
+    printf("yo");
     delay_count++;
 	if (delay_count == SIMULATION_DELAY){
 		delay_count = 0;

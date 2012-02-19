@@ -29,7 +29,7 @@ char outputpath[100];         /**< Output path char buffer*/
 int CUDA_argc;				  /**< number of CUDA arguments*/
 char** CUDA_argv;			  /**< CUDA arguments*/
 
-#define OUTPUT_TO_XML 0
+#define OUTPUT_TO_XML 1
 
 
 /** checkUsage

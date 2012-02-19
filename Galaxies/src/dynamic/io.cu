@@ -100,20 +100,20 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 		fputs(data, file);
 		fputs("</zVel>\n", file);
 		
-		fputs("<xAccn>", file);
-		sprintf(data, "%f", h_Particles_default->xAccn[i]);
+		fputs("<debug1>", file);
+		sprintf(data, "%f", h_Particles_default->debug1[i]);
 		fputs(data, file);
-		fputs("</xAccn>\n", file);
+		fputs("</debug1>\n", file);
 		
-		fputs("<yAccn>", file);
-		sprintf(data, "%f", h_Particles_default->yAccn[i]);
+		fputs("<debug2>", file);
+		sprintf(data, "%f", h_Particles_default->debug2[i]);
 		fputs(data, file);
-		fputs("</yAccn>\n", file);
+		fputs("</debug2>\n", file);
 		
-		fputs("<zAccn>", file);
-		sprintf(data, "%f", h_Particles_default->zAccn[i]);
+		fputs("<debug3>", file);
+		sprintf(data, "%f", h_Particles_default->debug3[i]);
 		fputs(data, file);
-		fputs("</zAccn>\n", file);
+		fputs("</debug3>\n", file);
 		
 		fputs("</xagent>\n", file);
 	}
@@ -153,9 +153,9 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	int in_Particle_xVel;
 	int in_Particle_yVel;
 	int in_Particle_zVel;
-	int in_Particle_xAccn;
-	int in_Particle_yAccn;
-	int in_Particle_zAccn;
+	int in_Particle_debug1;
+	int in_Particle_debug2;
+	int in_Particle_debug3;
 
 	/* for continuous agents: set agent count to zero */	
 	*h_xmachine_memory_Particle_count = 0;
@@ -170,9 +170,9 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	float Particle_xVel;
 	float Particle_yVel;
 	float Particle_zVel;
-	float Particle_xAccn;
-	float Particle_yAccn;
-	float Particle_zAccn;
+	float Particle_debug1;
+	float Particle_debug2;
+	float Particle_debug3;
 	
 	/* Open config file to read-only */
 	if((file = fopen(inputpath, "r"))==NULL)
@@ -202,9 +202,9 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	in_Particle_xVel = 0;
 	in_Particle_yVel = 0;
 	in_Particle_zVel = 0;
-	in_Particle_xAccn = 0;
-	in_Particle_yAccn = 0;
-	in_Particle_zAccn = 0;
+	in_Particle_debug1 = 0;
+	in_Particle_debug2 = 0;
+	in_Particle_debug3 = 0;
 	//set all Particle values to 0
 	//If this is not done then it will cause errors in emu mode where undefined memory is not 0
 	for (int k=0; k<xmachine_memory_Particle_MAX; k++)
@@ -218,9 +218,9 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 		h_Particles->xVel[k] = 0;
 		h_Particles->yVel[k] = 0;
 		h_Particles->zVel[k] = 0;
-		h_Particles->xAccn[k] = 0;
-		h_Particles->yAccn[k] = 0;
-		h_Particles->zAccn[k] = 0;
+		h_Particles->debug1[k] = 0;
+		h_Particles->debug2[k] = 0;
+		h_Particles->debug3[k] = 0;
 	}
 	
 
@@ -234,9 +234,9 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	Particle_xVel = 0;
 	Particle_yVel = 0;
 	Particle_zVel = 0;
-	Particle_xAccn = 0;
-	Particle_yAccn = 0;
-	Particle_zAccn = 0;
+	Particle_debug1 = 0;
+	Particle_debug2 = 0;
+	Particle_debug3 = 0;
 
 	/* Read file until end of xml */
 	while(reading==1)
@@ -303,11 +303,11 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
                     
 					h_Particles->zVel[*h_xmachine_memory_Particle_count] = Particle_zVel;
                     
-					h_Particles->xAccn[*h_xmachine_memory_Particle_count] = Particle_xAccn;
+					h_Particles->debug1[*h_xmachine_memory_Particle_count] = Particle_debug1;
                     
-					h_Particles->yAccn[*h_xmachine_memory_Particle_count] = Particle_yAccn;
+					h_Particles->debug2[*h_xmachine_memory_Particle_count] = Particle_debug2;
                     
-					h_Particles->zAccn[*h_xmachine_memory_Particle_count] = Particle_zAccn;
+					h_Particles->debug3[*h_xmachine_memory_Particle_count] = Particle_debug3;
                     
 					(*h_xmachine_memory_Particle_count) ++;
 					
@@ -330,9 +330,9 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 				Particle_xVel = 0;
 				Particle_yVel = 0;
 				Particle_zVel = 0;
-				Particle_xAccn = 0;
-				Particle_yAccn = 0;
-				Particle_zAccn = 0;
+				Particle_debug1 = 0;
+				Particle_debug2 = 0;
+				Particle_debug3 = 0;
 			}
 			if(strcmp(buffer, "id") == 0) in_Particle_id = 1;
 			if(strcmp(buffer, "/id") == 0) in_Particle_id = 0;
@@ -352,12 +352,12 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 			if(strcmp(buffer, "/yVel") == 0) in_Particle_yVel = 0;
 			if(strcmp(buffer, "zVel") == 0) in_Particle_zVel = 1;
 			if(strcmp(buffer, "/zVel") == 0) in_Particle_zVel = 0;
-			if(strcmp(buffer, "xAccn") == 0) in_Particle_xAccn = 1;
-			if(strcmp(buffer, "/xAccn") == 0) in_Particle_xAccn = 0;
-			if(strcmp(buffer, "yAccn") == 0) in_Particle_yAccn = 1;
-			if(strcmp(buffer, "/yAccn") == 0) in_Particle_yAccn = 0;
-			if(strcmp(buffer, "zAccn") == 0) in_Particle_zAccn = 1;
-			if(strcmp(buffer, "/zAccn") == 0) in_Particle_zAccn = 0;
+			if(strcmp(buffer, "debug1") == 0) in_Particle_debug1 = 1;
+			if(strcmp(buffer, "/debug1") == 0) in_Particle_debug1 = 0;
+			if(strcmp(buffer, "debug2") == 0) in_Particle_debug2 = 1;
+			if(strcmp(buffer, "/debug2") == 0) in_Particle_debug2 = 0;
+			if(strcmp(buffer, "debug3") == 0) in_Particle_debug3 = 1;
+			if(strcmp(buffer, "/debug3") == 0) in_Particle_debug3 = 0;
 			
 			
 			/* End of tag and reset buffer */
@@ -403,14 +403,14 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 				if(in_Particle_zVel){ 
 					Particle_zVel = (float) atof(buffer);
 				}
-				if(in_Particle_xAccn){ 
-					Particle_xAccn = (float) atof(buffer);
+				if(in_Particle_debug1){ 
+					Particle_debug1 = (float) atof(buffer);
 				}
-				if(in_Particle_yAccn){ 
-					Particle_yAccn = (float) atof(buffer);
+				if(in_Particle_debug2){ 
+					Particle_debug2 = (float) atof(buffer);
 				}
-				if(in_Particle_zAccn){ 
-					Particle_zAccn = (float) atof(buffer);
+				if(in_Particle_debug3){ 
+					Particle_debug3 = (float) atof(buffer);
 				}
 				
 			}

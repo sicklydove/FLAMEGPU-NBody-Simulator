@@ -30,15 +30,15 @@
 
 /* Agent population size definifions must be a multiple of THREADS_PER_TILE (defualt 64) */
 //Maximum buffer size (largest agent buffer size)
-#define buffer_size_MAX 2048
+#define buffer_size_MAX 65536
 
 //Maximum population size of xmachine_memory_Particle
-#define xmachine_memory_Particle_MAX 2048
+#define xmachine_memory_Particle_MAX 65536
   
   
 /* Message poulation size definitions */
 //Maximum population size of xmachine_mmessage_location
-#define xmachine_message_location_MAX 2048
+#define xmachine_message_location_MAX 65536
 
 
 
@@ -81,9 +81,9 @@ struct __align__(16) xmachine_memory_Particle
     float xVel;    /**< X-machine memory variable xVel of type float.*/
     float yVel;    /**< X-machine memory variable yVel of type float.*/
     float zVel;    /**< X-machine memory variable zVel of type float.*/
-    float xAccn;    /**< X-machine memory variable xAccn of type float.*/
-    float yAccn;    /**< X-machine memory variable yAccn of type float.*/
-    float zAccn;    /**< X-machine memory variable zAccn of type float.*/
+    float debug1;    /**< X-machine memory variable debug1 of type float.*/
+    float debug2;    /**< X-machine memory variable debug2 of type float.*/
+    float debug3;    /**< X-machine memory variable debug3 of type float.*/
 };
 
 
@@ -129,9 +129,9 @@ struct xmachine_memory_Particle_list
     float xVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list xVel of type float.*/
     float yVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list yVel of type float.*/
     float zVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list zVel of type float.*/
-    float xAccn [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list xAccn of type float.*/
-    float yAccn [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list yAccn of type float.*/
-    float zAccn [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list zAccn of type float.*/
+    float debug1 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug1 of type float.*/
+    float debug2 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug2 of type float.*/
+    float debug3 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug3 of type float.*/
 };
 
 
@@ -253,11 +253,11 @@ __FLAME_GPU_FUNC__ xmachine_message_location * get_next_location_message(xmachin
  * @param xVel	agent agent variable of type float
  * @param yVel	agent agent variable of type float
  * @param zVel	agent agent variable of type float
- * @param xAccn	agent agent variable of type float
- * @param yAccn	agent agent variable of type float
- * @param zAccn	agent agent variable of type float
+ * @param debug1	agent agent variable of type float
+ * @param debug2	agent agent variable of type float
+ * @param debug3	agent agent variable of type float
  */
-__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, float xAccn, float yAccn, float zAccn);
+__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3);
 
 
   

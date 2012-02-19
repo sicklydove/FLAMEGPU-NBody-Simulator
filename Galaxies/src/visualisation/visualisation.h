@@ -2,20 +2,22 @@
 #define __VISUALISATION_H
 
 // constants
-const unsigned int WINDOW_WIDTH = 512;
-const unsigned int WINDOW_HEIGHT = 512;
+const int SIMULATION_DELAY = 5000;
+const unsigned int WINDOW_WIDTH = 1024;
+const unsigned int WINDOW_HEIGHT = 768;
+
 
 //frustrum
 const double NEAR_CLIP = 0.1;
-const double FAR_CLIP = 100;
+const double FAR_CLIP = 2056;
 
 //Circle model fidelity
-const int SPHERE_SLICES = 20;
-const int SPHERE_STACKS = 20;
-const double SPHERE_RADIUS = 1;
+const int SPHERE_SLICES = 10;
+const int SPHERE_STACKS = 10;
+const double SPHERE_RADIUS = 0.5;
 
 //Viewing Distance
-const double VIEW_DISTANCE = 64;
+const double VIEW_DISTANCE = 100.0;
 
 //light position
 GLfloat LIGHT_POSITION[] = {10.0f, 10.0f, 10.0f, 1.0f};

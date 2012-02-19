@@ -41,55 +41,49 @@ __FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* xmemory, xmachine_me
  */
 __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_message_location_list* location_messages){
 	float dt=0.1;
-
-    float3 agent_position = make_float3(xmemory->x, xmemory->y, xmemory->z);
-	float agent_mass = xmemory->mass;
-
+    float gravConstant=0.667;
+	float3 agent_position = make_float3(xmemory->x, xmemory->y, xmemory->z);
 	float3 agent_accn=make_float3(0.0,0.0,0.0);
 
-      xmachine_message_location* current_message = get_first_location_message(location_messages);
-      while (current_message)
-      {
-          float currentMessageMass=current_message->mass;
-		  
-		  float3 currentMessagePosition=make_float3(current_message->x, current_message->y, current_message->z);
+    xmachine_message_location* current_message = get_first_location_message(location_messages);
+    while (current_message)
+	{
+		float currentMessageMass=current_message->mass;
+		float3 currentMessagePosition=make_float3(current_message->x, current_message->y, current_message->z);
+		float3 positionDifference=currentMessagePosition-agent_position;
 
-		  float3 positionDifference=agent_position - currentMessagePosition;
+		float abs_distance=sqrt(pow(positionDifference.x,2)+pow(positionDifference.y,2)+pow(positionDifference.z,2));
+		
+		float3 topHalfEqn=positionDifference*currentMessageMass;
+		float lowerHalfEqn=pow(abs_distance, 3);
 
-		  float xLen=(xmemory->x)-(current_message->x);
-		  xLen=pow(xLen, 2);
-	
-		  float yLen=(xmemory->y)-(current_message->y);
-		  yLen=pow(yLen, 2);
-		  
-		  float zLen=(xmemory->z)-(current_message->z);
-		  zLen=pow(zLen, 2);
+		float3 accn = make_float3(0,0,0);
 
-		  float abs_distance=sqrt(xLen+yLen+zLen);
+		if(lowerHalfEqn >1){
+			accn=topHalfEqn/lowerHalfEqn;
+		}
+		agent_accn+=accn;
 
-		  float lowerHalfEqn=pow(abs_distance, 3);
 
-		  float3 accnProportional=((currentMessageMass*positionDifference)/lowerHalfEqn);
+		current_message = get_next_location_message(current_message, location_messages);
+	}
 
-		  agent_accn+=accnProportional;
+	//Positions
+	xmemory->x+=dt*(xmemory->xVel);
+	xmemory->x+=0.5*(agent_accn.x)*(dt*dt);
 
-		  current_message = get_next_location_message(current_message, location_messages);
-	  }
+	xmemory->y+=dt*(xmemory->yVel);
+	xmemory->y+=0.5*(agent_accn.y)*(dt*dt);
 
-	  float xComp = agent_accn.x;
-	  float yComp = agent_accn.y;
-	  float zComp = agent_accn.z;
+	xmemory->z+=dt*(xmemory->zVel);
+	xmemory->z+=0.5*(agent_accn.z)*(dt*dt);
 
-	  float abs=(xComp*xComp)+(yComp*yComp)+(zComp+zComp);
-	  float3 final = agent_accn/sqrt(abs);
+	//Velocities
+	xmemory->xVel+=agent_accn.x*dt;
+	xmemory->yVel+=agent_accn.y*dt;
+	xmemory->zVel+=agent_accn.z*dt;
 
-	  xmemory->x =  xmemory->x+(xmemory->xVel)*dt;
-
-  
     return 0;
 }
-
-  
-
 
 #endif //_FLAMEGPU_FUNCTIONS

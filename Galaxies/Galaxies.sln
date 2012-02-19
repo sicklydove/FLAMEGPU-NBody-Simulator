@@ -1,0 +1,49 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FLAMEGPU_Project", "FLAMEGPU.vcproj", "{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_Console|Win32 = Debug_Console|Win32
+		Debug_Visualisation|Win32 = Debug_Visualisation|Win32
+		EmulationDebug_Console|Win32 = EmulationDebug_Console|Win32
+		EmulationDebug_Visualisation|Win32 = EmulationDebug_Visualisation|Win32
+		Release_Console|Win32 = Release_Console|Win32
+		Release_Visualisation|Win32 = Release_Visualisation|Win32
+		Debug_Console|x64 = Debug_Console|x64
+		Debug_Visualisation|x64 = Debug_Visualisation|x64
+		EmulationDebug_Console|x64 = EmulationDebug_Console|x64
+		EmulationDebug_Visualisation|x64 = EmulationDebug_Visualisation|x64
+		Release_Console|x64 = Release_Console|x64
+		Release_Visualisation|x64 = Release_Visualisation|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Debug_Console|Win32.ActiveCfg = Debug_Console|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Debug_Console|Win32.Build.0 = Debug_Console|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Debug_Visualisation|Win32.ActiveCfg = Debug_Visualisation|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Debug_Visualisation|Win32.Build.0 = Debug_Visualisation|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.EmulationDebug_Console|Win32.ActiveCfg = EmulationDebug_Console|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.EmulationDebug_Console|Win32.Build.0 = EmulationDebug_Console|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.EmulationDebug_Visualisation|Win32.ActiveCfg = EmulationDebug_Visualisation|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.EmulationDebug_Visualisation|Win32.Build.0 = EmulationDebug_Visualisation|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Release_Console|Win32.ActiveCfg = Release_Console|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Release_Console|Win32.Build.0 = Release_Console|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Release_Visualisation|Win32.ActiveCfg = Release_Visualisation|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Release_Visualisation|Win32.Build.0 = Release_Visualisation|Win32
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Debug_Console|x64.ActiveCfg = Debug_Console|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Debug_Console|x64.Build.0 = Debug_Console|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Debug_Visualisation|x64.ActiveCfg = Debug_Visualisation|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Debug_Visualisation|x64.Build.0 = Debug_Visualisation|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.EmulationDebug_Console|x64.ActiveCfg = EmulationDebug_Console|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.EmulationDebug_Console|x64.Build.0 = EmulationDebug_Console|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.EmulationDebug_Visualisation|x64.ActiveCfg = EmulationDebug_Visualisation|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.EmulationDebug_Visualisation|x64.Build.0 = EmulationDebug_Visualisation|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Release_Console|x64.ActiveCfg = Release_Console|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Release_Console|x64.Build.0 = Release_Console|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Release_Visualisation|x64.ActiveCfg = Release_Visualisation|x64
+		{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}.Release_Visualisation|x64.Build.0 = Release_Visualisation|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

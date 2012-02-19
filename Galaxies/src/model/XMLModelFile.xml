@@ -50,15 +50,15 @@
         </gpu:variable>
         <gpu:variable>
           <type>float</type>
-          <name>xAccn</name>
+          <name>debug1</name>
         </gpu:variable>
         <gpu:variable>
           <type>float</type>
-          <name>yAccn</name>
+          <name>debug2</name>
         </gpu:variable>
         <gpu:variable>
           <type>float</type>
-          <name>zAccn</name>
+          <name>debug3</name>
         </gpu:variable>    
       </memory>
       <functions>
@@ -95,7 +95,7 @@
         <initialState>default</initialState>
       </states>
       <gpu:type>continuous</gpu:type>
-      <gpu:bufferSize>2048</gpu:bufferSize>
+      <gpu:bufferSize>65536</gpu:bufferSize>
     </gpu:xagent>
   </xagents>
   <messages>
@@ -125,7 +125,7 @@
         </gpu:variable>
       </variables>
       <gpu:partitioningNone/>
-      <gpu:bufferSize>2048</gpu:bufferSize>
+      <gpu:bufferSize>65536</gpu:bufferSize>
     </gpu:message>
   </messages>
   <layers>
