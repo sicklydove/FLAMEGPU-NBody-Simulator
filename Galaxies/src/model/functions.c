@@ -40,48 +40,60 @@ __FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* xmemory, xmachine_me
  * @param location_messages  location_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_location_message and get_next_location_message functions.
  */
 __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_message_location_list* location_messages){
-	float dt=0.1;
-    float gravConstant=0.667;
+	float dt=0.001;
+    float gravConstant=1;
 	float3 agent_position = make_float3(xmemory->x, xmemory->y, xmemory->z);
 	float3 agent_accn=make_float3(0.0,0.0,0.0);
 
     xmachine_message_location* current_message = get_first_location_message(location_messages);
     while (current_message)
 	{
-		float currentMessageMass=current_message->mass;
+		float3 accn = make_float3(0,0,0);
 		float3 currentMessagePosition=make_float3(current_message->x, current_message->y, current_message->z);
-		float3 positionDifference=currentMessagePosition-agent_position;
 
+		float3 positionDifference=currentMessagePosition-agent_position;
 		float abs_distance=sqrt(pow(positionDifference.x,2)+pow(positionDifference.y,2)+pow(positionDifference.z,2));
 		
-		float3 topHalfEqn=positionDifference*currentMessageMass;
+		float3 topHalfEqn=positionDifference*current_message->mass*gravConstant;
 		float lowerHalfEqn=pow(abs_distance, 3);
 
-		float3 accn = make_float3(0,0,0);
-
-		if(lowerHalfEqn >1){
+		if(lowerHalfEqn >0.5){
 			accn=topHalfEqn/lowerHalfEqn;
 		}
 		agent_accn+=accn;
 
-
+	    xmemory->debug1=accn.x;
+		xmemory->debug2=abs_distance;
+        xmemory->debug3=lowerHalfEqn;
 		current_message = get_next_location_message(current_message, location_messages);
 	}
+	float xVel=xmemory->xVel;
+	float yVel=xmemory->yVel;
+	float zVel=xmemory->zVel;
 
-	//Positions
-	xmemory->x+=dt*(xmemory->xVel);
-	xmemory->x+=0.5*(agent_accn.x)*(dt*dt);
+	float varPos=agent_position.x;
+	varPos+=(dt*xVel);
+	varPos+=(0.5*(agent_accn.x)*(dt*dt));
+	xmemory->x=varPos;
 
-	xmemory->y+=dt*(xmemory->yVel);
-	xmemory->y+=0.5*(agent_accn.y)*(dt*dt);
+	varPos=agent_position.y;
+	varPos+=(dt*yVel);
+	varPos+=(0.5*(agent_accn.y)*(dt*dt));
+	xmemory->y=varPos;
 
-	xmemory->z+=dt*(xmemory->zVel);
-	xmemory->z+=0.5*(agent_accn.z)*(dt*dt);
+	varPos=agent_position.z;
+	varPos+=(dt*zVel);
+	varPos+=(0.5*(agent_accn.z)*(dt*dt));
+	xmemory->z=varPos;
 
 	//Velocities
-	xmemory->xVel+=agent_accn.x*dt;
-	xmemory->yVel+=agent_accn.y*dt;
-	xmemory->zVel+=agent_accn.z*dt;
+	xVel+=(agent_accn.x*dt);
+	yVel+=(agent_accn.y*dt);
+    zVel+=(agent_accn.z*dt);
+
+	xmemory->xVel=xVel;
+	xmemory->yVel=yVel;
+	xmemory->zVel=zVel;
 
     return 0;
 }
