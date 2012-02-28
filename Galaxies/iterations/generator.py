@@ -1,156 +1,241 @@
-import random
+import  random
+
+class  ParticleAgent:
+    def  __init__(self,  particleId,  xPos,  yPos,  zPos,  xVel,  yVel,  zVel,  mass,  isDark):
+        self.particleId=particleId
+        self.xPos=xPos
+        self.yPos=yPos
+        self.zPos=zPos
+        self.xVel=xVel
+        self.yVel=yVel
+        self.zVel=zVel
+        self.mass=mass
+        self.isDark=isDark
+
+    def  writeAgent(self):
+        outStr=""
+        outStr+='<xagent>'
+        outStr+='<name>Particle</name>'
+        outStr+='<id>'
+        outStr+=str(self.particleId)
+        outStr+='<mass>'
+        outStr+=str(self.mass)
+        outStr+='</mass>'
+        outStr+='<isDark>0</isDark>'
+        outStr+='<x>'
+        outStr+=str(self.xPos)
+        outStr+='</x>'
+        outStr+='<y>'
+        outStr+=str(self.yPos)
+        outStr+='</y>'
+        outStr+='<z>'
+        outStr+=str(self.zPos)
+        outStr+='</z>'
+        outStr+='<xVel>'
+        outStr+=str(self.xVel)
+        outStr+='</xVel>'
+        outStr+='<yVel>'
+        outStr+=str(self.yVel)
+        outStr+='</yVel>'
+        outStr+='<zVel>'
+        outStr+=str(self.zVel)
+        outStr+='</zVel>'
+        outStr+='</xagent>\r\n'
+        return  outStr
+
+class  Simulation:
+    def  __init__(self,  filename):
+        self.filename=filename
+
+    def  initOutput(self):
+        self.outputFile=open(self.filename,  'w')
+        self.outputFile.write('<states>\r\n<itno>0</itno>\r\n')
+
+    def  closeOutput(self):
+        self.outputFile.write('</states>')
+        self.outputFile.close()
+
+    def  writeAgents(self,  ls):
+        for  agent  in  ls:
+            agentXML=agent.writeAgent()
+            self.outputFile.write(agentXML)
+            
+
+class  ProbabilityDistribution:
+    def  __init__(self,  distribType,  val1=None,  val2=None):
+        if(distribType  is  ('gaussian'  or  'normal')):
+            self.distribType='gaussian'
+
+            if((val1  or  val2)  is  None):
+                print  "ERROR:  Must  define  a  mu  and  sigma  value  for  a  Gaussian  distribution"
+                exit()
+
+            else:
+                self.mu=val1
+                self.sigma=val2
+
+        elif(distribType  is  ('fixed'  or  'set'  or  'static'))  :
+            self.distribType='fixed'
+
+            if(val1  is  None):
+                print  "ERROR:  Must  define  a  set  value  for  a  fixed  distribution"
+                exit()
+
+            else:
+                self.fixedVal=val1
+
+        else:
+            self.distribType='random'
+
+            if((val1  or  val2)  is  None):
+                print  "ERROR:  Must  define  a  Min  and  Max  value  for  a  random  distribution"
+                exit()
+
+            else:
+                self.minVal=val1
+                self.maxVal=val2
+
+    def  getItem(self):
+        if(self.distribType  is  'gaussian'):
+            return  random.gauss(self.mu,  self.sigma)
+
+        elif(self.distribType  is  'random'):
+            return  random.uniform(self.minVal,  self.maxVal)
+
+        elif(self.distribType  is  'fixed'):
+            return  self.fixedVal
 
 
-class ParticleAgent:
-  def __init__(self, particleId, xPos, yPos, zPos, xVel, yVel, zVel, mass, isDark):
-    self.particleId=particleId
-    self.xPos=xPos
-    self.yPos=yPos
-    self.zPos=zPos
-    self.xVel=xVel
-    self.yVel=yVel
-    self.zVel=zVel
-    self.mass=mass
-    self.isDark=isDark
+class  ParticleDistribution:
+    def  __init__(self,  numAgents,  usingZAxis):
+        self.numAgents=numAgents
+        self.usingZAxis=usingZAxis
+        self.particles={}
+        self.massesSet=False
+        self.positionsSet=False
+        self.velocitiesSet=False
 
-  def writeAgent(self):
-    outStr=""
-    outStr+='<xagent>'
-    outStr+='<name>Particle</name>'
-    outStr+='<id>'
-    outStr+=str(self.particleId)
-    outStr+='<mass>'
-    outStr+=str(self.mass)
-    outStr+='</mass>'
-    outStr+='<isDark>0</isDark>'
-    outStr+='<x>'
-    outStr+=str(self.xPos)
-    outStr+='</x>'
-    outStr+='<y>'
-    outStr+=str(self.yPos)
-    outStr+='</y>'
-    outStr+='<z>'
-    outStr+=str(self.zPos)
-    outStr+='</z>'
-    outStr+='<xVel>'
-    outStr+=str(self.xVel)
-    outStr+='</xVel>'
-    outStr+='<yVel>'
-    outStr+=str(self.yVel)
-    outStr+='</yVel>'
-    outStr+='<zVel>'
-    outStr+=str(self.zVel)
-    outStr+='</zVel>'
-    outStr+='</xagent>\r\n'
-    return outStr
+        for  counter  in  range  (0,  self.numAgents):
+            self.particles[counter]=[0,False,(0,0,0),(0,0,0)]
 
-class Simulation:
-  def __init__(self, outputFile, numAgents, maxMass, maxVel, minVel, maxPos, minPos, randomMass, randomVel, usingZAxis):
-    self.numAgents=numAgents
-    self.maxMass=maxMass
-    self.maxVel=maxVel
-    self.minVel=minVel
-    self.maxPos=maxPos
-    self.minPos=minPos
-    self.randomMass=randomMass
-    self.randomVel=randomVel
-    self.usingZAxis=usingZAxis
-    self.outputFile=outputFile
+    def  setMasses(self,  massDistribution):
+        for  count  in  range  (0,  self.numAgents):
+            self.particles[count][0]=massDistribution.getItem()
 
-  def initOutput(self):
-    self.outputFile.write('<states>\r\n<itno>0</itno>\r\n')
+            #darkMatter
+            self.particles[count][1]=False
+            self.massesSet=True
+    
+    def  setPositions(self,  xDistrib,  yDistrib=None,  zDistrib=None):
+        #If  not  set,  use  same  distribution  for  all  dimensions
+        if((yDistrib  and  zDistrib)  is  None):
+            yDistrib=xDistrib
+            zDistrib=xDistrib
 
-  def closeOutput(self):
-    self.outputFile.write('</states>')
+        for  i  in  range  (0,  self.numAgents):
+            self.particles[i][3]=(xDistrib.getItem(),  yDistrib.getItem(),  zDistrib.getItem())
 
-  def makeAgentsFromFile(self, fileloc):
-      agentsDict={}
+        self.positionsSet=True
+    
+    def  setVelocities(self,  xVelDistrib,  yVelDistrib=None,  zVelDistrib=None):
 
-      #File loading code
-      scaleFactor=1
-      velScaleFactor=1
-      massScale=1
-      inFile=open(fileloc, 'r')
+        #If  not  set,  use  same  distribution  for  all  dimensions
+        if((yVelDistrib  and  zVelDistrib)  is  None):
+            yVelDistrib=xVelDistrib
+            zVelDistrib=xVelDistrib
 
-      count=0
-      with inFile as f:
-        content=f.readlines()
+        for  i  in  range  (0,  self.numAgents):
+            self.particles[i][3]=(xVelDistrib.getItem(),  yVelDistrib.getItem(),  zVelDistrib.getItem())
 
-      for line in content:
-	stripStr=line.split()
-        massPosVel=[0,0,0,0,0,0,0]
-	massPosVel[0]=massScale*float(stripStr[0])
-	for index in range(1,4):
-	  massPosVel[index]=scaleFactor*float(stripStr[index])
-	for index in range(4,7):
-          massPosVel[index]=velScaleFactor*float(stripStr[index])
-	count+=1
+        self.velocitiesSet=True
 
-        agentsDict[count]=massPosVel
+    def  makeAgentsFromFile(self,  fileloc):
+            agentsDict={}
 
-      for item in agentsDict:
-        ls=agentsDict[item]
-        newAgent=ParticleAgent(item, ls[1], ls[2], ls[3], ls[4], ls[5], ls[6], ls[0], False)
-        agentXML=newAgent.writeAgent()
-        self.outputFile.write(agentXML)
+            #File  loading  code
+            scaleFactor=1
+            velScaleFactor=1
+            massScale=1
+            inFile=open(fileloc,  'r')
 
-  def makeAgents(self):
-    for num in range(0,self.numAgents):
-      isDark=False
+            count=0
+            with  inFile  as  f:
+                content=f.readlines()
 
-      positionsAndVelocities=[0,0,0,0,0,0]
+            for  line  in  content:
+                stripStr=line.split()
+                massPosVel=[0,0,0,0,0,0,0]
+                massPosVel[0]=massScale*float(stripStr[0])
 
-      for index in range(0,3):
-	val=random.uniform(self.minPos, self.maxPos)
-        positionsAndVelocities[index]=val
+            for  index  in  range(1,4):
+                massPosVel[index]=scaleFactor*float(stripStr[index])
 
-      for index in range(3,6):
-	val=random.random()
-	boolean=random.random()
-	if(boolean>0.5):
-		val=0-val
-        positionsAndVelocities[index]=val*self.maxVel
-        if(not (self.randomVel)):
-          positionsAndVelocities[index]=maxMass
+            for  index  in  range(4,7):
+                massPosVel[index]=velScaleFactor*float(stripStr[index])
 
-      if(not(self.usingZAxis)):
-        positionsAndVelocities[2]=0
-        positionsAndVelocities[5]=0
+            count+=1
 
-      mass=maxMass
-      if(self.randomMass):
-	mass=random.random()
-	mass=self.maxMass*mass
+            agentsDict[count]=massPosVel
 
-      xPos=positionsAndVelocities[0]
-      yPos=positionsAndVelocities[1]
-      zPos=positionsAndVelocities[2]
-      xVel=positionsAndVelocities[3]
-      yVel=positionsAndVelocities[4]
-      zVel=positionsAndVelocities[5]
+            for  item  in  agentsDict:
+                ls=agentsDict[item]
+                newAgent=ParticleAgent(item,  ls[1],  ls[2],  ls[3],  ls[4],  ls[5],  ls[6],  ls[0],  False)
+                agentXML=newAgent.writeAgent()
+                self.outputFile.write(agentXML)
 
-      newAgent=ParticleAgent(num, xPos, yPos, zPos, xVel, yVel, zVel, mass, isDark)
-      agentXML=newAgent.writeAgent()
-      self.outputFile.write(agentXML)
+    def  getParticleAgents(self):
 
-if __name__ == '__main__':
-  numAgents=1000
-  maxMass=0.05
-  maxVel=0.7
-  maxPos=0.3
-  minPos=0
-  randomMass=False
-  randomVel=True
-  usingZAxis=True
-  outFile=open('./0.xml', 'w')
-  sim=Simulation(outFile, numAgents, maxMass, maxVel, maxVel, maxPos, minPos, randomMass, randomVel, usingZAxis)
-  distrib=Simulation(outFile, 5000, 0.05, 0.7, 0.7, .7, -1.25, False, randomVel, usingZAxis)
-  sim.initOutput()
+        particleAgents=[]
+        if(not(self.massesSet  and  self.positionsSet  and  self.velocitiesSet)):
+            print  "ERROR:  Can't  write  particle  positions  until  masses,  positions  and  velocities  have  been  set"
+    
+        else:
+            for  key,  val  in  self.particles.iteritems():
+	mass=val[0]
+	isDark=val[1]
+                xPos=val[2][0]
+                yPos=val[2][1]
+                zPos=val[2][2]
+                xVel=val[3][0]
+                yVel=val[3][1]
+                zVel=val[3][2]
+                thisParticle=ParticleAgent(key,  xPos,  yPos,  zPos,  xVel,  yVel,  zVel,  mass,  isDark)
+	particleAgents.append(thisParticle)
 
-  #sim.makeAgentsFromFile('tab8096.txt')
-  sim.makeAgents()
-  distrib.makeAgents()
+        return  particleAgents
 
-  sim.closeOutput()
-  outFile.close()
+if  __name__  ==  '__main__':
+    numAgents=1000
+    maxMass=0.05
+    maxVel=0.7
+    maxPos=0.3
+    minPos=0
+    randomMass=False
+    randomVel=True
+    usingZAxis=True
+
+    simulation=Simulation('./0.xml')
+    simulation.initOutput()
+
+    distribution1=ParticleDistribution(2,  True)
+    distrib1Masses=ProbabilityDistribution('fixed',  0.05)
+    distrib1positions=ProbabilityDistribution('random',  0.3,  0)
+    distrib1velocities=ProbabilityDistribution('random',  0.7,  0)
+
+    distribution1.setMasses(distrib1Masses)
+    distribution1.setPositions(distrib1positions)
+    #distribution1.testFn()
+    distribution1.setVelocities(distrib1velocities)
+
+    distrib1Particles=distribution1.getParticleAgents()
+    simulation.writeAgents(distrib1Particles)
+
+    #distrib=Simulation(outFile,  5000,  0.05,  0.7,  0.7,  .7,  -1.25,  False,  randomVel,  usingZAxis)
+    #sim.initOutput()
+
+    #sim.makeAgentsFromFile('tab8096.txt')
+    #sim.makeAgents()
+    #distrib.makeAgents()
+
+    simulation.closeOutput()
 
