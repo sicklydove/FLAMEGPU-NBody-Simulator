@@ -57,7 +57,7 @@ __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_mes
 		float3 topHalfEqn=positionDifference*current_message->mass*gravConstant;
 		float lowerHalfEqn=pow(abs_distance, 3);
 
-		if(lowerHalfEqn >0.5){
+		if(lowerHalfEqn >0.03){
 			accn=topHalfEqn/lowerHalfEqn;
 		}
 		agent_accn+=accn;
