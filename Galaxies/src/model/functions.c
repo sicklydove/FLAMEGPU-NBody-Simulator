@@ -42,6 +42,8 @@ __FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* xmemory, xmachine_me
 __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_message_location_list* location_messages){
 	float dt=0.001;
     float gravConstant=1;
+    float gravConstant=1;
+
 	float3 agent_position = make_float3(xmemory->x, xmemory->y, xmemory->z);
 	float3 agent_accn=make_float3(0.0,0.0,0.0);
 
@@ -55,6 +57,7 @@ __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_mes
 		float abs_distance=sqrt(pow(positionDifference.x,2)+pow(positionDifference.y,2)+pow(positionDifference.z,2));
 		
 		float3 topHalfEqn=positionDifference*current_message->mass*gravConstant;
+
 		float lowerHalfEqn=pow(abs_distance, 3);
 
 		if(lowerHalfEqn >0.03){
