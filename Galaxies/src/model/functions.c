@@ -42,7 +42,8 @@ __FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* xmemory, xmachine_me
 __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_message_location_list* location_messages){
 	float dt=0.001;
     float gravConstant=1;
-    float gravConstant=1;
+	float velocityDamper=0.25;
+	float sphereRadius = 0.0035;
 
 	float3 agent_position = make_float3(xmemory->x, xmemory->y, xmemory->z);
 	float3 agent_accn=make_float3(0.0,0.0,0.0);
@@ -55,19 +56,20 @@ __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_mes
 
 		float3 positionDifference=currentMessagePosition-agent_position;
 		float abs_distance=sqrt(pow(positionDifference.x,2)+pow(positionDifference.y,2)+pow(positionDifference.z,2));
-		
+
 		float3 topHalfEqn=positionDifference*current_message->mass*gravConstant;
 
-		float lowerHalfEqn=pow(abs_distance, 3);
 
-		if(lowerHalfEqn >0.03){
-			accn=topHalfEqn/lowerHalfEqn;
+		if(abs_distance>5*sphereRadius){
+			float lowerHalfEqn=pow((pow(abs_distance, 2)+pow(velocityDamper,2)), (3/2));
+		    accn=topHalfEqn/lowerHalfEqn;
 		}
+
 		agent_accn+=accn;
 
-	    xmemory->debug1=accn.x;
-		xmemory->debug2=abs_distance;
-        xmemory->debug3=lowerHalfEqn;
+	    //xmemory->debug1=accn.x;
+		//xmemory->debug2=abs_distance;
+        //xmemory->debug3=lowerHalfEqn;
 		current_message = get_next_location_message(current_message, location_messages);
 	}
 	float xVel=xmemory->xVel;

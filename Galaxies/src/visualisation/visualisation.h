@@ -3,8 +3,8 @@
 
 // constants
 const int SIMULATION_DELAY = 5000;
-const unsigned int WINDOW_WIDTH = 1024;
-const unsigned int WINDOW_HEIGHT = 768;
+const unsigned int WINDOW_WIDTH = 1600;
+const unsigned int WINDOW_HEIGHT = 900;
 
 
 //frustrum

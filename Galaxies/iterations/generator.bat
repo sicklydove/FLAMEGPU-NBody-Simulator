@@ -1,1 +1,1 @@
-python ./generator.py
+python ./makeT0.py
