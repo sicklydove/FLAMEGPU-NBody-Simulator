@@ -31,7 +31,11 @@ __constant__ int d_xmachine_memory_Particle_count;
 
 /* Agent state count constants */
 
-__constant__ int d_xmachine_memory_Particle_default_count;
+__constant__ int d_xmachine_memory_Particle_settingActive_count;
+
+__constant__ int d_xmachine_memory_Particle_sendingData_count;
+
+__constant__ int d_xmachine_memory_Particle_updatingPosition_count;
 
 
 /* Message constants */
@@ -132,6 +136,88 @@ __device__ int next_cell2D(int3* relative_cell)
 }
 
 
+/** outputdata_function_filter
+ *	Standard agent condition function. Filters agents from one state list to the next depending on the condition
+ * @param currentState xmachine_memory_Particle_list representing agent i the current state
+ * @param nextState xmachine_memory_Particle_list representing agent i the next state
+ */
+ __global__ void outputdata_function_filter(xmachine_memory_Particle_list* currentState, xmachine_memory_Particle_list* nextState)
+ {
+	//global thread index
+	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	
+	//check thread max
+	if (index < d_xmachine_memory_Particle_count){
+	
+		//apply the filter
+		if (currentState->isActive[index]>0)
+		{	//copy agent data to newstate list
+			nextState->id[index] = currentState->id[index];
+			nextState->mass[index] = currentState->mass[index];
+			nextState->isDark[index] = currentState->isDark[index];
+			nextState->x[index] = currentState->x[index];
+			nextState->y[index] = currentState->y[index];
+			nextState->z[index] = currentState->z[index];
+			nextState->xVel[index] = currentState->xVel[index];
+			nextState->yVel[index] = currentState->yVel[index];
+			nextState->zVel[index] = currentState->zVel[index];
+			nextState->isActive[index] = currentState->isActive[index];
+			nextState->debug1[index] = currentState->debug1[index];
+			nextState->debug2[index] = currentState->debug2[index];
+			nextState->debug3[index] = currentState->debug3[index];
+			//set scan input flag to 1
+			nextState->_scan_input[index] = 1;
+		}
+		else
+		{
+			//set scan input flag of current state to 1 (keep agent)
+			currentState->_scan_input[index] = 1;
+		}
+	
+	}
+ }
+
+/** notoutputdata_function_filter
+ *	Standard agent condition function. Filters agents from one state list to the next depending on the condition
+ * @param currentState xmachine_memory_Particle_list representing agent i the current state
+ * @param nextState xmachine_memory_Particle_list representing agent i the next state
+ */
+ __global__ void notoutputdata_function_filter(xmachine_memory_Particle_list* currentState, xmachine_memory_Particle_list* nextState)
+ {
+	//global thread index
+	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	
+	//check thread max
+	if (index < d_xmachine_memory_Particle_count){
+	
+		//apply the filter
+		if (currentState->isActive[index]<1)
+		{	//copy agent data to newstate list
+			nextState->id[index] = currentState->id[index];
+			nextState->mass[index] = currentState->mass[index];
+			nextState->isDark[index] = currentState->isDark[index];
+			nextState->x[index] = currentState->x[index];
+			nextState->y[index] = currentState->y[index];
+			nextState->z[index] = currentState->z[index];
+			nextState->xVel[index] = currentState->xVel[index];
+			nextState->yVel[index] = currentState->yVel[index];
+			nextState->zVel[index] = currentState->zVel[index];
+			nextState->isActive[index] = currentState->isActive[index];
+			nextState->debug1[index] = currentState->debug1[index];
+			nextState->debug2[index] = currentState->debug2[index];
+			nextState->debug3[index] = currentState->debug3[index];
+			//set scan input flag to 1
+			nextState->_scan_input[index] = 1;
+		}
+		else
+		{
+			//set scan input flag of current state to 1 (keep agent)
+			currentState->_scan_input[index] = 1;
+		}
+	
+	}
+ }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Dyanamically created Particle agent functions */
 
@@ -178,6 +264,7 @@ __global__ void scatter_Particle_Agents(xmachine_memory_Particle_list* agents_ds
 		agents_dst->xVel[output_index] = agents_src->xVel[index];
 		agents_dst->yVel[output_index] = agents_src->yVel[index];
 		agents_dst->zVel[output_index] = agents_src->zVel[index];
+		agents_dst->isActive[output_index] = agents_src->isActive[index];
 		agents_dst->debug1[output_index] = agents_src->debug1[index];
 		agents_dst->debug2[output_index] = agents_src->debug2[index];
 		agents_dst->debug3[output_index] = agents_src->debug3[index];
@@ -209,6 +296,7 @@ __global__ void append_Particle_Agents(xmachine_memory_Particle_list* agents_dst
 	    agents_dst->xVel[output_index] = agents_src->xVel[index];
 	    agents_dst->yVel[output_index] = agents_src->yVel[index];
 	    agents_dst->zVel[output_index] = agents_src->zVel[index];
+	    agents_dst->isActive[output_index] = agents_src->isActive[index];
 	    agents_dst->debug1[output_index] = agents_src->debug1[index];
 	    agents_dst->debug2[output_index] = agents_src->debug2[index];
 	    agents_dst->debug3[output_index] = agents_src->debug3[index];
@@ -227,12 +315,13 @@ __global__ void append_Particle_Agents(xmachine_memory_Particle_list* agents_dst
  * @param xVel agent variable of type float
  * @param yVel agent variable of type float
  * @param zVel agent variable of type float
+ * @param isActive agent variable of type int
  * @param debug1 agent variable of type float
  * @param debug2 agent variable of type float
  * @param debug3 agent variable of type float
  */
 template <int AGENT_TYPE>
-__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3){
+__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, int isActive, float debug1, float debug2, float debug3){
 	
 	int index;
     
@@ -260,6 +349,7 @@ __device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id
 	agents->xVel[index] = xVel;
 	agents->yVel[index] = yVel;
 	agents->zVel[index] = zVel;
+	agents->isActive[index] = isActive;
 	agents->debug1[index] = debug1;
 	agents->debug2[index] = debug2;
 	agents->debug3[index] = debug3;
@@ -267,8 +357,8 @@ __device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id
 }
 
 //non templated version assumes DISCRETE_2D but works also for CONTINUOUS
-__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3){
-    add_Particle_agent<DISCRETE_2D>(agents, id, mass, isDark, x, y, z, xVel, yVel, zVel, debug1, debug2, debug3);
+__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, int isActive, float debug1, float debug2, float debug3){
+    add_Particle_agent<DISCRETE_2D>(agents, id, mass, isDark, x, y, z, xVel, yVel, zVel, isActive, debug1, debug2, debug3);
 }
 
 /** reorder_Particle_agents
@@ -293,6 +383,7 @@ __global__ void reorder_Particle_agents(unsigned int* values, xmachine_memory_Pa
 	ordered_agents->xVel[index] = unordered_agents->xVel[old_pos];
 	ordered_agents->yVel[index] = unordered_agents->yVel[old_pos];
 	ordered_agents->zVel[index] = unordered_agents->zVel[old_pos];
+	ordered_agents->isActive[index] = unordered_agents->isActive[old_pos];
 	ordered_agents->debug1[index] = unordered_agents->debug1[old_pos];
 	ordered_agents->debug2[index] = unordered_agents->debug2[old_pos];
 	ordered_agents->debug3[index] = unordered_agents->debug3[old_pos];
@@ -474,6 +565,57 @@ __device__ xmachine_message_location* get_next_location_message(xmachine_message
 /**
  *
  */
+__global__ void GPUFLAME_setActive(xmachine_memory_Particle_list* agents){
+	
+	//continuous agent: index is agent position in 1D agent list
+	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+  
+    //For agents not using non partitioned message input check the agent bounds
+    if (index > d_xmachine_memory_Particle_count)
+        return;
+    
+
+	//SoA to AoS - xmachine_memory_setActive Coalesced memory read
+	xmachine_memory_Particle agent;
+	agent.id = agents->id[index];
+	agent.mass = agents->mass[index];
+	agent.isDark = agents->isDark[index];
+	agent.x = agents->x[index];
+	agent.y = agents->y[index];
+	agent.z = agents->z[index];
+	agent.xVel = agents->xVel[index];
+	agent.yVel = agents->yVel[index];
+	agent.zVel = agents->zVel[index];
+	agent.isActive = agents->isActive[index];
+	agent.debug1 = agents->debug1[index];
+	agent.debug2 = agents->debug2[index];
+	agent.debug3 = agents->debug3[index];
+
+	//FLAME function call
+	int dead = !setActive(&agent);
+	
+	//continuous agent: set reallocation flag
+	agents->_scan_input[index]  = dead; 
+
+	//AoS to SoA - xmachine_memory_setActive Coalesced memory write
+	agents->id[index] = agent.id;
+	agents->mass[index] = agent.mass;
+	agents->isDark[index] = agent.isDark;
+	agents->x[index] = agent.x;
+	agents->y[index] = agent.y;
+	agents->z[index] = agent.z;
+	agents->xVel[index] = agent.xVel;
+	agents->yVel[index] = agent.yVel;
+	agents->zVel[index] = agent.zVel;
+	agents->isActive[index] = agent.isActive;
+	agents->debug1[index] = agent.debug1;
+	agents->debug2[index] = agent.debug2;
+	agents->debug3[index] = agent.debug3;
+}
+
+/**
+ *
+ */
 __global__ void GPUFLAME_outputdata(xmachine_memory_Particle_list* agents, xmachine_message_location_list* location_messages){
 	
 	//continuous agent: index is agent position in 1D agent list
@@ -495,6 +637,7 @@ __global__ void GPUFLAME_outputdata(xmachine_memory_Particle_list* agents, xmach
 	agent.xVel = agents->xVel[index];
 	agent.yVel = agents->yVel[index];
 	agent.zVel = agents->zVel[index];
+	agent.isActive = agents->isActive[index];
 	agent.debug1 = agents->debug1[index];
 	agent.debug2 = agents->debug2[index];
 	agent.debug3 = agents->debug3[index];
@@ -515,6 +658,58 @@ __global__ void GPUFLAME_outputdata(xmachine_memory_Particle_list* agents, xmach
 	agents->xVel[index] = agent.xVel;
 	agents->yVel[index] = agent.yVel;
 	agents->zVel[index] = agent.zVel;
+	agents->isActive[index] = agent.isActive;
+	agents->debug1[index] = agent.debug1;
+	agents->debug2[index] = agent.debug2;
+	agents->debug3[index] = agent.debug3;
+}
+
+/**
+ *
+ */
+__global__ void GPUFLAME_notoutputdata(xmachine_memory_Particle_list* agents){
+	
+	//continuous agent: index is agent position in 1D agent list
+	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+  
+    //For agents not using non partitioned message input check the agent bounds
+    if (index > d_xmachine_memory_Particle_count)
+        return;
+    
+
+	//SoA to AoS - xmachine_memory_notoutputdata Coalesced memory read
+	xmachine_memory_Particle agent;
+	agent.id = agents->id[index];
+	agent.mass = agents->mass[index];
+	agent.isDark = agents->isDark[index];
+	agent.x = agents->x[index];
+	agent.y = agents->y[index];
+	agent.z = agents->z[index];
+	agent.xVel = agents->xVel[index];
+	agent.yVel = agents->yVel[index];
+	agent.zVel = agents->zVel[index];
+	agent.isActive = agents->isActive[index];
+	agent.debug1 = agents->debug1[index];
+	agent.debug2 = agents->debug2[index];
+	agent.debug3 = agents->debug3[index];
+
+	//FLAME function call
+	int dead = !notoutputdata(&agent);
+	
+	//continuous agent: set reallocation flag
+	agents->_scan_input[index]  = dead; 
+
+	//AoS to SoA - xmachine_memory_notoutputdata Coalesced memory write
+	agents->id[index] = agent.id;
+	agents->mass[index] = agent.mass;
+	agents->isDark[index] = agent.isDark;
+	agents->x[index] = agent.x;
+	agents->y[index] = agent.y;
+	agents->z[index] = agent.z;
+	agents->xVel[index] = agent.xVel;
+	agents->yVel[index] = agent.yVel;
+	agents->zVel[index] = agent.zVel;
+	agents->isActive[index] = agent.isActive;
 	agents->debug1[index] = agent.debug1;
 	agents->debug2[index] = agent.debug2;
 	agents->debug3[index] = agent.debug3;
@@ -543,6 +738,7 @@ __global__ void GPUFLAME_inputdata(xmachine_memory_Particle_list* agents, xmachi
 	agent.xVel = agents->xVel[index];
 	agent.yVel = agents->yVel[index];
 	agent.zVel = agents->zVel[index];
+	agent.isActive = agents->isActive[index];
 	agent.debug1 = agents->debug1[index];
 	agent.debug2 = agents->debug2[index];
 	agent.debug3 = agents->debug3[index];
@@ -563,6 +759,7 @@ __global__ void GPUFLAME_inputdata(xmachine_memory_Particle_list* agents, xmachi
 	agents->xVel[index] = agent.xVel;
 	agents->yVel[index] = agent.yVel;
 	agents->zVel[index] = agent.zVel;
+	agents->isActive[index] = agent.isActive;
 	agents->debug1[index] = agent.debug1;
 	agents->debug2[index] = agent.debug2;
 	agents->debug3[index] = agent.debug3;

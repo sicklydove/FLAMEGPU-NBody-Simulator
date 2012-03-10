@@ -81,6 +81,7 @@ struct __align__(16) xmachine_memory_Particle
     float xVel;    /**< X-machine memory variable xVel of type float.*/
     float yVel;    /**< X-machine memory variable yVel of type float.*/
     float zVel;    /**< X-machine memory variable zVel of type float.*/
+    int isActive;    /**< X-machine memory variable isActive of type int.*/
     float debug1;    /**< X-machine memory variable debug1 of type float.*/
     float debug2;    /**< X-machine memory variable debug2 of type float.*/
     float debug3;    /**< X-machine memory variable debug3 of type float.*/
@@ -129,6 +130,7 @@ struct xmachine_memory_Particle_list
     float xVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list xVel of type float.*/
     float yVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list yVel of type float.*/
     float zVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list zVel of type float.*/
+    int isActive [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list isActive of type int.*/
     float debug1 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug1 of type float.*/
     float debug2 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug2 of type float.*/
     float debug3 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug3 of type float.*/
@@ -193,11 +195,25 @@ __FLAME_GPU_FUNC__ float rnd(RNG_rand48* rand48);
 /* Agent function prototypes */
 
 /**
+ * setActive FLAMEGPU Agent Function
+ * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
+ 
+ */
+__FLAME_GPU_FUNC__ int setActive(xmachine_memory_Particle* agent);
+
+/**
  * outputdata FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
  * @param location_messages Pointer to output message list of type xmachine_message_location_list. Must be passed as an argument to the add_location_message function ??.
  */
 __FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* agent, xmachine_message_location_list* location_messages);
+
+/**
+ * notoutputdata FLAMEGPU Agent Function
+ * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
+ 
+ */
+__FLAME_GPU_FUNC__ int notoutputdata(xmachine_memory_Particle* agent);
 
 /**
  * inputdata FLAMEGPU Agent Function
@@ -253,11 +269,12 @@ __FLAME_GPU_FUNC__ xmachine_message_location * get_next_location_message(xmachin
  * @param xVel	agent agent variable of type float
  * @param yVel	agent agent variable of type float
  * @param zVel	agent agent variable of type float
+ * @param isActive	agent agent variable of type int
  * @param debug1	agent agent variable of type float
  * @param debug2	agent agent variable of type float
  * @param debug3	agent agent variable of type float
  */
-__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3);
+__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, int isActive, float debug1, float debug2, float debug3);
 
 
   
@@ -287,7 +304,7 @@ extern "C" void singleIteration();
  * @param d_Particles Pointer to agent list on the GPU device
  * @param h_xmachine_memory_Particle_count Pointer to agent counter
  */
-extern "C" void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_Particle_list* h_Particles_default, xmachine_memory_Particle_list* d_Particles_default, int h_xmachine_memory_Particle_default_count);
+extern "C" void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_Particle_list* h_Particles_settingActive, xmachine_memory_Particle_list* d_Particles_settingActive, int h_xmachine_memory_Particle_settingActive_count,xmachine_memory_Particle_list* h_Particles_sendingData, xmachine_memory_Particle_list* d_Particles_sendingData, int h_xmachine_memory_Particle_sendingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count);
 
 
 /** readInitialStates
@@ -309,30 +326,82 @@ extern "C" void readInitialStates(char* inputpath, xmachine_memory_Particle_list
 extern "C" int get_agent_Particle_MAX_count();
 
 
-/** get_agent_Particle_default_count
- * Gets the agent count for the Particle agent type in state default
- * @return		the current Particle agent count in state default
+/** get_agent_Particle_settingActive_count
+ * Gets the agent count for the Particle agent type in state settingActive
+ * @return		the current Particle agent count in state settingActive
  */
-extern "C" int get_agent_Particle_default_count();
+extern "C" int get_agent_Particle_settingActive_count();
 
-/** get_device_Particle_default_agents
+/** get_device_Particle_settingActive_agents
  * Gets a pointer to xmachine_memory_Particle_list on the GPU device
  * @return		a xmachine_memory_Particle_list on the GPU device
  */
-extern "C" xmachine_memory_Particle_list* get_device_Particle_default_agents();
+extern "C" xmachine_memory_Particle_list* get_device_Particle_settingActive_agents();
 
-/** get_host_Particle_default_agents
+/** get_host_Particle_settingActive_agents
  * Gets a pointer to xmachine_memory_Particle_list on the CPU host
  * @return		a xmachine_memory_Particle_list on the CPU host
  */
-extern "C" xmachine_memory_Particle_list* get_host_Particle_default_agents();
+extern "C" xmachine_memory_Particle_list* get_host_Particle_settingActive_agents();
 
 
-/** sort_Particles_default
+/** sort_Particles_settingActive
  * Sorts an agent state list by providing a CUDA kernal to generate key value pairs
  * @param		a pointer CUDA kernal function to generate key value pairs
  */
-void sort_Particles_default(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
+void sort_Particles_settingActive(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
+
+
+/** get_agent_Particle_sendingData_count
+ * Gets the agent count for the Particle agent type in state sendingData
+ * @return		the current Particle agent count in state sendingData
+ */
+extern "C" int get_agent_Particle_sendingData_count();
+
+/** get_device_Particle_sendingData_agents
+ * Gets a pointer to xmachine_memory_Particle_list on the GPU device
+ * @return		a xmachine_memory_Particle_list on the GPU device
+ */
+extern "C" xmachine_memory_Particle_list* get_device_Particle_sendingData_agents();
+
+/** get_host_Particle_sendingData_agents
+ * Gets a pointer to xmachine_memory_Particle_list on the CPU host
+ * @return		a xmachine_memory_Particle_list on the CPU host
+ */
+extern "C" xmachine_memory_Particle_list* get_host_Particle_sendingData_agents();
+
+
+/** sort_Particles_sendingData
+ * Sorts an agent state list by providing a CUDA kernal to generate key value pairs
+ * @param		a pointer CUDA kernal function to generate key value pairs
+ */
+void sort_Particles_sendingData(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
+
+
+/** get_agent_Particle_updatingPosition_count
+ * Gets the agent count for the Particle agent type in state updatingPosition
+ * @return		the current Particle agent count in state updatingPosition
+ */
+extern "C" int get_agent_Particle_updatingPosition_count();
+
+/** get_device_Particle_updatingPosition_agents
+ * Gets a pointer to xmachine_memory_Particle_list on the GPU device
+ * @return		a xmachine_memory_Particle_list on the GPU device
+ */
+extern "C" xmachine_memory_Particle_list* get_device_Particle_updatingPosition_agents();
+
+/** get_host_Particle_updatingPosition_agents
+ * Gets a pointer to xmachine_memory_Particle_list on the CPU host
+ * @return		a xmachine_memory_Particle_list on the CPU host
+ */
+extern "C" xmachine_memory_Particle_list* get_host_Particle_updatingPosition_agents();
+
+
+/** sort_Particles_updatingPosition
+ * Sorts an agent state list by providing a CUDA kernal to generate key value pairs
+ * @param		a pointer CUDA kernal function to generate key value pairs
+ */
+void sort_Particles_updatingPosition(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
 
 
   

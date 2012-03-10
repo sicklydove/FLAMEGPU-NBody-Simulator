@@ -20,6 +20,8 @@
 
 #include <header.h>
 
+
+
 /**
  * outputdata FLAMEGPU Agent Function
  * Automatically generated using functions.xslt
@@ -28,8 +30,31 @@
  */
 __FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* xmemory, xmachine_message_location_list* location_messages){
 
-	add_location_message(location_messages, xmemory->id, xmemory->mass, xmemory->x, xmemory->y, xmemory->z);
+	  add_location_message(location_messages, xmemory->id, xmemory->mass, xmemory->x, xmemory->y, xmemory->z);
     
+    return 0;
+}
+
+/**
+optimisation
+
+*/
+__FLAME_GPU_FUNC__ int setActive(xmachine_memory_Particle* xmemory){
+
+	float currentActiveState=xmemory->isActive;
+	if(currentActiveState>0){
+		xmemory->isActive=0;
+	}
+	else{
+		xmemory->isActive=1;
+	}
+	xmemory->debug1=xmemory->isActive;
+
+    return 0;
+}
+
+__FLAME_GPU_FUNC__ int notoutputdata(xmachine_memory_Particle* xmemory){
+    //Do nothing
     return 0;
 }
 
@@ -39,47 +64,59 @@ __FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* xmemory, xmachine_me
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
  * @param location_messages  location_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_location_message and get_next_location_message functions.
  */
+	/*
+	SHOCK HORROR!
+	IT'S ITERATION THAT SLOWS IT LIKE FUCK
+	
+	W/O ITERATION: 55
+	W/ ITERATION AND NO CALCULATIONS: 18
+	W/ ITERATION AND CACLULATIONS: 8
+
+	15K AGENTS
+	*/
 __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_message_location_list* location_messages){
+
+	
+	float isActive = xmemory->isActive;
+	
+	//if(isActive > 0){
 	float dt=0.001;
     float gravConstant=1;
-	float velocityDamper=0.25;
-	float sphereRadius = 0.0035;
+    float velocityDamper=0.25;
+    float sphereRadius = 0.0035;
 
 	float3 agent_position = make_float3(xmemory->x, xmemory->y, xmemory->z);
 	float3 agent_accn=make_float3(0.0,0.0,0.0);
-
-    xmachine_message_location* current_message = get_first_location_message(location_messages);
-    while (current_message)
-	{
+	xmachine_message_location* current_message = get_first_location_message(location_messages);
+	
+	while (current_message){
 		float3 accn = make_float3(0,0,0);
 		float3 currentMessagePosition=make_float3(current_message->x, current_message->y, current_message->z);
-
 		float3 positionDifference=currentMessagePosition-agent_position;
 		float abs_distance=sqrt(pow(positionDifference.x,2)+pow(positionDifference.y,2)+pow(positionDifference.z,2));
 
 		float3 topHalfEqn=positionDifference*current_message->mass*gravConstant;
 
-
 		if(abs_distance>5*sphereRadius){
 			float lowerHalfEqn=pow((pow(abs_distance, 2)+pow(velocityDamper,2)), (3/2));
-		    accn=topHalfEqn/lowerHalfEqn;
+			accn=topHalfEqn/lowerHalfEqn;
 		}
 
 		agent_accn+=accn;
-
-	    //xmemory->debug1=accn.x;
+		//xmemory->debug1=accn.x;
 		//xmemory->debug2=abs_distance;
-        //xmemory->debug3=lowerHalfEqn;
+		//xmemory->debug3=lowerHalfEqn;
 		current_message = get_next_location_message(current_message, location_messages);
 	}
+        
 	float xVel=xmemory->xVel;
 	float yVel=xmemory->yVel;
 	float zVel=xmemory->zVel;
-
 	float varPos=agent_position.x;
+
 	varPos+=(dt*xVel);
 	varPos+=(0.5*(agent_accn.x)*(dt*dt));
-	xmemory->x=varPos;
+	xmemory->x=varPos;		
 
 	varPos=agent_position.y;
 	varPos+=(dt*yVel);
@@ -91,15 +128,15 @@ __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_mes
 	varPos+=(0.5*(agent_accn.z)*(dt*dt));
 	xmemory->z=varPos;
 
-	//Velocities
+		//Velocities
 	xVel+=(agent_accn.x*dt);
 	yVel+=(agent_accn.y*dt);
-    zVel+=(agent_accn.z*dt);
+	zVel+=(agent_accn.z*dt);
 
 	xmemory->xVel=xVel;
 	xmemory->yVel=yVel;
 	xmemory->zVel=zVel;
-
+	//}
     return 0;
 }
 

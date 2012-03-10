@@ -37,8 +37,14 @@ GLuint sphereNormals;
 
 //Simulation output buffers/textures
 
-GLuint Particle_default_tbo;
-GLuint Particle_default_displacementTex;
+GLuint Particle_settingActive_tbo;
+GLuint Particle_settingActive_displacementTex;
+
+GLuint Particle_sendingData_tbo;
+GLuint Particle_sendingData_displacementTex;
+
+GLuint Particle_updatingPosition_tbo;
+GLuint Particle_updatingPosition_displacementTex;
 
 
 // mouse controls
@@ -193,7 +199,11 @@ void initVisualisation()
 	setVertexBufferData();
 
 	// create TBO
-	createTBO( &Particle_default_tbo, &Particle_default_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
+	createTBO( &Particle_settingActive_tbo, &Particle_settingActive_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
+	
+	createTBO( &Particle_sendingData_tbo, &Particle_sendingData_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
+	
+	createTBO( &Particle_updatingPosition_tbo, &Particle_updatingPosition_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
 	
 
 	//set shader uniforms
@@ -234,12 +244,12 @@ void runCuda()
 	float4 *dptr;
 
 	
-	if (get_agent_Particle_default_count() > 0)
+	if (get_agent_Particle_settingActive_count() > 0)
 	{
 		// map OpenGL buffer object for writing from CUDA
-		CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&dptr, Particle_default_tbo));
+		CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&dptr, Particle_settingActive_tbo));
 		//cuda block size
-		tile_size = (int) ceil((float)get_agent_Particle_default_count()/threads_per_tile);
+		tile_size = (int) ceil((float)get_agent_Particle_settingActive_count()/threads_per_tile);
 		grid = dim3(tile_size, 1, 1);
 		threads = dim3(threads_per_tile, 1, 1);
         
@@ -247,10 +257,48 @@ void runCuda()
         centralise = getMaximumBounds() + getMinimumBounds();
         centralise /= 2;
         
-		output_Particle_agent_to_VBO<<< grid, threads>>>(get_device_Particle_default_agents(), dptr, centralise);
+		output_Particle_agent_to_VBO<<< grid, threads>>>(get_device_Particle_settingActive_agents(), dptr, centralise);
 		CUT_CHECK_ERROR("Kernel execution failed");
 		// unmap buffer object
-		CUDA_SAFE_CALL(cudaGLUnmapBufferObject(Particle_default_tbo));
+		CUDA_SAFE_CALL(cudaGLUnmapBufferObject(Particle_settingActive_tbo));
+	}
+	
+	if (get_agent_Particle_sendingData_count() > 0)
+	{
+		// map OpenGL buffer object for writing from CUDA
+		CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&dptr, Particle_sendingData_tbo));
+		//cuda block size
+		tile_size = (int) ceil((float)get_agent_Particle_sendingData_count()/threads_per_tile);
+		grid = dim3(tile_size, 1, 1);
+		threads = dim3(threads_per_tile, 1, 1);
+        
+        //continuous variables  
+        centralise = getMaximumBounds() + getMinimumBounds();
+        centralise /= 2;
+        
+		output_Particle_agent_to_VBO<<< grid, threads>>>(get_device_Particle_sendingData_agents(), dptr, centralise);
+		CUT_CHECK_ERROR("Kernel execution failed");
+		// unmap buffer object
+		CUDA_SAFE_CALL(cudaGLUnmapBufferObject(Particle_sendingData_tbo));
+	}
+	
+	if (get_agent_Particle_updatingPosition_count() > 0)
+	{
+		// map OpenGL buffer object for writing from CUDA
+		CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&dptr, Particle_updatingPosition_tbo));
+		//cuda block size
+		tile_size = (int) ceil((float)get_agent_Particle_updatingPosition_count()/threads_per_tile);
+		grid = dim3(tile_size, 1, 1);
+		threads = dim3(threads_per_tile, 1, 1);
+        
+        //continuous variables  
+        centralise = getMaximumBounds() + getMinimumBounds();
+        centralise /= 2;
+        
+		output_Particle_agent_to_VBO<<< grid, threads>>>(get_device_Particle_updatingPosition_agents(), dptr, centralise);
+		CUT_CHECK_ERROR("Kernel execution failed");
+		// unmap buffer object
+		CUDA_SAFE_CALL(cudaGLUnmapBufferObject(Particle_updatingPosition_tbo));
 	}
 	
 }
@@ -506,11 +554,57 @@ void display()
 	glLightfv(GL_LIGHT0, GL_POSITION, LIGHT_POSITION);
 
 	
-	//Draw Particle Agents in default state
+	//Draw Particle Agents in settingActive state
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_BUFFER_EXT, Particle_default_displacementTex);
+	glBindTexture(GL_TEXTURE_BUFFER_EXT, Particle_settingActive_displacementTex);
 	//loop
-	for (int i=0; i< get_agent_Particle_default_count(); i++){
+	for (int i=0; i< get_agent_Particle_settingActive_count(); i++){
+		glVertexAttrib1f(vs_mapIndex, (float)i);
+		
+		//draw using vertex and attribute data on the gpu (fast)
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+
+		glBindBuffer(GL_ARRAY_BUFFER, sphereVerts);
+		glVertexPointer(3, GL_FLOAT, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, sphereNormals);
+		glNormalPointer(GL_FLOAT, 0, 0);
+
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, SPHERE_SLICES * (SPHERE_STACKS+1));
+
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	}
+	
+	//Draw Particle Agents in sendingData state
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_BUFFER_EXT, Particle_sendingData_displacementTex);
+	//loop
+	for (int i=0; i< get_agent_Particle_sendingData_count(); i++){
+		glVertexAttrib1f(vs_mapIndex, (float)i);
+		
+		//draw using vertex and attribute data on the gpu (fast)
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+
+		glBindBuffer(GL_ARRAY_BUFFER, sphereVerts);
+		glVertexPointer(3, GL_FLOAT, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, sphereNormals);
+		glNormalPointer(GL_FLOAT, 0, 0);
+
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, SPHERE_SLICES * (SPHERE_STACKS+1));
+
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	}
+	
+	//Draw Particle Agents in updatingPosition state
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_BUFFER_EXT, Particle_updatingPosition_displacementTex);
+	//loop
+	for (int i=0; i< get_agent_Particle_updatingPosition_count(); i++){
 		glVertexAttrib1f(vs_mapIndex, (float)i);
 		
 		//draw using vertex and attribute data on the gpu (fast)
@@ -563,7 +657,11 @@ void keyboard( unsigned char key, int /*x*/, int /*y*/)
         deleteVBO( &sphereVerts);
 		deleteVBO( &sphereNormals);
 		
-		deleteTBO( &Particle_default_tbo);
+		deleteTBO( &Particle_settingActive_tbo);
+		
+		deleteTBO( &Particle_sendingData_tbo);
+		
+		deleteTBO( &Particle_updatingPosition_tbo);
 		
         exit( 0);
     }

@@ -30,11 +30,13 @@ float3 agent_minimum;
 
 
     
-void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_Particle_list* h_Particles_default, xmachine_memory_Particle_list* d_Particles_default, int h_xmachine_memory_Particle_default_count)
+void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_Particle_list* h_Particles_settingActive, xmachine_memory_Particle_list* d_Particles_settingActive, int h_xmachine_memory_Particle_settingActive_count,xmachine_memory_Particle_list* h_Particles_sendingData, xmachine_memory_Particle_list* d_Particles_sendingData, int h_xmachine_memory_Particle_sendingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count)
 {
 	//Device to host memory transfer
 	
-	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_default, d_Particles_default, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_settingActive, d_Particles_settingActive, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_sendingData, d_Particles_sendingData, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_updatingPosition, d_Particles_updatingPosition, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
 	
 	/* Pointer to file */
 	FILE *file;
@@ -51,67 +53,216 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 	fputs("</environment>\n" , file);
 
 	//Write each Particle agent to xml
-	for (int i=0; i<h_xmachine_memory_Particle_default_count; i++){
+	for (int i=0; i<h_xmachine_memory_Particle_settingActive_count; i++){
 		fputs("<xagent>\n" , file);
 		fputs("<name>Particle</name>\n", file);
 		
 		fputs("<id>", file);
-		sprintf(data, "%i", h_Particles_default->id[i]);
+		sprintf(data, "%i", h_Particles_settingActive->id[i]);
 		fputs(data, file);
 		fputs("</id>\n", file);
 		
 		fputs("<mass>", file);
-		sprintf(data, "%f", h_Particles_default->mass[i]);
+		sprintf(data, "%f", h_Particles_settingActive->mass[i]);
 		fputs(data, file);
 		fputs("</mass>\n", file);
 		
 		fputs("<isDark>", file);
-		sprintf(data, "%i", h_Particles_default->isDark[i]);
+		sprintf(data, "%i", h_Particles_settingActive->isDark[i]);
 		fputs(data, file);
 		fputs("</isDark>\n", file);
 		
 		fputs("<x>", file);
-		sprintf(data, "%f", h_Particles_default->x[i]);
+		sprintf(data, "%f", h_Particles_settingActive->x[i]);
 		fputs(data, file);
 		fputs("</x>\n", file);
 		
 		fputs("<y>", file);
-		sprintf(data, "%f", h_Particles_default->y[i]);
+		sprintf(data, "%f", h_Particles_settingActive->y[i]);
 		fputs(data, file);
 		fputs("</y>\n", file);
 		
 		fputs("<z>", file);
-		sprintf(data, "%f", h_Particles_default->z[i]);
+		sprintf(data, "%f", h_Particles_settingActive->z[i]);
 		fputs(data, file);
 		fputs("</z>\n", file);
 		
 		fputs("<xVel>", file);
-		sprintf(data, "%f", h_Particles_default->xVel[i]);
+		sprintf(data, "%f", h_Particles_settingActive->xVel[i]);
 		fputs(data, file);
 		fputs("</xVel>\n", file);
 		
 		fputs("<yVel>", file);
-		sprintf(data, "%f", h_Particles_default->yVel[i]);
+		sprintf(data, "%f", h_Particles_settingActive->yVel[i]);
 		fputs(data, file);
 		fputs("</yVel>\n", file);
 		
 		fputs("<zVel>", file);
-		sprintf(data, "%f", h_Particles_default->zVel[i]);
+		sprintf(data, "%f", h_Particles_settingActive->zVel[i]);
 		fputs(data, file);
 		fputs("</zVel>\n", file);
 		
+		fputs("<isActive>", file);
+		sprintf(data, "%i", h_Particles_settingActive->isActive[i]);
+		fputs(data, file);
+		fputs("</isActive>\n", file);
+		
 		fputs("<debug1>", file);
-		sprintf(data, "%f", h_Particles_default->debug1[i]);
+		sprintf(data, "%f", h_Particles_settingActive->debug1[i]);
 		fputs(data, file);
 		fputs("</debug1>\n", file);
 		
 		fputs("<debug2>", file);
-		sprintf(data, "%f", h_Particles_default->debug2[i]);
+		sprintf(data, "%f", h_Particles_settingActive->debug2[i]);
 		fputs(data, file);
 		fputs("</debug2>\n", file);
 		
 		fputs("<debug3>", file);
-		sprintf(data, "%f", h_Particles_default->debug3[i]);
+		sprintf(data, "%f", h_Particles_settingActive->debug3[i]);
+		fputs(data, file);
+		fputs("</debug3>\n", file);
+		
+		fputs("</xagent>\n", file);
+	}
+	//Write each Particle agent to xml
+	for (int i=0; i<h_xmachine_memory_Particle_sendingData_count; i++){
+		fputs("<xagent>\n" , file);
+		fputs("<name>Particle</name>\n", file);
+		
+		fputs("<id>", file);
+		sprintf(data, "%i", h_Particles_sendingData->id[i]);
+		fputs(data, file);
+		fputs("</id>\n", file);
+		
+		fputs("<mass>", file);
+		sprintf(data, "%f", h_Particles_sendingData->mass[i]);
+		fputs(data, file);
+		fputs("</mass>\n", file);
+		
+		fputs("<isDark>", file);
+		sprintf(data, "%i", h_Particles_sendingData->isDark[i]);
+		fputs(data, file);
+		fputs("</isDark>\n", file);
+		
+		fputs("<x>", file);
+		sprintf(data, "%f", h_Particles_sendingData->x[i]);
+		fputs(data, file);
+		fputs("</x>\n", file);
+		
+		fputs("<y>", file);
+		sprintf(data, "%f", h_Particles_sendingData->y[i]);
+		fputs(data, file);
+		fputs("</y>\n", file);
+		
+		fputs("<z>", file);
+		sprintf(data, "%f", h_Particles_sendingData->z[i]);
+		fputs(data, file);
+		fputs("</z>\n", file);
+		
+		fputs("<xVel>", file);
+		sprintf(data, "%f", h_Particles_sendingData->xVel[i]);
+		fputs(data, file);
+		fputs("</xVel>\n", file);
+		
+		fputs("<yVel>", file);
+		sprintf(data, "%f", h_Particles_sendingData->yVel[i]);
+		fputs(data, file);
+		fputs("</yVel>\n", file);
+		
+		fputs("<zVel>", file);
+		sprintf(data, "%f", h_Particles_sendingData->zVel[i]);
+		fputs(data, file);
+		fputs("</zVel>\n", file);
+		
+		fputs("<isActive>", file);
+		sprintf(data, "%i", h_Particles_sendingData->isActive[i]);
+		fputs(data, file);
+		fputs("</isActive>\n", file);
+		
+		fputs("<debug1>", file);
+		sprintf(data, "%f", h_Particles_sendingData->debug1[i]);
+		fputs(data, file);
+		fputs("</debug1>\n", file);
+		
+		fputs("<debug2>", file);
+		sprintf(data, "%f", h_Particles_sendingData->debug2[i]);
+		fputs(data, file);
+		fputs("</debug2>\n", file);
+		
+		fputs("<debug3>", file);
+		sprintf(data, "%f", h_Particles_sendingData->debug3[i]);
+		fputs(data, file);
+		fputs("</debug3>\n", file);
+		
+		fputs("</xagent>\n", file);
+	}
+	//Write each Particle agent to xml
+	for (int i=0; i<h_xmachine_memory_Particle_updatingPosition_count; i++){
+		fputs("<xagent>\n" , file);
+		fputs("<name>Particle</name>\n", file);
+		
+		fputs("<id>", file);
+		sprintf(data, "%i", h_Particles_updatingPosition->id[i]);
+		fputs(data, file);
+		fputs("</id>\n", file);
+		
+		fputs("<mass>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->mass[i]);
+		fputs(data, file);
+		fputs("</mass>\n", file);
+		
+		fputs("<isDark>", file);
+		sprintf(data, "%i", h_Particles_updatingPosition->isDark[i]);
+		fputs(data, file);
+		fputs("</isDark>\n", file);
+		
+		fputs("<x>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->x[i]);
+		fputs(data, file);
+		fputs("</x>\n", file);
+		
+		fputs("<y>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->y[i]);
+		fputs(data, file);
+		fputs("</y>\n", file);
+		
+		fputs("<z>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->z[i]);
+		fputs(data, file);
+		fputs("</z>\n", file);
+		
+		fputs("<xVel>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->xVel[i]);
+		fputs(data, file);
+		fputs("</xVel>\n", file);
+		
+		fputs("<yVel>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->yVel[i]);
+		fputs(data, file);
+		fputs("</yVel>\n", file);
+		
+		fputs("<zVel>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->zVel[i]);
+		fputs(data, file);
+		fputs("</zVel>\n", file);
+		
+		fputs("<isActive>", file);
+		sprintf(data, "%i", h_Particles_updatingPosition->isActive[i]);
+		fputs(data, file);
+		fputs("</isActive>\n", file);
+		
+		fputs("<debug1>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->debug1[i]);
+		fputs(data, file);
+		fputs("</debug1>\n", file);
+		
+		fputs("<debug2>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->debug2[i]);
+		fputs(data, file);
+		fputs("</debug2>\n", file);
+		
+		fputs("<debug3>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->debug3[i]);
 		fputs(data, file);
 		fputs("</debug3>\n", file);
 		
@@ -153,6 +304,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	int in_Particle_xVel;
 	int in_Particle_yVel;
 	int in_Particle_zVel;
+	int in_Particle_isActive;
 	int in_Particle_debug1;
 	int in_Particle_debug2;
 	int in_Particle_debug3;
@@ -170,6 +322,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	float Particle_xVel;
 	float Particle_yVel;
 	float Particle_zVel;
+	int Particle_isActive;
 	float Particle_debug1;
 	float Particle_debug2;
 	float Particle_debug3;
@@ -202,6 +355,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	in_Particle_xVel = 0;
 	in_Particle_yVel = 0;
 	in_Particle_zVel = 0;
+	in_Particle_isActive = 0;
 	in_Particle_debug1 = 0;
 	in_Particle_debug2 = 0;
 	in_Particle_debug3 = 0;
@@ -218,6 +372,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 		h_Particles->xVel[k] = 0;
 		h_Particles->yVel[k] = 0;
 		h_Particles->zVel[k] = 0;
+		h_Particles->isActive[k] = 0;
 		h_Particles->debug1[k] = 0;
 		h_Particles->debug2[k] = 0;
 		h_Particles->debug3[k] = 0;
@@ -234,6 +389,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	Particle_xVel = 0;
 	Particle_yVel = 0;
 	Particle_zVel = 0;
+	Particle_isActive = 0;
 	Particle_debug1 = 0;
 	Particle_debug2 = 0;
 	Particle_debug3 = 0;
@@ -303,6 +459,8 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
                     
 					h_Particles->zVel[*h_xmachine_memory_Particle_count] = Particle_zVel;
                     
+					h_Particles->isActive[*h_xmachine_memory_Particle_count] = Particle_isActive;
+                    
 					h_Particles->debug1[*h_xmachine_memory_Particle_count] = Particle_debug1;
                     
 					h_Particles->debug2[*h_xmachine_memory_Particle_count] = Particle_debug2;
@@ -330,6 +488,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 				Particle_xVel = 0;
 				Particle_yVel = 0;
 				Particle_zVel = 0;
+				Particle_isActive = 0;
 				Particle_debug1 = 0;
 				Particle_debug2 = 0;
 				Particle_debug3 = 0;
@@ -352,6 +511,8 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 			if(strcmp(buffer, "/yVel") == 0) in_Particle_yVel = 0;
 			if(strcmp(buffer, "zVel") == 0) in_Particle_zVel = 1;
 			if(strcmp(buffer, "/zVel") == 0) in_Particle_zVel = 0;
+			if(strcmp(buffer, "isActive") == 0) in_Particle_isActive = 1;
+			if(strcmp(buffer, "/isActive") == 0) in_Particle_isActive = 0;
 			if(strcmp(buffer, "debug1") == 0) in_Particle_debug1 = 1;
 			if(strcmp(buffer, "/debug1") == 0) in_Particle_debug1 = 0;
 			if(strcmp(buffer, "debug2") == 0) in_Particle_debug2 = 1;
@@ -402,6 +563,9 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 				}
 				if(in_Particle_zVel){ 
 					Particle_zVel = (float) atof(buffer);
+				}
+				if(in_Particle_isActive){ 
+					Particle_isActive = (int) atoi(buffer);
 				}
 				if(in_Particle_debug1){ 
 					Particle_debug1 = (float) atof(buffer);

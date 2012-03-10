@@ -2,7 +2,7 @@
 <gpu:xmodel xmlns:gpu="http://www.dcs.shef.ac.uk/~paul/XMMLGPU"
         xmlns="http://www.dcs.shef.ac.uk/~paul/XMML">
   <name>Galaxy Formation</name>
-  <gpu:environment>
+  <gpu:environment> 
     <gpu:functionFiles>
       <file>functions.c</file>
     </gpu:functionFiles>
@@ -48,6 +48,10 @@
           <type>float</type>
           <name>zVel</name>
         </gpu:variable>
+        <gpu:variable><!--Make this bool-->
+          <type>int</type>
+          <name>isActive</name>
+        </gpu:variable>
         <gpu:variable>
           <type>float</type>
           <name>debug1</name>
@@ -62,23 +66,59 @@
         </gpu:variable>    
       </memory>
       <functions>
+
+        <gpu:function>
+          <name>setActive</name>
+          <currentState>settingActive</currentState>
+          <nextState>sendingData</nextState>
+          <gpu:reallocate>false</gpu:reallocate>
+          <gpu:RNG>false</gpu:RNG>
+        </gpu:function>
+        
         <gpu:function>
           <name>outputdata</name>
-          <currentState>default</currentState>
-          <nextState>default</nextState>
+          <currentState>sendingData</currentState>
+          <nextState>updatingPosition</nextState>
           <outputs>
             <gpu:output>
               <messageName>location</messageName>
               <gpu:type>single_message</gpu:type>
             </gpu:output>
           </outputs>
+          <condition>
+            <lhs>
+              <agentVariable>isActive</agentVariable>
+            </lhs>
+            <operator>&gt;</operator>
+            <rhs>
+              <value>0</value>
+            </rhs>
+          </condition>
           <gpu:reallocate>false</gpu:reallocate>
           <gpu:RNG>false</gpu:RNG>
         </gpu:function>
+
+        <gpu:function>
+          <name>notoutputdata</name>
+          <currentState>sendingData</currentState>
+          <nextState>settingActive</nextState>
+          <condition>
+            <lhs>
+              <agentVariable>isActive</agentVariable>
+            </lhs>
+            <operator>&lt;</operator>
+            <rhs>
+              <value>1</value>
+            </rhs>
+          </condition>
+          <gpu:reallocate>false</gpu:reallocate>
+          <gpu:RNG>false</gpu:RNG>
+        </gpu:function>
+        
         <gpu:function>
           <name>inputdata</name>
-          <currentState>default</currentState>
-          <nextState>default</nextState>
+          <currentState>updatingPosition</currentState>
+          <nextState>settingActive</nextState>
           <inputs>
             <gpu:input>
               <messageName>location</messageName>
@@ -88,16 +128,24 @@
           <gpu:RNG>false</gpu:RNG>
         </gpu:function>
       </functions>
+      
       <states>
         <gpu:state>
-          <name>default</name>
+          <name>settingActive</name>
         </gpu:state>
-        <initialState>default</initialState>
+        <gpu:state>
+          <name>sendingData</name>
+        </gpu:state>
+        <gpu:state>
+          <name>updatingPosition</name>
+        </gpu:state>
+        <initialState>settingActive</initialState>
       </states>
       <gpu:type>continuous</gpu:type>
       <gpu:bufferSize>65536</gpu:bufferSize>
     </gpu:xagent>
   </xagents>
+  
   <messages>
     <gpu:message>
       <name>location</name>
@@ -128,11 +176,22 @@
       <gpu:bufferSize>65536</gpu:bufferSize>
     </gpu:message>
   </messages>
+  
   <layers>
+    <layer>
+      <gpu:layerFunction>
+        <name>setActive</name>
+      </gpu:layerFunction>
+    </layer>
     <layer>
       <gpu:layerFunction>
         <name>outputdata</name>
       </gpu:layerFunction>
+      <gpu:layerFunction>
+        <name>notoutputdata</name>
+      </gpu:layerFunction>
+    </layer>
+    <layer>
       <gpu:layerFunction>
         <name>inputdata</name>
       </gpu:layerFunction>

@@ -42,9 +42,19 @@ uint * d_xmachine_memory_Particle_keys;	  /**< Agent sort identifiers keys*/
 uint * d_xmachine_memory_Particle_values;  /**< Agent sort identifiers value */
     
 /* Particle state variables */
-xmachine_memory_Particle_list* h_Particles_default;      /**< Pointer to agent list (population) on host*/
-xmachine_memory_Particle_list* d_Particles_default;      /**< Pointer to agent list (population) on the device*/
-int h_xmachine_memory_Particle_default_count;   /**< Agent population size counter */ 
+xmachine_memory_Particle_list* h_Particles_settingActive;      /**< Pointer to agent list (population) on host*/
+xmachine_memory_Particle_list* d_Particles_settingActive;      /**< Pointer to agent list (population) on the device*/
+int h_xmachine_memory_Particle_settingActive_count;   /**< Agent population size counter */ 
+
+/* Particle state variables */
+xmachine_memory_Particle_list* h_Particles_sendingData;      /**< Pointer to agent list (population) on host*/
+xmachine_memory_Particle_list* d_Particles_sendingData;      /**< Pointer to agent list (population) on the device*/
+int h_xmachine_memory_Particle_sendingData_count;   /**< Agent population size counter */ 
+
+/* Particle state variables */
+xmachine_memory_Particle_list* h_Particles_updatingPosition;      /**< Pointer to agent list (population) on host*/
+xmachine_memory_Particle_list* d_Particles_updatingPosition;      /**< Pointer to agent list (population) on the device*/
+int h_xmachine_memory_Particle_updatingPosition_count;   /**< Agent population size counter */ 
 
 
 /* Message Memory */
@@ -73,10 +83,20 @@ int radix_keybits = 32;
 
 /* Agent function prototypes */
 
+/** Particle_setActive
+ * Agent function prototype for setActive function of Particle agent
+ */
+void Particle_setActive();
+
 /** Particle_outputdata
  * Agent function prototype for outputdata function of Particle agent
  */
 void Particle_outputdata();
+
+/** Particle_notoutputdata
+ * Agent function prototype for notoutputdata function of Particle agent
+ */
+void Particle_notoutputdata();
 
 /** Particle_inputdata
  * Agent function prototype for inputdata function of Particle agent
@@ -165,7 +185,9 @@ void initialise(char * inputfile){
   
 	/* Agent memory allocation (CPU) */
 	int xmachine_Particle_SoA_size = sizeof(xmachine_memory_Particle_list);
-	h_Particles_default = (xmachine_memory_Particle_list*)malloc(xmachine_Particle_SoA_size);
+	h_Particles_settingActive = (xmachine_memory_Particle_list*)malloc(xmachine_Particle_SoA_size);
+	h_Particles_sendingData = (xmachine_memory_Particle_list*)malloc(xmachine_Particle_SoA_size);
+	h_Particles_updatingPosition = (xmachine_memory_Particle_list*)malloc(xmachine_Particle_SoA_size);
 
 	/* Message memory allocation (CPU) */
 	int message_location_SoA_size = sizeof(xmachine_message_location_list);
@@ -175,7 +197,7 @@ void initialise(char * inputfile){
 
 
 	//read initial states
-	readInitialStates(inputfile, h_Particles_default, &h_xmachine_memory_Particle_default_count);
+	readInitialStates(inputfile, h_Particles_settingActive, &h_xmachine_memory_Particle_settingActive_count);
 	
 	
 	/* Particle Agent memory allocation (GPU) */
@@ -185,9 +207,17 @@ void initialise(char * inputfile){
     //continuous agent sort identifiers
     CUDA_SAFE_CALL( cudaMalloc( (void**) &d_xmachine_memory_Particle_keys, xmachine_memory_Particle_MAX* sizeof(uint)));
 	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_xmachine_memory_Particle_values, xmachine_memory_Particle_MAX* sizeof(uint)));
-	/* default memory allocation (GPU) */
-	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Particles_default, xmachine_Particle_SoA_size));
-	CUDA_SAFE_CALL( cudaMemcpy( d_Particles_default, h_Particles_default, xmachine_Particle_SoA_size, cudaMemcpyHostToDevice));
+	/* settingActive memory allocation (GPU) */
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Particles_settingActive, xmachine_Particle_SoA_size));
+	CUDA_SAFE_CALL( cudaMemcpy( d_Particles_settingActive, h_Particles_settingActive, xmachine_Particle_SoA_size, cudaMemcpyHostToDevice));
+    
+	/* sendingData memory allocation (GPU) */
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Particles_sendingData, xmachine_Particle_SoA_size));
+	CUDA_SAFE_CALL( cudaMemcpy( d_Particles_sendingData, h_Particles_sendingData, xmachine_Particle_SoA_size, cudaMemcpyHostToDevice));
+    
+	/* updatingPosition memory allocation (GPU) */
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Particles_updatingPosition, xmachine_Particle_SoA_size));
+	CUDA_SAFE_CALL( cudaMemcpy( d_Particles_updatingPosition, h_Particles_updatingPosition, xmachine_Particle_SoA_size, cudaMemcpyHostToDevice));
     
 	/* location Message memory allocation (GPU) */
 	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_locations, message_location_SoA_size));
@@ -257,29 +287,81 @@ void initialise(char * inputfile){
 } 
 
 
-void sort_Particles_default(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents))
+void sort_Particles_settingActive(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents))
 {
 	dim3 grid;
 	dim3 threads;
-	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_default_count/THREADS_PER_TILE);
+	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_settingActive_count/THREADS_PER_TILE);
 	grid.x = tile_size;
 	threads.x = THREADS_PER_TILE;
 
 	//generate sort keys
-	generate_key_value_pairs<<<grid, threads>>>(d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, d_Particles_default);
+	generate_key_value_pairs<<<grid, threads>>>(d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, d_Particles_settingActive);
 	CUT_CHECK_ERROR("Kernel execution failed");
 	
 	//sort
-	cudppSort(cudpp_sortplan, d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, radix_keybits, h_xmachine_memory_Particle_default_count);
+	cudppSort(cudpp_sortplan, d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, radix_keybits, h_xmachine_memory_Particle_settingActive_count);
 	CUT_CHECK_ERROR("Kernel execution failed");
 
 	//reorder agents
-	reorder_Particle_agents<<<grid, threads>>>(d_xmachine_memory_Particle_values, d_Particles_default, d_Particles_swap);
+	reorder_Particle_agents<<<grid, threads>>>(d_xmachine_memory_Particle_values, d_Particles_settingActive, d_Particles_swap);
 	CUT_CHECK_ERROR("Kernel execution failed");
 
 	//swap
-	xmachine_memory_Particle_list* d_Particles_temp = d_Particles_default;
-	d_Particles_default = d_Particles_swap;
+	xmachine_memory_Particle_list* d_Particles_temp = d_Particles_settingActive;
+	d_Particles_settingActive = d_Particles_swap;
+	d_Particles_swap = d_Particles_temp;	
+}
+
+void sort_Particles_sendingData(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents))
+{
+	dim3 grid;
+	dim3 threads;
+	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_sendingData_count/THREADS_PER_TILE);
+	grid.x = tile_size;
+	threads.x = THREADS_PER_TILE;
+
+	//generate sort keys
+	generate_key_value_pairs<<<grid, threads>>>(d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, d_Particles_sendingData);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	
+	//sort
+	cudppSort(cudpp_sortplan, d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, radix_keybits, h_xmachine_memory_Particle_sendingData_count);
+	CUT_CHECK_ERROR("Kernel execution failed");
+
+	//reorder agents
+	reorder_Particle_agents<<<grid, threads>>>(d_xmachine_memory_Particle_values, d_Particles_sendingData, d_Particles_swap);
+	CUT_CHECK_ERROR("Kernel execution failed");
+
+	//swap
+	xmachine_memory_Particle_list* d_Particles_temp = d_Particles_sendingData;
+	d_Particles_sendingData = d_Particles_swap;
+	d_Particles_swap = d_Particles_temp;	
+}
+
+void sort_Particles_updatingPosition(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents))
+{
+	dim3 grid;
+	dim3 threads;
+	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_updatingPosition_count/THREADS_PER_TILE);
+	grid.x = tile_size;
+	threads.x = THREADS_PER_TILE;
+
+	//generate sort keys
+	generate_key_value_pairs<<<grid, threads>>>(d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, d_Particles_updatingPosition);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	
+	//sort
+	cudppSort(cudpp_sortplan, d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, radix_keybits, h_xmachine_memory_Particle_updatingPosition_count);
+	CUT_CHECK_ERROR("Kernel execution failed");
+
+	//reorder agents
+	reorder_Particle_agents<<<grid, threads>>>(d_xmachine_memory_Particle_values, d_Particles_updatingPosition, d_Particles_swap);
+	CUT_CHECK_ERROR("Kernel execution failed");
+
+	//swap
+	xmachine_memory_Particle_list* d_Particles_temp = d_Particles_updatingPosition;
+	d_Particles_updatingPosition = d_Particles_swap;
 	d_Particles_swap = d_Particles_temp;	
 }
 
@@ -293,8 +375,14 @@ void cleanup(){
 	CUDA_SAFE_CALL(cudaFree(d_Particles_swap));
 	CUDA_SAFE_CALL(cudaFree(d_Particles_new));
 	
-	free( h_Particles_default);
-	CUDA_SAFE_CALL(cudaFree(d_Particles_default));
+	free( h_Particles_settingActive);
+	CUDA_SAFE_CALL(cudaFree(d_Particles_settingActive));
+	
+	free( h_Particles_sendingData);
+	CUDA_SAFE_CALL(cudaFree(d_Particles_sendingData));
+	
+	free( h_Particles_updatingPosition);
+	CUDA_SAFE_CALL(cudaFree(d_Particles_updatingPosition));
 	
 
 	/* Message data free */
@@ -317,7 +405,13 @@ void singleIteration(){
 	/* Call agent functions in order itterating through the layer functions */
 	
 	/* Layer 1*/
+	Particle_setActive();
+	
+	/* Layer 2*/
 	Particle_outputdata();
+	Particle_notoutputdata();
+	
+	/* Layer 3*/
 	Particle_inputdata();
 	
 
@@ -338,23 +432,123 @@ int get_agent_Particle_MAX_count(){
 }
 
 
-int get_agent_Particle_default_count(){
+int get_agent_Particle_settingActive_count(){
 	//continuous agent
-	return h_xmachine_memory_Particle_default_count;
+	return h_xmachine_memory_Particle_settingActive_count;
 	
 }
 
-xmachine_memory_Particle_list* get_device_Particle_default_agents(){
-	return d_Particles_default;
+xmachine_memory_Particle_list* get_device_Particle_settingActive_agents(){
+	return d_Particles_settingActive;
 }
 
-xmachine_memory_Particle_list* get_host_Particle_default_agents(){
-	return h_Particles_default;
+xmachine_memory_Particle_list* get_host_Particle_settingActive_agents(){
+	return h_Particles_settingActive;
+}
+
+int get_agent_Particle_sendingData_count(){
+	//continuous agent
+	return h_xmachine_memory_Particle_sendingData_count;
+	
+}
+
+xmachine_memory_Particle_list* get_device_Particle_sendingData_agents(){
+	return d_Particles_sendingData;
+}
+
+xmachine_memory_Particle_list* get_host_Particle_sendingData_agents(){
+	return h_Particles_sendingData;
+}
+
+int get_agent_Particle_updatingPosition_count(){
+	//continuous agent
+	return h_xmachine_memory_Particle_updatingPosition_count;
+	
+}
+
+xmachine_memory_Particle_list* get_device_Particle_updatingPosition_agents(){
+	return d_Particles_updatingPosition;
+}
+
+xmachine_memory_Particle_list* get_host_Particle_updatingPosition_agents(){
+	return h_Particles_updatingPosition;
 }
 
 
 
 /* Agent functions */
+
+
+/** Particle_setActive
+ * Agent function prototype for setActive function of Particle agent
+ */
+void Particle_setActive(){
+	dim3 grid;
+	dim3 threads;
+	int sm_size;
+	
+	//CHECK THE CURRENT STATE LIST COUNT IS NOT EQUAL TO 0
+	
+	if (h_xmachine_memory_Particle_settingActive_count == 0)
+	{
+		return;
+	}
+	
+	
+	//SET GRID AND BLOCK SIZES
+	//set tile size depending on agent count, set a 1d grid and block
+	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_settingActive_count/THREADS_PER_TILE);
+	grid.x = tile_size;
+	threads.x = THREADS_PER_TILE;
+	sm_size = SM_START;
+
+	
+
+	//******************************** AGENT FUNCTION CONDITION *********************
+	//THERE IS NOT A FUNCTION CONDITION
+	//currentState maps to working list
+	xmachine_memory_Particle_list* Particles_settingActive_temp = d_Particles;
+	d_Particles = d_Particles_settingActive;
+	d_Particles_settingActive = Particles_settingActive_temp;
+	//set working count to current state count
+	h_xmachine_memory_Particle_count = h_xmachine_memory_Particle_settingActive_count;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_count, &h_xmachine_memory_Particle_count, sizeof(int)));	
+	//set current state count to 0
+	h_xmachine_memory_Particle_settingActive_count = 0;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_settingActive_count, &h_xmachine_memory_Particle_settingActive_count, sizeof(int)));	
+	
+
+	//******************************** AGENT FUNCTION *******************************
+
+	
+	
+	//MAIN XMACHINE FUNCTION CALL (setActive)
+	//Reallocate   : false
+	//Input        : 
+	//Output       : 
+	//Agent Output : 
+	GPUFLAME_setActive<<<grid, threads, sm_size>>>(d_Particles);
+	CUT_CHECK_ERROR("Kernel execution failed");
+    
+    
+	
+	//************************ MOVE AGENTS TO NEXT STATE ****************************
+    
+	//check the working agents wont exceed the buffer size in the new state list
+	if (h_xmachine_memory_Particle_sendingData_count+h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
+		printf("Error: Buffer size of setActive agents in state sendingData will be exceeded moving working agents to next state in function setActive\n");
+		exit(0);
+	}
+	//append agents to next state list
+	append_Particle_Agents<<<grid, threads>>>(d_Particles_sendingData, d_Particles, h_xmachine_memory_Particle_sendingData_count, h_xmachine_memory_Particle_count);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	//update new state agent size
+	h_xmachine_memory_Particle_sendingData_count += h_xmachine_memory_Particle_count;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_sendingData_count, &h_xmachine_memory_Particle_sendingData_count, sizeof(int)));	
+	
+	
+}
+
 
 
 /** Particle_outputdata
@@ -367,7 +561,7 @@ void Particle_outputdata(){
 	
 	//CHECK THE CURRENT STATE LIST COUNT IS NOT EQUAL TO 0
 	
-	if (h_xmachine_memory_Particle_default_count == 0)
+	if (h_xmachine_memory_Particle_sendingData_count == 0)
 	{
 		return;
 	}
@@ -375,7 +569,7 @@ void Particle_outputdata(){
 	
 	//SET GRID AND BLOCK SIZES
 	//set tile size depending on agent count, set a 1d grid and block
-	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_default_count/THREADS_PER_TILE);
+	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_sendingData_count/THREADS_PER_TILE);
 	grid.x = tile_size;
 	threads.x = THREADS_PER_TILE;
 	sm_size = SM_START;
@@ -383,17 +577,73 @@ void Particle_outputdata(){
 	
 
 	//******************************** AGENT FUNCTION CONDITION *********************
-	//THERE IS NOT A FUNCTION CONDITION
-	//currentState maps to working list
-	xmachine_memory_Particle_list* Particles_default_temp = d_Particles;
-	d_Particles = d_Particles_default;
-	d_Particles_default = Particles_default_temp;
-	//set working count to current state count
-	h_xmachine_memory_Particle_count = h_xmachine_memory_Particle_default_count;
+	//CONTINUOUS AGENT FUNCTION AND THERE IS A FUNCTION CONDITION
+  	
+	//COPY CURRENT STATE COUNT TO WORKING COUNT (host and device)
+	h_xmachine_memory_Particle_count = h_xmachine_memory_Particle_sendingData_count;
 	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_count, &h_xmachine_memory_Particle_count, sizeof(int)));	
-	//set current state count to 0
-	h_xmachine_memory_Particle_default_count = 0;
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_default_count, &h_xmachine_memory_Particle_default_count, sizeof(int)));	
+	
+	//RESET SCAN INPUTS
+	//reset scan input for currentState
+	reset_Particle_scan_input<<<grid, threads>>>(d_Particles_sendingData);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	//reset scan input for working lists
+	reset_Particle_scan_input<<<grid, threads>>>(d_Particles);
+	CUT_CHECK_ERROR("Kernel execution failed");
+
+	//APPLY FUNCTION FILTER
+	outputdata_function_filter<<<grid, threads>>>(d_Particles_sendingData, d_Particles);
+	CUT_CHECK_ERROR("Kernel execution failed");
+		
+	//COMPACT CURRENT STATE LIST
+	cudppScan(cudpp_scanplan, d_Particles_sendingData->_position, d_Particles_sendingData->_scan_input, h_xmachine_memory_Particle_count);
+	//reset agent count
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_sum, &d_Particles_sendingData->_position[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_included, &d_Particles_sendingData->_scan_input[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	if (cudpp_last_included == 1)
+		h_xmachine_memory_Particle_sendingData_count = cudpp_last_sum+1;
+	else		
+		h_xmachine_memory_Particle_sendingData_count = cudpp_last_sum;
+	//Scatter into swap
+	scatter_Particle_Agents<<<grid, threads>>>(d_Particles_swap, d_Particles_sendingData, 0, h_xmachine_memory_Particle_count);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	//use a temp pointer change working swap list with current state list
+	xmachine_memory_Particle_list* Particles_sendingData_temp = d_Particles_sendingData;
+	d_Particles_sendingData = d_Particles_swap;
+	d_Particles_swap = Particles_sendingData_temp;
+	//update the device count
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_sendingData_count, &h_xmachine_memory_Particle_sendingData_count, sizeof(int)));	
+		
+	//COMPACT WORKING STATE LIST
+	cudppScan(cudpp_scanplan, d_Particles->_position, d_Particles->_scan_input, h_xmachine_memory_Particle_count);
+	//reset agent count
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_sum, &d_Particles->_position[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_included, &d_Particles->_scan_input[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	//Scatter into swap
+	scatter_Particle_Agents<<<grid, threads>>>(d_Particles_swap, d_Particles, 0, h_xmachine_memory_Particle_count);
+    CUT_CHECK_ERROR("Kernel execution failed");
+	//update working agent count after the scatter
+    if (cudpp_last_included == 1)
+		h_xmachine_memory_Particle_count = cudpp_last_sum+1;
+	else		
+		h_xmachine_memory_Particle_count = cudpp_last_sum;
+    //use a temp pointer change working swap list with current state list
+	xmachine_memory_Particle_list* Particles_temp = d_Particles;
+	d_Particles = d_Particles_swap;
+	d_Particles_swap = Particles_temp;
+	//update the device count
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_count, &h_xmachine_memory_Particle_count, sizeof(int)));	
+	
+	//CHECK WORKING LIST COUNT IS NOT EQUAL TO 0
+	if (h_xmachine_memory_Particle_count == 0)
+	{
+		return;
+	}
+	
+	//Update the grid and block size for the working list size of continuous agent
+	tile_size = (int)ceil((float)h_xmachine_memory_Particle_count/THREADS_PER_TILE);
+	grid.x = tile_size;
+	threads.x = THREADS_PER_TILE;
 	
 
 	//******************************** AGENT FUNCTION *******************************
@@ -431,16 +681,144 @@ void Particle_outputdata(){
 	//************************ MOVE AGENTS TO NEXT STATE ****************************
     
 	//check the working agents wont exceed the buffer size in the new state list
-	if (h_xmachine_memory_Particle_default_count+h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
-		printf("Error: Buffer size of outputdata agents in state default will be exceeded moving working agents to next state in function outputdata\n");
+	if (h_xmachine_memory_Particle_updatingPosition_count+h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
+		printf("Error: Buffer size of outputdata agents in state updatingPosition will be exceeded moving working agents to next state in function outputdata\n");
 		exit(0);
 	}
 	//append agents to next state list
-	append_Particle_Agents<<<grid, threads>>>(d_Particles_default, d_Particles, h_xmachine_memory_Particle_default_count, h_xmachine_memory_Particle_count);
+	append_Particle_Agents<<<grid, threads>>>(d_Particles_updatingPosition, d_Particles, h_xmachine_memory_Particle_updatingPosition_count, h_xmachine_memory_Particle_count);
 	CUT_CHECK_ERROR("Kernel execution failed");
 	//update new state agent size
-	h_xmachine_memory_Particle_default_count += h_xmachine_memory_Particle_count;
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_default_count, &h_xmachine_memory_Particle_default_count, sizeof(int)));	
+	h_xmachine_memory_Particle_updatingPosition_count += h_xmachine_memory_Particle_count;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_updatingPosition_count, &h_xmachine_memory_Particle_updatingPosition_count, sizeof(int)));	
+	
+	
+}
+
+
+
+/** Particle_notoutputdata
+ * Agent function prototype for notoutputdata function of Particle agent
+ */
+void Particle_notoutputdata(){
+	dim3 grid;
+	dim3 threads;
+	int sm_size;
+	
+	//CHECK THE CURRENT STATE LIST COUNT IS NOT EQUAL TO 0
+	
+	if (h_xmachine_memory_Particle_sendingData_count == 0)
+	{
+		return;
+	}
+	
+	
+	//SET GRID AND BLOCK SIZES
+	//set tile size depending on agent count, set a 1d grid and block
+	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_sendingData_count/THREADS_PER_TILE);
+	grid.x = tile_size;
+	threads.x = THREADS_PER_TILE;
+	sm_size = SM_START;
+
+	
+
+	//******************************** AGENT FUNCTION CONDITION *********************
+	//CONTINUOUS AGENT FUNCTION AND THERE IS A FUNCTION CONDITION
+  	
+	//COPY CURRENT STATE COUNT TO WORKING COUNT (host and device)
+	h_xmachine_memory_Particle_count = h_xmachine_memory_Particle_sendingData_count;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_count, &h_xmachine_memory_Particle_count, sizeof(int)));	
+	
+	//RESET SCAN INPUTS
+	//reset scan input for currentState
+	reset_Particle_scan_input<<<grid, threads>>>(d_Particles_sendingData);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	//reset scan input for working lists
+	reset_Particle_scan_input<<<grid, threads>>>(d_Particles);
+	CUT_CHECK_ERROR("Kernel execution failed");
+
+	//APPLY FUNCTION FILTER
+	notoutputdata_function_filter<<<grid, threads>>>(d_Particles_sendingData, d_Particles);
+	CUT_CHECK_ERROR("Kernel execution failed");
+		
+	//COMPACT CURRENT STATE LIST
+	cudppScan(cudpp_scanplan, d_Particles_sendingData->_position, d_Particles_sendingData->_scan_input, h_xmachine_memory_Particle_count);
+	//reset agent count
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_sum, &d_Particles_sendingData->_position[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_included, &d_Particles_sendingData->_scan_input[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	if (cudpp_last_included == 1)
+		h_xmachine_memory_Particle_sendingData_count = cudpp_last_sum+1;
+	else		
+		h_xmachine_memory_Particle_sendingData_count = cudpp_last_sum;
+	//Scatter into swap
+	scatter_Particle_Agents<<<grid, threads>>>(d_Particles_swap, d_Particles_sendingData, 0, h_xmachine_memory_Particle_count);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	//use a temp pointer change working swap list with current state list
+	xmachine_memory_Particle_list* Particles_sendingData_temp = d_Particles_sendingData;
+	d_Particles_sendingData = d_Particles_swap;
+	d_Particles_swap = Particles_sendingData_temp;
+	//update the device count
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_sendingData_count, &h_xmachine_memory_Particle_sendingData_count, sizeof(int)));	
+		
+	//COMPACT WORKING STATE LIST
+	cudppScan(cudpp_scanplan, d_Particles->_position, d_Particles->_scan_input, h_xmachine_memory_Particle_count);
+	//reset agent count
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_sum, &d_Particles->_position[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_included, &d_Particles->_scan_input[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	//Scatter into swap
+	scatter_Particle_Agents<<<grid, threads>>>(d_Particles_swap, d_Particles, 0, h_xmachine_memory_Particle_count);
+    CUT_CHECK_ERROR("Kernel execution failed");
+	//update working agent count after the scatter
+    if (cudpp_last_included == 1)
+		h_xmachine_memory_Particle_count = cudpp_last_sum+1;
+	else		
+		h_xmachine_memory_Particle_count = cudpp_last_sum;
+    //use a temp pointer change working swap list with current state list
+	xmachine_memory_Particle_list* Particles_temp = d_Particles;
+	d_Particles = d_Particles_swap;
+	d_Particles_swap = Particles_temp;
+	//update the device count
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_count, &h_xmachine_memory_Particle_count, sizeof(int)));	
+	
+	//CHECK WORKING LIST COUNT IS NOT EQUAL TO 0
+	if (h_xmachine_memory_Particle_count == 0)
+	{
+		return;
+	}
+	
+	//Update the grid and block size for the working list size of continuous agent
+	tile_size = (int)ceil((float)h_xmachine_memory_Particle_count/THREADS_PER_TILE);
+	grid.x = tile_size;
+	threads.x = THREADS_PER_TILE;
+	
+
+	//******************************** AGENT FUNCTION *******************************
+
+	
+	
+	//MAIN XMACHINE FUNCTION CALL (notoutputdata)
+	//Reallocate   : false
+	//Input        : 
+	//Output       : 
+	//Agent Output : 
+	GPUFLAME_notoutputdata<<<grid, threads, sm_size>>>(d_Particles);
+	CUT_CHECK_ERROR("Kernel execution failed");
+    
+    
+	
+	//************************ MOVE AGENTS TO NEXT STATE ****************************
+    
+	//check the working agents wont exceed the buffer size in the new state list
+	if (h_xmachine_memory_Particle_settingActive_count+h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
+		printf("Error: Buffer size of notoutputdata agents in state settingActive will be exceeded moving working agents to next state in function notoutputdata\n");
+		exit(0);
+	}
+	//append agents to next state list
+	append_Particle_Agents<<<grid, threads>>>(d_Particles_settingActive, d_Particles, h_xmachine_memory_Particle_settingActive_count, h_xmachine_memory_Particle_count);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	//update new state agent size
+	h_xmachine_memory_Particle_settingActive_count += h_xmachine_memory_Particle_count;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_settingActive_count, &h_xmachine_memory_Particle_settingActive_count, sizeof(int)));	
 	
 	
 }
@@ -457,7 +835,7 @@ void Particle_inputdata(){
 	
 	//CHECK THE CURRENT STATE LIST COUNT IS NOT EQUAL TO 0
 	
-	if (h_xmachine_memory_Particle_default_count == 0)
+	if (h_xmachine_memory_Particle_updatingPosition_count == 0)
 	{
 		return;
 	}
@@ -465,7 +843,7 @@ void Particle_inputdata(){
 	
 	//SET GRID AND BLOCK SIZES
 	//set tile size depending on agent count, set a 1d grid and block
-	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_default_count/THREADS_PER_TILE);
+	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_updatingPosition_count/THREADS_PER_TILE);
 	grid.x = tile_size;
 	threads.x = THREADS_PER_TILE;
 	sm_size = SM_START;
@@ -475,15 +853,15 @@ void Particle_inputdata(){
 	//******************************** AGENT FUNCTION CONDITION *********************
 	//THERE IS NOT A FUNCTION CONDITION
 	//currentState maps to working list
-	xmachine_memory_Particle_list* Particles_default_temp = d_Particles;
-	d_Particles = d_Particles_default;
-	d_Particles_default = Particles_default_temp;
+	xmachine_memory_Particle_list* Particles_updatingPosition_temp = d_Particles;
+	d_Particles = d_Particles_updatingPosition;
+	d_Particles_updatingPosition = Particles_updatingPosition_temp;
 	//set working count to current state count
-	h_xmachine_memory_Particle_count = h_xmachine_memory_Particle_default_count;
+	h_xmachine_memory_Particle_count = h_xmachine_memory_Particle_updatingPosition_count;
 	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_count, &h_xmachine_memory_Particle_count, sizeof(int)));	
 	//set current state count to 0
-	h_xmachine_memory_Particle_default_count = 0;
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_default_count, &h_xmachine_memory_Particle_default_count, sizeof(int)));	
+	h_xmachine_memory_Particle_updatingPosition_count = 0;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_updatingPosition_count, &h_xmachine_memory_Particle_updatingPosition_count, sizeof(int)));	
 	
 
 	//******************************** AGENT FUNCTION *******************************
@@ -514,16 +892,16 @@ void Particle_inputdata(){
 	//************************ MOVE AGENTS TO NEXT STATE ****************************
     
 	//check the working agents wont exceed the buffer size in the new state list
-	if (h_xmachine_memory_Particle_default_count+h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
-		printf("Error: Buffer size of inputdata agents in state default will be exceeded moving working agents to next state in function inputdata\n");
+	if (h_xmachine_memory_Particle_settingActive_count+h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
+		printf("Error: Buffer size of inputdata agents in state settingActive will be exceeded moving working agents to next state in function inputdata\n");
 		exit(0);
 	}
 	//append agents to next state list
-	append_Particle_Agents<<<grid, threads>>>(d_Particles_default, d_Particles, h_xmachine_memory_Particle_default_count, h_xmachine_memory_Particle_count);
+	append_Particle_Agents<<<grid, threads>>>(d_Particles_settingActive, d_Particles, h_xmachine_memory_Particle_settingActive_count, h_xmachine_memory_Particle_count);
 	CUT_CHECK_ERROR("Kernel execution failed");
 	//update new state agent size
-	h_xmachine_memory_Particle_default_count += h_xmachine_memory_Particle_count;
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_default_count, &h_xmachine_memory_Particle_default_count, sizeof(int)));	
+	h_xmachine_memory_Particle_settingActive_count += h_xmachine_memory_Particle_count;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_settingActive_count, &h_xmachine_memory_Particle_settingActive_count, sizeof(int)));	
 	
 	
 }

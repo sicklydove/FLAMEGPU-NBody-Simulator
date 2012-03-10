@@ -17,6 +17,12 @@ class  ParticleAgent:
     self.isDark=isDark
 
   def  writeAgent(self):
+    rand = random.random()
+    if (rand>0.5):
+      rand = 1
+    else:
+      rand=0
+
     outStr=""
     outStr+='<xagent>'
     outStr+='<name>Particle</name>'
@@ -44,6 +50,9 @@ class  ParticleAgent:
     outStr+='<zVel>'
     outStr+=str(self.zVel)
     outStr+='</zVel>'
+    outStr+='<isActive>'
+    outStr+=str(rand)
+    outStr+='</isActive>'
     outStr+='</xagent>\r\n'
     return  outStr
 
