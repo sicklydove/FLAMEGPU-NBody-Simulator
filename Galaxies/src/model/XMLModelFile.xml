@@ -2,12 +2,73 @@
 <gpu:xmodel xmlns:gpu="http://www.dcs.shef.ac.uk/~paul/XMMLGPU"
         xmlns="http://www.dcs.shef.ac.uk/~paul/XMML">
   <name>Galaxy Formation</name>
-  <gpu:environment> 
+  <gpu:environment>
+    <gpu:constants>
+      <gpu:variable>
+        <type>float</type>
+        <name>DELTA_T</name>
+      </gpu:variable>
+      <gpu:variable>
+        <type>float</type>
+        <name>GRAV_CONST</name>
+      </gpu:variable>
+      <gpu:variable>
+        <type>float</type>
+        <name>VELOCITY_DAMP</name>
+      </gpu:variable>
+      <gpu:variable>
+        <type>float</type>
+        <name>MIN_INTERRACTION_RAD</name>
+      </gpu:variable>
+      <gpu:variable>
+        <type>int</type>
+        <name>NUM_PARTITIONS</name>
+      </gpu:variable>
+    </gpu:constants>
     <gpu:functionFiles>
       <file>functions.c</file>
     </gpu:functionFiles>
+    <gpu:initFunctions>
+      <gpu:initFunction>
+        <gpu:name>initConstants</gpu:name>
+      </gpu:initFunction>
+    </gpu:initFunctions>
   </gpu:environment>
+  
   <xagents>
+    <gpu:xagent>
+      <name>simulationVarsAgent</name>
+      <memory>
+        <gpu:variable>
+          <type>int</type>
+          <name>itNum</name>
+          <defaultValue>0</defaultValue>
+        </gpu:variable>
+      </memory>
+      <functions>
+        <gpu:function>
+          <name>increaseIterationNum</name>
+          <currentState>default</currentState>
+          <nextState>default</nextState>
+          <outputs>
+            <gpu:output>
+              <messageName>itNumMessage</messageName>
+              <gpu:type>single_message</gpu:type>
+            </gpu:output>
+          </outputs>
+          <gpu:reallocate>false</gpu:reallocate>
+        </gpu:function>
+      </functions>
+      <states>
+        <gpu:state>
+          <name>default</name>
+        </gpu:state>
+        <initialState>default</initialState>
+      </states>
+      <gpu:type>continuous</gpu:type>
+      <gpu:bufferSize>1</gpu:bufferSize>
+    </gpu:xagent>
+    
     <gpu:xagent>
       <name>Particle</name>
       <description>Simple particle</description>
@@ -48,9 +109,13 @@
           <type>float</type>
           <name>zVel</name>
         </gpu:variable>
-        <gpu:variable><!--Make this bool-->
+        <gpu:variable>
           <type>int</type>
           <name>isActive</name>
+        </gpu:variable>
+        <gpu:variable>
+          <type>int</type>
+          <name>initialOffset</name>
         </gpu:variable>
         <gpu:variable>
           <type>float</type>
@@ -71,6 +136,11 @@
           <name>setActive</name>
           <currentState>settingActive</currentState>
           <nextState>sendingData</nextState>
+          <inputs>
+            <gpu:input>
+              <messageName>itNumMessage</messageName>
+            </gpu:input>
+          </inputs>
           <gpu:reallocate>false</gpu:reallocate>
           <gpu:RNG>false</gpu:RNG>
         </gpu:function>
@@ -142,7 +212,7 @@
         <initialState>settingActive</initialState>
       </states>
       <gpu:type>continuous</gpu:type>
-      <gpu:bufferSize>65536</gpu:bufferSize>
+      <gpu:bufferSize>32768</gpu:bufferSize>
     </gpu:xagent>
   </xagents>
   
@@ -151,10 +221,6 @@
       <name>location</name>
       <description>A message holding agent location and mass</description>
       <variables>
-        <gpu:variable>
-          <type>int</type>
-          <name>id</name>
-        </gpu:variable>
         <gpu:variable>
           <type>float</type>
           <name>mass</name>
@@ -175,9 +241,27 @@
       <gpu:partitioningNone/>
       <gpu:bufferSize>65536</gpu:bufferSize>
     </gpu:message>
+
+    <gpu:message>
+      <name>itNumMessage</name>
+      <description>The current simulation iteration</description>
+      <variables>
+        <gpu:variable>
+          <type>int</type>
+          <name>itNum</name>
+        </gpu:variable>
+      </variables>
+      <gpu:partitioningNone/>
+      <gpu:bufferSize>1</gpu:bufferSize>
+    </gpu:message>
   </messages>
   
   <layers>
+    <layer>
+      <gpu:layerFunction>
+        <name>increaseIterationNum</name>
+      </gpu:layerFunction>
+    </layer>
     <layer>
       <gpu:layerFunction>
         <name>setActive</name>

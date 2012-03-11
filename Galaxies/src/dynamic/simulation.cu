@@ -33,6 +33,19 @@ int PADDING;
 
 /* Agent Memory */
 
+/* simulationVarsAgent Agent variables these lists are used in the agent function where as the other lists are used only outside the agent functions*/
+xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents;      /**< Pointer to agent list (population) on the device*/
+xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_swap; /**< Pointer to agent list swap on the device (used when killing agents)*/
+xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_new;  /**< Pointer to new agent list on the device (used to hold new agents bfore they are appended to the population)*/
+int h_xmachine_memory_simulationVarsAgent_count;   /**< Agent population size counter */ 
+uint * d_xmachine_memory_simulationVarsAgent_keys;	  /**< Agent sort identifiers keys*/
+uint * d_xmachine_memory_simulationVarsAgent_values;  /**< Agent sort identifiers value */
+    
+/* simulationVarsAgent state variables */
+xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default;      /**< Pointer to agent list (population) on host*/
+xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default;      /**< Pointer to agent list (population) on the device*/
+int h_xmachine_memory_simulationVarsAgent_default_count;   /**< Agent population size counter */ 
+
 /* Particle Agent variables these lists are used in the agent function where as the other lists are used only outside the agent functions*/
 xmachine_memory_Particle_list* d_Particles;      /**< Pointer to agent list (population) on the device*/
 xmachine_memory_Particle_list* d_Particles_swap; /**< Pointer to agent list swap on the device (used when killing agents)*/
@@ -67,6 +80,14 @@ xmachine_message_location_list* d_locations_swap;    /**< Pointer to message swa
 int h_message_location_count;         /**< message list counter*/
 int h_message_location_output_type;   /**< message output type (single or optional)*/
 
+/* itNumMessage Message variables */
+xmachine_message_itNumMessage_list* h_itNumMessages;         /**< Pointer to message list on host*/
+xmachine_message_itNumMessage_list* d_itNumMessages;         /**< Pointer to message list on device*/
+xmachine_message_itNumMessage_list* d_itNumMessages_swap;    /**< Pointer to message swap list on device (used for holding optional messages)*/
+/* Non partitioned and spatial partitioned message variables  */
+int h_message_itNumMessage_count;         /**< message list counter*/
+int h_message_itNumMessage_output_type;   /**< message output type (single or optional)*/
+
 
 /*Global condition counts*/
 
@@ -82,6 +103,11 @@ int cudpp_last_included;      /**< Indicates if last sum value is included in th
 int radix_keybits = 32;
 
 /* Agent function prototypes */
+
+/** simulationVarsAgent_increaseIterationNum
+ * Agent function prototype for increaseIterationNum function of simulationVarsAgent agent
+ */
+void simulationVarsAgent_increaseIterationNum();
 
 /** Particle_setActive
  * Agent function prototype for setActive function of Particle agent
@@ -184,6 +210,8 @@ void initialise(char * inputfile){
 	printf("Allocating Host and Device memeory\n");
   
 	/* Agent memory allocation (CPU) */
+	int xmachine_simulationVarsAgent_SoA_size = sizeof(xmachine_memory_simulationVarsAgent_list);
+	h_simulationVarsAgents_default = (xmachine_memory_simulationVarsAgent_list*)malloc(xmachine_simulationVarsAgent_SoA_size);
 	int xmachine_Particle_SoA_size = sizeof(xmachine_memory_Particle_list);
 	h_Particles_settingActive = (xmachine_memory_Particle_list*)malloc(xmachine_Particle_SoA_size);
 	h_Particles_sendingData = (xmachine_memory_Particle_list*)malloc(xmachine_Particle_SoA_size);
@@ -192,14 +220,27 @@ void initialise(char * inputfile){
 	/* Message memory allocation (CPU) */
 	int message_location_SoA_size = sizeof(xmachine_message_location_list);
 	h_locations = (xmachine_message_location_list*)malloc(message_location_SoA_size);
+	int message_itNumMessage_SoA_size = sizeof(xmachine_message_itNumMessage_list);
+	h_itNumMessages = (xmachine_message_itNumMessage_list*)malloc(message_itNumMessage_SoA_size);
 
     //Exit if agent or message buffer sizes are to small for function outpus
 
 
 	//read initial states
-	readInitialStates(inputfile, h_Particles_settingActive, &h_xmachine_memory_Particle_settingActive_count);
+	readInitialStates(inputfile, h_simulationVarsAgents_default, &h_xmachine_memory_simulationVarsAgent_default_count, h_Particles_settingActive, &h_xmachine_memory_Particle_settingActive_count);
 	
 	
+	/* simulationVarsAgent Agent memory allocation (GPU) */
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_simulationVarsAgents, xmachine_simulationVarsAgent_SoA_size));
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_simulationVarsAgents_swap, xmachine_simulationVarsAgent_SoA_size));
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_simulationVarsAgents_new, xmachine_simulationVarsAgent_SoA_size));
+    //continuous agent sort identifiers
+    CUDA_SAFE_CALL( cudaMalloc( (void**) &d_xmachine_memory_simulationVarsAgent_keys, xmachine_memory_simulationVarsAgent_MAX* sizeof(uint)));
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_xmachine_memory_simulationVarsAgent_values, xmachine_memory_simulationVarsAgent_MAX* sizeof(uint)));
+	/* default memory allocation (GPU) */
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_simulationVarsAgents_default, xmachine_simulationVarsAgent_SoA_size));
+	CUDA_SAFE_CALL( cudaMemcpy( d_simulationVarsAgents_default, h_simulationVarsAgents_default, xmachine_simulationVarsAgent_SoA_size, cudaMemcpyHostToDevice));
+    
 	/* Particle Agent memory allocation (GPU) */
 	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Particles, xmachine_Particle_SoA_size));
 	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Particles_swap, xmachine_Particle_SoA_size));
@@ -223,6 +264,11 @@ void initialise(char * inputfile){
 	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_locations, message_location_SoA_size));
 	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_locations_swap, message_location_SoA_size));
 	CUDA_SAFE_CALL( cudaMemcpy( d_locations, h_locations, message_location_SoA_size, cudaMemcpyHostToDevice));
+	
+	/* itNumMessage Message memory allocation (GPU) */
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_itNumMessages, message_itNumMessage_SoA_size));
+	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_itNumMessages_swap, message_itNumMessage_SoA_size));
+	CUDA_SAFE_CALL( cudaMemcpy( d_itNumMessages, h_itNumMessages, message_itNumMessage_SoA_size, cudaMemcpyHostToDevice));
 		
 
 	/*Set global condition counts*/
@@ -283,9 +329,36 @@ void initialise(char * inputfile){
 	CUDA_SAFE_CALL( cudaMemcpy( d_rand48, h_rand48, h_rand48_SoA_size, cudaMemcpyHostToDevice));
 
 	/* Call all init functions */
+	initConstants();
 	
 } 
 
+
+void sort_simulationVarsAgents_default(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_simulationVarsAgent_list* agents))
+{
+	dim3 grid;
+	dim3 threads;
+	int tile_size = (int)ceil((float)h_xmachine_memory_simulationVarsAgent_default_count/THREADS_PER_TILE);
+	grid.x = tile_size;
+	threads.x = THREADS_PER_TILE;
+
+	//generate sort keys
+	generate_key_value_pairs<<<grid, threads>>>(d_xmachine_memory_simulationVarsAgent_keys, d_xmachine_memory_simulationVarsAgent_values, d_simulationVarsAgents_default);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	
+	//sort
+	cudppSort(cudpp_sortplan, d_xmachine_memory_simulationVarsAgent_keys, d_xmachine_memory_simulationVarsAgent_values, radix_keybits, h_xmachine_memory_simulationVarsAgent_default_count);
+	CUT_CHECK_ERROR("Kernel execution failed");
+
+	//reorder agents
+	reorder_simulationVarsAgent_agents<<<grid, threads>>>(d_xmachine_memory_simulationVarsAgent_values, d_simulationVarsAgents_default, d_simulationVarsAgents_swap);
+	CUT_CHECK_ERROR("Kernel execution failed");
+
+	//swap
+	xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_temp = d_simulationVarsAgents_default;
+	d_simulationVarsAgents_default = d_simulationVarsAgents_swap;
+	d_simulationVarsAgents_swap = d_simulationVarsAgents_temp;	
+}
 
 void sort_Particles_settingActive(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents))
 {
@@ -370,6 +443,14 @@ void cleanup(){
 
 	/* Agent data free*/
 	
+	/* simulationVarsAgent Agent variables */
+	CUDA_SAFE_CALL(cudaFree(d_simulationVarsAgents));
+	CUDA_SAFE_CALL(cudaFree(d_simulationVarsAgents_swap));
+	CUDA_SAFE_CALL(cudaFree(d_simulationVarsAgents_new));
+	
+	free( h_simulationVarsAgents_default);
+	CUDA_SAFE_CALL(cudaFree(d_simulationVarsAgents_default));
+	
 	/* Particle Agent variables */
 	CUDA_SAFE_CALL(cudaFree(d_Particles));
 	CUDA_SAFE_CALL(cudaFree(d_Particles_swap));
@@ -392,6 +473,11 @@ void cleanup(){
 	CUDA_SAFE_CALL(cudaFree(d_locations));
 	CUDA_SAFE_CALL(cudaFree(d_locations_swap));
 	
+	/* itNumMessage Message variables */
+	free( h_itNumMessages);
+	CUDA_SAFE_CALL(cudaFree(d_itNumMessages));
+	CUDA_SAFE_CALL(cudaFree(d_itNumMessages_swap));
+	
 }
 
 void singleIteration(){
@@ -401,17 +487,24 @@ void singleIteration(){
 	//upload to device constant
 	CUDA_SAFE_CALL(cudaMemcpyToSymbol( d_message_location_count, &h_message_location_count, sizeof(int)));
 	
+	h_message_itNumMessage_count = 0;
+	//upload to device constant
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol( d_message_itNumMessage_count, &h_message_itNumMessage_count, sizeof(int)));
+	
 
 	/* Call agent functions in order itterating through the layer functions */
 	
 	/* Layer 1*/
-	Particle_setActive();
+	simulationVarsAgent_increaseIterationNum();
 	
 	/* Layer 2*/
+	Particle_setActive();
+	
+	/* Layer 3*/
 	Particle_outputdata();
 	Particle_notoutputdata();
 	
-	/* Layer 3*/
+	/* Layer 4*/
 	Particle_inputdata();
 	
 
@@ -423,8 +516,48 @@ void singleIteration(){
 /* Environment functions */
 
 
+void set_DELTA_T(float* h_DELTA_T){
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(DELTA_T, h_DELTA_T, sizeof(float)));
+}
+
+void set_GRAV_CONST(float* h_GRAV_CONST){
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(GRAV_CONST, h_GRAV_CONST, sizeof(float)));
+}
+
+void set_VELOCITY_DAMP(float* h_VELOCITY_DAMP){
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(VELOCITY_DAMP, h_VELOCITY_DAMP, sizeof(float)));
+}
+
+void set_MIN_INTERRACTION_RAD(float* h_MIN_INTERRACTION_RAD){
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(MIN_INTERRACTION_RAD, h_MIN_INTERRACTION_RAD, sizeof(float)));
+}
+
+void set_NUM_PARTITIONS(int* h_NUM_PARTITIONS){
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(NUM_PARTITIONS, h_NUM_PARTITIONS, sizeof(int)));
+}
+
 
 /* Agent data access functions*/
+
+    
+int get_agent_simulationVarsAgent_MAX_count(){
+    return xmachine_memory_simulationVarsAgent_MAX;
+}
+
+
+int get_agent_simulationVarsAgent_default_count(){
+	//continuous agent
+	return h_xmachine_memory_simulationVarsAgent_default_count;
+	
+}
+
+xmachine_memory_simulationVarsAgent_list* get_device_simulationVarsAgent_default_agents(){
+	return d_simulationVarsAgents_default;
+}
+
+xmachine_memory_simulationVarsAgent_list* get_host_simulationVarsAgent_default_agents(){
+	return h_simulationVarsAgents_default;
+}
 
     
 int get_agent_Particle_MAX_count(){
@@ -479,6 +612,96 @@ xmachine_memory_Particle_list* get_host_Particle_updatingPosition_agents(){
 /* Agent functions */
 
 
+/** simulationVarsAgent_increaseIterationNum
+ * Agent function prototype for increaseIterationNum function of simulationVarsAgent agent
+ */
+void simulationVarsAgent_increaseIterationNum(){
+	dim3 grid;
+	dim3 threads;
+	int sm_size;
+	
+	//CHECK THE CURRENT STATE LIST COUNT IS NOT EQUAL TO 0
+	
+	if (h_xmachine_memory_simulationVarsAgent_default_count == 0)
+	{
+		return;
+	}
+	
+	
+	//SET GRID AND BLOCK SIZES
+	//set tile size depending on agent count, set a 1d grid and block
+	int tile_size = (int)ceil((float)h_xmachine_memory_simulationVarsAgent_default_count/THREADS_PER_TILE);
+	grid.x = tile_size;
+	threads.x = THREADS_PER_TILE;
+	sm_size = SM_START;
+
+	
+
+	//******************************** AGENT FUNCTION CONDITION *********************
+	//THERE IS NOT A FUNCTION CONDITION
+	//currentState maps to working list
+	xmachine_memory_simulationVarsAgent_list* simulationVarsAgents_default_temp = d_simulationVarsAgents;
+	d_simulationVarsAgents = d_simulationVarsAgents_default;
+	d_simulationVarsAgents_default = simulationVarsAgents_default_temp;
+	//set working count to current state count
+	h_xmachine_memory_simulationVarsAgent_count = h_xmachine_memory_simulationVarsAgent_default_count;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_simulationVarsAgent_count, &h_xmachine_memory_simulationVarsAgent_count, sizeof(int)));	
+	//set current state count to 0
+	h_xmachine_memory_simulationVarsAgent_default_count = 0;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_simulationVarsAgent_default_count, &h_xmachine_memory_simulationVarsAgent_default_count, sizeof(int)));	
+	
+
+	//******************************** AGENT FUNCTION *******************************
+
+	
+	//CONTINUOUS AGENT CHECK FUNCTION OUTPUT BUFFERS FOR OUT OF BOUNDS
+	if (h_message_itNumMessage_count + h_xmachine_memory_simulationVarsAgent_count > xmachine_message_itNumMessage_MAX){
+		printf("Error: Buffer size of itNumMessage message will be exceeded in function increaseIterationNum\n");
+		exit(0);
+	}
+	
+	//SET THE OUTPUT MESSAGE TYPE
+	//Set the message_type for non partitioned and spatially partitioned message outputs
+	h_message_itNumMessage_output_type = single_message;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_message_itNumMessage_output_type, &h_message_itNumMessage_output_type, sizeof(int)));
+	
+	
+	//MAIN XMACHINE FUNCTION CALL (increaseIterationNum)
+	//Reallocate   : false
+	//Input        : 
+	//Output       : itNumMessage
+	//Agent Output : 
+	GPUFLAME_increaseIterationNum<<<grid, threads, sm_size>>>(d_simulationVarsAgents, d_itNumMessages);
+	CUT_CHECK_ERROR("Kernel execution failed");
+    
+    
+	//CONTINUOUS AGENTS SCATTER NON PARTITIONED OPTIONAL OUTPUT MESSAGES
+	
+	//UPDATE MESSAGE COUNTS FOR CONTINUOUS AGENTS WITH NON PARTITIONED MESSAGE OUTPUT 
+	h_message_itNumMessage_count += h_xmachine_memory_simulationVarsAgent_count;	
+	//Copy count to device
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_message_itNumMessage_count, &h_message_itNumMessage_count, sizeof(int)));	
+	
+	
+	//************************ MOVE AGENTS TO NEXT STATE ****************************
+    
+	//check the working agents wont exceed the buffer size in the new state list
+	if (h_xmachine_memory_simulationVarsAgent_default_count+h_xmachine_memory_simulationVarsAgent_count > xmachine_memory_simulationVarsAgent_MAX){
+		printf("Error: Buffer size of increaseIterationNum agents in state default will be exceeded moving working agents to next state in function increaseIterationNum\n");
+		exit(0);
+	}
+	//append agents to next state list
+	append_simulationVarsAgent_Agents<<<grid, threads>>>(d_simulationVarsAgents_default, d_simulationVarsAgents, h_xmachine_memory_simulationVarsAgent_default_count, h_xmachine_memory_simulationVarsAgent_count);
+	CUT_CHECK_ERROR("Kernel execution failed");
+	//update new state agent size
+	h_xmachine_memory_simulationVarsAgent_default_count += h_xmachine_memory_simulationVarsAgent_count;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_simulationVarsAgent_default_count, &h_xmachine_memory_simulationVarsAgent_default_count, sizeof(int)));	
+	
+	
+}
+
+
+
 /** Particle_setActive
  * Agent function prototype for setActive function of Particle agent
  */
@@ -521,16 +744,27 @@ void Particle_setActive(){
 	//******************************** AGENT FUNCTION *******************************
 
 	
+	//UPDATE SHARED MEMEORY SIZE FOR EACH FUNCTION INPUT
+	//Continuous agent and message input has no partitioning
+	sm_size += (threads.x * sizeof(xmachine_message_itNumMessage));
+	
+    //all continuous agent types require single 32bit word per thread offset (to avoid sm bank conflicts)
+	sm_size += (threads.x * PADDING);
+	
+	//BIND APPROPRIATE MESSAGE INPUT VARIABLES TO TEXTURES (to make use of the texture cache)
+	
 	
 	//MAIN XMACHINE FUNCTION CALL (setActive)
 	//Reallocate   : false
-	//Input        : 
+	//Input        : itNumMessage
 	//Output       : 
 	//Agent Output : 
-	GPUFLAME_setActive<<<grid, threads, sm_size>>>(d_Particles);
+	GPUFLAME_setActive<<<grid, threads, sm_size>>>(d_Particles, d_itNumMessages);
 	CUT_CHECK_ERROR("Kernel execution failed");
     
     
+	//UNBIND MESSAGE INPUT VARIABLE TEXTURES
+	
 	
 	//************************ MOVE AGENTS TO NEXT STATE ****************************
     

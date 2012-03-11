@@ -30,10 +30,11 @@ float3 agent_minimum;
 
 
     
-void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_Particle_list* h_Particles_settingActive, xmachine_memory_Particle_list* d_Particles_settingActive, int h_xmachine_memory_Particle_settingActive_count,xmachine_memory_Particle_list* h_Particles_sendingData, xmachine_memory_Particle_list* d_Particles_sendingData, int h_xmachine_memory_Particle_sendingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count)
+void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_settingActive, xmachine_memory_Particle_list* d_Particles_settingActive, int h_xmachine_memory_Particle_settingActive_count,xmachine_memory_Particle_list* h_Particles_sendingData, xmachine_memory_Particle_list* d_Particles_sendingData, int h_xmachine_memory_Particle_sendingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count)
 {
 	//Device to host memory transfer
 	
+	CUDA_SAFE_CALL( cudaMemcpy( h_simulationVarsAgents_default, d_simulationVarsAgents_default, sizeof(xmachine_memory_simulationVarsAgent_list), cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_settingActive, d_Particles_settingActive, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_sendingData, d_Particles_sendingData, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_updatingPosition, d_Particles_updatingPosition, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
@@ -52,6 +53,18 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 	fputs("<environment>\n" , file);
 	fputs("</environment>\n" , file);
 
+	//Write each simulationVarsAgent agent to xml
+	for (int i=0; i<h_xmachine_memory_simulationVarsAgent_default_count; i++){
+		fputs("<xagent>\n" , file);
+		fputs("<name>simulationVarsAgent</name>\n", file);
+		
+		fputs("<itNum>", file);
+		sprintf(data, "%i", h_simulationVarsAgents_default->itNum[i]);
+		fputs(data, file);
+		fputs("</itNum>\n", file);
+		
+		fputs("</xagent>\n", file);
+	}
 	//Write each Particle agent to xml
 	for (int i=0; i<h_xmachine_memory_Particle_settingActive_count; i++){
 		fputs("<xagent>\n" , file);
@@ -106,6 +119,11 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 		sprintf(data, "%i", h_Particles_settingActive->isActive[i]);
 		fputs(data, file);
 		fputs("</isActive>\n", file);
+		
+		fputs("<initialOffset>", file);
+		sprintf(data, "%i", h_Particles_settingActive->initialOffset[i]);
+		fputs(data, file);
+		fputs("</initialOffset>\n", file);
 		
 		fputs("<debug1>", file);
 		sprintf(data, "%f", h_Particles_settingActive->debug1[i]);
@@ -179,6 +197,11 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 		fputs(data, file);
 		fputs("</isActive>\n", file);
 		
+		fputs("<initialOffset>", file);
+		sprintf(data, "%i", h_Particles_sendingData->initialOffset[i]);
+		fputs(data, file);
+		fputs("</initialOffset>\n", file);
+		
 		fputs("<debug1>", file);
 		sprintf(data, "%f", h_Particles_sendingData->debug1[i]);
 		fputs(data, file);
@@ -251,6 +274,11 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 		fputs(data, file);
 		fputs("</isActive>\n", file);
 		
+		fputs("<initialOffset>", file);
+		sprintf(data, "%i", h_Particles_updatingPosition->initialOffset[i]);
+		fputs(data, file);
+		fputs("</initialOffset>\n", file);
+		
 		fputs("<debug1>", file);
 		sprintf(data, "%f", h_Particles_updatingPosition->debug1[i]);
 		fputs(data, file);
@@ -277,7 +305,7 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 	fclose(file);
 }
 
-void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particles, int* h_xmachine_memory_Particle_count)
+void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents, int* h_xmachine_memory_simulationVarsAgent_count,xmachine_memory_Particle_list* h_Particles, int* h_xmachine_memory_Particle_count)
 {
 
 	int temp = 0;
@@ -295,6 +323,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	/* Variables for checking tags */
 	int reading, i;
 	int in_tag, in_itno, in_name;
+	int in_simulationVarsAgent_itNum;
 	int in_Particle_id;
 	int in_Particle_mass;
 	int in_Particle_isDark;
@@ -305,14 +334,17 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	int in_Particle_yVel;
 	int in_Particle_zVel;
 	int in_Particle_isActive;
+	int in_Particle_initialOffset;
 	int in_Particle_debug1;
 	int in_Particle_debug2;
 	int in_Particle_debug3;
 
 	/* for continuous agents: set agent count to zero */	
+	*h_xmachine_memory_simulationVarsAgent_count = 0;	
 	*h_xmachine_memory_Particle_count = 0;
 	
 	/* Variables for initial state data */
+	int simulationVarsAgent_itNum;
 	int Particle_id;
 	float Particle_mass;
 	int Particle_isDark;
@@ -323,6 +355,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	float Particle_yVel;
 	float Particle_zVel;
 	int Particle_isActive;
+	int Particle_initialOffset;
 	float Particle_debug1;
 	float Particle_debug2;
 	float Particle_debug3;
@@ -346,6 +379,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	in_tag = 0;
 	in_itno = 0;
 	in_name = 0;
+	in_simulationVarsAgent_itNum = 0;
 	in_Particle_id = 0;
 	in_Particle_mass = 0;
 	in_Particle_isDark = 0;
@@ -356,9 +390,17 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	in_Particle_yVel = 0;
 	in_Particle_zVel = 0;
 	in_Particle_isActive = 0;
+	in_Particle_initialOffset = 0;
 	in_Particle_debug1 = 0;
 	in_Particle_debug2 = 0;
 	in_Particle_debug3 = 0;
+	//set all simulationVarsAgent values to 0
+	//If this is not done then it will cause errors in emu mode where undefined memory is not 0
+	for (int k=0; k<xmachine_memory_simulationVarsAgent_MAX; k++)
+	{	
+		h_simulationVarsAgents->itNum[k] = 0;
+	}
+	
 	//set all Particle values to 0
 	//If this is not done then it will cause errors in emu mode where undefined memory is not 0
 	for (int k=0; k<xmachine_memory_Particle_MAX; k++)
@@ -373,6 +415,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 		h_Particles->yVel[k] = 0;
 		h_Particles->zVel[k] = 0;
 		h_Particles->isActive[k] = 0;
+		h_Particles->initialOffset[k] = 0;
 		h_Particles->debug1[k] = 0;
 		h_Particles->debug2[k] = 0;
 		h_Particles->debug3[k] = 0;
@@ -380,6 +423,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	
 
 	/* Default variables for memory */
+	simulationVarsAgent_itNum = 0;
 	Particle_id = 0;
 	Particle_mass = 0;
 	Particle_isDark = 0;
@@ -390,6 +434,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	Particle_yVel = 0;
 	Particle_zVel = 0;
 	Particle_isActive = 0;
+	Particle_initialOffset = 0;
 	Particle_debug1 = 0;
 	Particle_debug2 = 0;
 	Particle_debug3 = 0;
@@ -414,7 +459,22 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 			if(strcmp(buffer, "/name") == 0) in_name = 0;
 			if(strcmp(buffer, "/xagent") == 0)
 			{
-				if(strcmp(agentname, "Particle") == 0)
+				if(strcmp(agentname, "simulationVarsAgent") == 0)
+				{		
+					if (*h_xmachine_memory_simulationVarsAgent_count > xmachine_memory_simulationVarsAgent_MAX){
+						printf("ERROR: MAX Buffer size (%i) for agent simulationVarsAgent exceeded whilst reading data\n", xmachine_memory_simulationVarsAgent_MAX);
+						// Close the file and stop reading
+						fclose(file);
+						exit(0);
+					}
+                    
+					h_simulationVarsAgents->itNum[*h_xmachine_memory_simulationVarsAgent_count] = simulationVarsAgent_itNum;
+                    
+					(*h_xmachine_memory_simulationVarsAgent_count) ++;
+					
+					
+				}
+				else if(strcmp(agentname, "Particle") == 0)
 				{		
 					if (*h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
 						printf("ERROR: MAX Buffer size (%i) for agent Particle exceeded whilst reading data\n", xmachine_memory_Particle_MAX);
@@ -461,6 +521,8 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
                     
 					h_Particles->isActive[*h_xmachine_memory_Particle_count] = Particle_isActive;
                     
+					h_Particles->initialOffset[*h_xmachine_memory_Particle_count] = Particle_initialOffset;
+                    
 					h_Particles->debug1[*h_xmachine_memory_Particle_count] = Particle_debug1;
                     
 					h_Particles->debug2[*h_xmachine_memory_Particle_count] = Particle_debug2;
@@ -479,6 +541,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 
 				
 				/* Reset xagent variables */
+				simulationVarsAgent_itNum = 0;
 				Particle_id = 0;
 				Particle_mass = 0;
 				Particle_isDark = 0;
@@ -489,10 +552,13 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 				Particle_yVel = 0;
 				Particle_zVel = 0;
 				Particle_isActive = 0;
+				Particle_initialOffset = 0;
 				Particle_debug1 = 0;
 				Particle_debug2 = 0;
 				Particle_debug3 = 0;
 			}
+			if(strcmp(buffer, "itNum") == 0) in_simulationVarsAgent_itNum = 1;
+			if(strcmp(buffer, "/itNum") == 0) in_simulationVarsAgent_itNum = 0;
 			if(strcmp(buffer, "id") == 0) in_Particle_id = 1;
 			if(strcmp(buffer, "/id") == 0) in_Particle_id = 0;
 			if(strcmp(buffer, "mass") == 0) in_Particle_mass = 1;
@@ -513,6 +579,8 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 			if(strcmp(buffer, "/zVel") == 0) in_Particle_zVel = 0;
 			if(strcmp(buffer, "isActive") == 0) in_Particle_isActive = 1;
 			if(strcmp(buffer, "/isActive") == 0) in_Particle_isActive = 0;
+			if(strcmp(buffer, "initialOffset") == 0) in_Particle_initialOffset = 1;
+			if(strcmp(buffer, "/initialOffset") == 0) in_Particle_initialOffset = 0;
 			if(strcmp(buffer, "debug1") == 0) in_Particle_debug1 = 1;
 			if(strcmp(buffer, "/debug1") == 0) in_Particle_debug1 = 0;
 			if(strcmp(buffer, "debug2") == 0) in_Particle_debug2 = 1;
@@ -537,6 +605,9 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 			if(in_name) strcpy(agentname, buffer);
 			else
 			{
+				if(in_simulationVarsAgent_itNum){ 
+					simulationVarsAgent_itNum = (int) atoi(buffer);
+				}
 				if(in_Particle_id){ 
 					Particle_id = (int) atoi(buffer);
 				}
@@ -566,6 +637,9 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 				}
 				if(in_Particle_isActive){ 
 					Particle_isActive = (int) atoi(buffer);
+				}
+				if(in_Particle_initialOffset){ 
+					Particle_initialOffset = (int) atoi(buffer);
 				}
 				if(in_Particle_debug1){ 
 					Particle_debug1 = (float) atof(buffer);

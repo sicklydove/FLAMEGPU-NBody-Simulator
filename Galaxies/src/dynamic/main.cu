@@ -168,6 +168,8 @@ int main( int argc, char** argv)
 		if (OUTPUT_TO_XML)
 		{
 			saveIterationData(outputpath, i+1, 
+				//default state simulationVarsAgent agents
+				get_host_simulationVarsAgent_default_agents(), get_device_simulationVarsAgent_default_agents(), get_agent_simulationVarsAgent_default_count(),
 				//settingActive state Particle agents
 				get_host_Particle_settingActive_agents(), get_device_Particle_settingActive_agents(), get_agent_Particle_settingActive_count(),
 				//sendingData state Particle agents

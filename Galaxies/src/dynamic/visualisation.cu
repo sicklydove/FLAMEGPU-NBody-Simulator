@@ -37,6 +37,9 @@ GLuint sphereNormals;
 
 //Simulation output buffers/textures
 
+GLuint simulationVarsAgent_default_tbo;
+GLuint simulationVarsAgent_default_displacementTex;
+
 GLuint Particle_settingActive_tbo;
 GLuint Particle_settingActive_displacementTex;
 
@@ -152,6 +155,21 @@ const char fragmentShaderSource[] =
 
 //GPU Kernels
 
+__global__ void output_simulationVarsAgent_agent_to_VBO(xmachine_memory_simulationVarsAgent_list* agents, float4* vbo, float3 centralise, int population_width){
+
+	//global thread index
+	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+
+	vbo[index].x = 0.0;
+	vbo[index].y = 0.0;
+	vbo[index].z = 0.0;
+	
+	vbo[index].x = 0.0;
+	vbo[index].y = 0.0;
+	vbo[index].z = 0.0;
+	vbo[index].w = 1.0;
+}
+
 __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agents, float4* vbo, float3 centralise){
 
 	//global thread index
@@ -199,6 +217,8 @@ void initVisualisation()
 	setVertexBufferData();
 
 	// create TBO
+	createTBO( &simulationVarsAgent_default_tbo, &simulationVarsAgent_default_displacementTex, xmachine_memory_simulationVarsAgent_MAX * sizeof( float4));
+	
 	createTBO( &Particle_settingActive_tbo, &Particle_settingActive_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
 	
 	createTBO( &Particle_sendingData_tbo, &Particle_sendingData_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
@@ -243,6 +263,26 @@ void runCuda()
 	//pointer
 	float4 *dptr;
 
+	
+	if (get_agent_simulationVarsAgent_default_count() > 0)
+	{
+		// map OpenGL buffer object for writing from CUDA
+		CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&dptr, simulationVarsAgent_default_tbo));
+		//cuda block size
+		tile_size = (int) ceil((float)get_agent_simulationVarsAgent_default_count()/threads_per_tile);
+		grid = dim3(tile_size, 1, 1);
+		threads = dim3(threads_per_tile, 1, 1);
+        //discrete variables
+        int population_width = (int)floor(sqrt((float)get_agent_simulationVarsAgent_default_count()));
+		centralise.x = population_width / 2.0;
+        centralise.y = population_width / 2.0;
+        centralise.z = 0.0;
+        
+		output_simulationVarsAgent_agent_to_VBO<<< grid, threads>>>(get_device_simulationVarsAgent_default_agents(), dptr, centralise, population_width);
+		CUT_CHECK_ERROR("Kernel execution failed");
+		// unmap buffer object
+		CUDA_SAFE_CALL(cudaGLUnmapBufferObject(simulationVarsAgent_default_tbo));
+	}
 	
 	if (get_agent_Particle_settingActive_count() > 0)
 	{
@@ -554,6 +594,29 @@ void display()
 	glLightfv(GL_LIGHT0, GL_POSITION, LIGHT_POSITION);
 
 	
+	//Draw simulationVarsAgent Agents in default state
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_BUFFER_EXT, simulationVarsAgent_default_displacementTex);
+	//loop
+	for (int i=0; i< get_agent_simulationVarsAgent_default_count(); i++){
+		glVertexAttrib1f(vs_mapIndex, (float)i);
+		
+		//draw using vertex and attribute data on the gpu (fast)
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+
+		glBindBuffer(GL_ARRAY_BUFFER, sphereVerts);
+		glVertexPointer(3, GL_FLOAT, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, sphereNormals);
+		glNormalPointer(GL_FLOAT, 0, 0);
+
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, SPHERE_SLICES * (SPHERE_STACKS+1));
+
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	}
+	
 	//Draw Particle Agents in settingActive state
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_BUFFER_EXT, Particle_settingActive_displacementTex);
@@ -656,6 +719,8 @@ void keyboard( unsigned char key, int /*x*/, int /*y*/)
     case( 27) :
         deleteVBO( &sphereVerts);
 		deleteVBO( &sphereNormals);
+		
+		deleteTBO( &simulationVarsAgent_default_tbo);
 		
 		deleteTBO( &Particle_settingActive_tbo);
 		
