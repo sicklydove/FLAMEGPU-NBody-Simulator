@@ -52,6 +52,7 @@ class  ParticleAgent:
     outStr+=str(self.zVel)
     outStr+='</zVel>'
     outStr+='<initialOffset>'
+#    outStr+=str(0)
     outStr+=str(rand)
     outStr+='</initialOffset>'
     outStr+='</xagent>\r\n'

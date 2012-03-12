@@ -155,7 +155,7 @@ const char fragmentShaderSource[] =
 
 //GPU Kernels
 
-__global__ void output_simulationVarsAgent_agent_to_VBO(xmachine_memory_simulationVarsAgent_list* agents, float4* vbo, float3 centralise, int population_width){
+__global__ void output_simulationVarsAgent_agent_to_VBO(xmachine_memory_simulationVarsAgent_list* agents, float4* vbo, float3 centralise){
 
 	//global thread index
 	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
@@ -272,13 +272,12 @@ void runCuda()
 		tile_size = (int) ceil((float)get_agent_simulationVarsAgent_default_count()/threads_per_tile);
 		grid = dim3(tile_size, 1, 1);
 		threads = dim3(threads_per_tile, 1, 1);
-        //discrete variables
-        int population_width = (int)floor(sqrt((float)get_agent_simulationVarsAgent_default_count()));
-		centralise.x = population_width / 2.0;
-        centralise.y = population_width / 2.0;
-        centralise.z = 0.0;
         
-		output_simulationVarsAgent_agent_to_VBO<<< grid, threads>>>(get_device_simulationVarsAgent_default_agents(), dptr, centralise, population_width);
+        //continuous variables  
+        centralise = getMaximumBounds() + getMinimumBounds();
+        centralise /= 2;
+        
+		output_simulationVarsAgent_agent_to_VBO<<< grid, threads>>>(get_device_simulationVarsAgent_default_agents(), dptr, centralise);
 		CUT_CHECK_ERROR("Kernel execution failed");
 		// unmap buffer object
 		CUDA_SAFE_CALL(cudaGLUnmapBufferObject(simulationVarsAgent_default_tbo));

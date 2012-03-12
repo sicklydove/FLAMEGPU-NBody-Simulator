@@ -19,14 +19,28 @@
 #define _FLAMEGPU_FUNCTIONS
 
 #include <header.h>
+#include <stdio.h>
 
 __FLAME_GPU_INIT_FUNC__ void initConstants(){
 
-	float dt=0.001f; 
+	float dt=0.0001f; 
 	float gravConstant=1;
     float velocityDamper=0.25;
     float sphereRadius = 0.0035;
 	int numPartitions=2;
+
+	/*
+	printf("Input dt\n");
+	scanf("%f", &dt);
+	printf("\nInput gravitational constant:\n");
+	scanf("%f", &gravConstant);
+	printf("\nInput velocity dampening factor:\n");
+	scanf("%f", &velocityDamper);
+	printf("\nInput minimum radius of interraction:\n");
+	scanf("%f", &velocityDamper);
+	printf("\nInput number of timestep slices (optimisation):\n");
+	scanf("%d", &numPartitions);
+	*/
 
 	set_DELTA_T(&dt);
 	set_GRAV_CONST(&gravConstant);
