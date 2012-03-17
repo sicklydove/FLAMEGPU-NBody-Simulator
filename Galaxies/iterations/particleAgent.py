@@ -15,14 +15,9 @@ class  ParticleAgent:
     self.zVel=zVel
     self.mass=mass
     self.isDark=isDark
+    self.offsetGroup=0
 
   def  writeAgent(self):
-    rand = random.random()
-    if (rand>0.5):
-      rand = 1
-    else:
-      rand=0
-
     outStr=""
     outStr+='<xagent>'
     outStr+='<name>Particle</name>'
@@ -52,8 +47,7 @@ class  ParticleAgent:
     outStr+=str(self.zVel)
     outStr+='</zVel>'
     outStr+='<initialOffset>'
-#    outStr+=str(0)
-    outStr+=str(rand)
+    outStr+=str(offsetGroup)
     outStr+='</initialOffset>'
     outStr+='</xagent>\r\n'
     return  outStr

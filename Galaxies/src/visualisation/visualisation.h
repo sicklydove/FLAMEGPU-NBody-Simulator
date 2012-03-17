@@ -9,7 +9,7 @@ const unsigned int WINDOW_HEIGHT = 900;
 
 //frustrum
 const double NEAR_CLIP = 0.01;
-const double FAR_CLIP = 64;
+const double FAR_CLIP = 640;
 
 //Circle model fidelity
 const int SPHERE_SLICES = 10;
@@ -20,6 +20,6 @@ const double SPHERE_RADIUS = 0.0035;
 const double VIEW_DISTANCE = 1;
 
 //light position
-GLfloat LIGHT_POSITION[] = {10.0f, 10.0f, 10.0f, 1.0f};
+GLfloat LIGHT_POSITION[] = {1.0f, 1.0f, 1.0f, 1.0f};
 
 #endif __VISUALISATION_H

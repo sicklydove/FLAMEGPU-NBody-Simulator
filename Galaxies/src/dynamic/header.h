@@ -40,8 +40,8 @@
   
   
 /* Message poulation size definitions */
-//Maximum population size of xmachine_mmessage_location
-#define xmachine_message_location_MAX 65536
+//Maximum population size of xmachine_mmessage_particleVariables
+#define xmachine_message_particleVariables_MAX 65536
 
 //Maximum population size of xmachine_mmessage_itNumMessage
 #define xmachine_message_itNumMessage_MAX 1
@@ -88,16 +88,16 @@ struct __align__(16) xmachine_memory_simulationVarsAgent
 struct __align__(16) xmachine_memory_Particle
 {
     int id;    /**< X-machine memory variable id of type int.*/
-    float mass;    /**< X-machine memory variable mass of type float.*/
     int isDark;    /**< X-machine memory variable isDark of type int.*/
+    int isActive;    /**< X-machine memory variable isActive of type int.*/
+    int initialOffset;    /**< X-machine memory variable initialOffset of type int.*/
+    float mass;    /**< X-machine memory variable mass of type float.*/
     float x;    /**< X-machine memory variable x of type float.*/
     float y;    /**< X-machine memory variable y of type float.*/
     float z;    /**< X-machine memory variable z of type float.*/
     float xVel;    /**< X-machine memory variable xVel of type float.*/
     float yVel;    /**< X-machine memory variable yVel of type float.*/
     float zVel;    /**< X-machine memory variable zVel of type float.*/
-    int isActive;    /**< X-machine memory variable isActive of type int.*/
-    int initialOffset;    /**< X-machine memory variable initialOffset of type int.*/
     float debug1;    /**< X-machine memory variable debug1 of type float.*/
     float debug2;    /**< X-machine memory variable debug2 of type float.*/
     float debug3;    /**< X-machine memory variable debug3 of type float.*/
@@ -107,11 +107,11 @@ struct __align__(16) xmachine_memory_Particle
 
 /* Message structures */
 
-/** struct xmachine_message_location
+/** struct xmachine_message_particleVariables
  * Brute force: No Partitioning
  * Holds all message variables and is aligned to help with coalesced reads on the GPU
  */
-struct __align__(16) xmachine_message_location
+struct __align__(16) xmachine_message_particleVariables
 {	
     /* Brute force Partitioning Variables */
     int _position;          /**< 1D position of message in linear message list */   
@@ -162,16 +162,16 @@ struct xmachine_memory_Particle_list
     int _scan_input [xmachine_memory_Particle_MAX];  /**< Used during parallel prefix sum */
     
     int id [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list id of type int.*/
-    float mass [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list mass of type float.*/
     int isDark [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list isDark of type int.*/
+    int isActive [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list isActive of type int.*/
+    int initialOffset [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list initialOffset of type int.*/
+    float mass [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list mass of type float.*/
     float x [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list x of type float.*/
     float y [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list y of type float.*/
     float z [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list z of type float.*/
     float xVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list xVel of type float.*/
     float yVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list yVel of type float.*/
     float zVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list zVel of type float.*/
-    int isActive [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list isActive of type int.*/
-    int initialOffset [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list initialOffset of type int.*/
     float debug1 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug1 of type float.*/
     float debug2 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug2 of type float.*/
     float debug3 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug3 of type float.*/
@@ -181,20 +181,20 @@ struct xmachine_memory_Particle_list
 
 /* Message lists. Structure of Array (SoA) for memory coalescing on GPU */
 
-/** struct xmachine_message_location_list
+/** struct xmachine_message_particleVariables_list
  * Brute force: No Partitioning
  * Structure of Array for memory coalescing 
  */
-struct xmachine_message_location_list
+struct xmachine_message_particleVariables_list
 {
     /* Non discrete messages have temp variables used for reductions with optional message outputs */
-    int _position [xmachine_message_location_MAX];    /**< Holds agents position in the 1D agent list */
-    int _scan_input [xmachine_message_location_MAX];  /**< Used during parallel prefix sum */
+    int _position [xmachine_message_particleVariables_MAX];    /**< Holds agents position in the 1D agent list */
+    int _scan_input [xmachine_message_particleVariables_MAX];  /**< Used during parallel prefix sum */
     
-    float mass [xmachine_message_location_MAX];    /**< Message memory variable list mass of type float.*/
-    float x [xmachine_message_location_MAX];    /**< Message memory variable list x of type float.*/
-    float y [xmachine_message_location_MAX];    /**< Message memory variable list y of type float.*/
-    float z [xmachine_message_location_MAX];    /**< Message memory variable list z of type float.*/
+    float mass [xmachine_message_particleVariables_MAX];    /**< Message memory variable list mass of type float.*/
+    float x [xmachine_message_particleVariables_MAX];    /**< Message memory variable list x of type float.*/
+    float y [xmachine_message_particleVariables_MAX];    /**< Message memory variable list y of type float.*/
+    float z [xmachine_message_particleVariables_MAX];    /**< Message memory variable list z of type float.*/
     
 };
 
@@ -249,69 +249,69 @@ __FLAME_GPU_FUNC__ float rnd(RNG_rand48* rand48);
 /* Agent function prototypes */
 
 /**
- * increaseIterationNum FLAMEGPU Agent Function
+ * broadcastItNum FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_simulationVarsAgent. This represents a single agent instance and can be modified directly.
  * @param itNumMessage_messages Pointer to output message list of type xmachine_message_itNumMessage_list. Must be passed as an argument to the add_itNumMessage_message function ??.
  */
-__FLAME_GPU_FUNC__ int increaseIterationNum(xmachine_memory_simulationVarsAgent* agent, xmachine_message_itNumMessage_list* itNumMessage_messages);
+__FLAME_GPU_FUNC__ int broadcastItNum(xmachine_memory_simulationVarsAgent* agent, xmachine_message_itNumMessage_list* itNumMessage_messages);
 
 /**
- * setActive FLAMEGPU Agent Function
+ * setIsActive FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
  * @param itNumMessage_messages  itNumMessage_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_itNumMessage_message and get_next_itNumMessage_message functions.
  */
-__FLAME_GPU_FUNC__ int setActive(xmachine_memory_Particle* agent, xmachine_message_itNumMessage_list* itNumMessage_messages);
+__FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* agent, xmachine_message_itNumMessage_list* itNumMessage_messages);
 
 /**
- * outputdata FLAMEGPU Agent Function
+ * broadcastVariables FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
- * @param location_messages Pointer to output message list of type xmachine_message_location_list. Must be passed as an argument to the add_location_message function ??.
+ * @param particleVariables_messages Pointer to output message list of type xmachine_message_particleVariables_list. Must be passed as an argument to the add_particleVariables_message function ??.
  */
-__FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* agent, xmachine_message_location_list* location_messages);
+__FLAME_GPU_FUNC__ int broadcastVariables(xmachine_memory_Particle* agent, xmachine_message_particleVariables_list* particleVariables_messages);
 
 /**
- * notoutputdata FLAMEGPU Agent Function
+ * skipBroadcastingVariables FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
  
  */
-__FLAME_GPU_FUNC__ int notoutputdata(xmachine_memory_Particle* agent);
+__FLAME_GPU_FUNC__ int skipBroadcastingVariables(xmachine_memory_Particle* agent);
 
 /**
- * inputdata FLAMEGPU Agent Function
+ * updatePosition FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
- * @param location_messages  location_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_location_message and get_next_location_message functions.
+ * @param particleVariables_messages  particleVariables_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_particleVariables_message and get_next_particleVariables_message functions.
  */
-__FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* agent, xmachine_message_location_list* location_messages);
+__FLAME_GPU_FUNC__ int updatePosition(xmachine_memory_Particle* agent, xmachine_message_particleVariables_list* particleVariables_messages);
 
   
-/* Message Function Prototypes for Brute force (No Partitioning) location message implemented in FLAMEGPU_Kernels */
+/* Message Function Prototypes for Brute force (No Partitioning) particleVariables message implemented in FLAMEGPU_Kernels */
 
-/** add_location_agent
+/** add_particleVariables_agent
  * Function for all types of message partitioning
- * Adds a new location agent to the xmachine_memory_location_list list using a linear mapping
- * @param agents	xmachine_memory_location_list agent list
+ * Adds a new particleVariables agent to the xmachine_memory_particleVariables_list list using a linear mapping
+ * @param agents	xmachine_memory_particleVariables_list agent list
  * @param mass	message variable of type float
  * @param x	message variable of type float
  * @param y	message variable of type float
  * @param z	message variable of type float
  */
  
- __FLAME_GPU_FUNC__ void add_location_message(xmachine_message_location_list* location_messages, float mass, float x, float y, float z);
+ __FLAME_GPU_FUNC__ void add_particleVariables_message(xmachine_message_particleVariables_list* particleVariables_messages, float mass, float x, float y, float z);
  
-/** get_first_location_message
+/** get_first_particleVariables_message
  * Get first message function for non partitioned (brute force) messages
- * @param location_messages message list
+ * @param particleVariables_messages message list
  * @return        returns the first message from the message list (offset depending on agent block)
  */
-__FLAME_GPU_FUNC__ xmachine_message_location * get_first_location_message(xmachine_message_location_list* location_messages);
+__FLAME_GPU_FUNC__ xmachine_message_particleVariables * get_first_particleVariables_message(xmachine_message_particleVariables_list* particleVariables_messages);
 
-/** get_next_location_message
+/** get_next_particleVariables_message
  * Get first message function for non partitioned (brute force) messages
  * @param current the current message struct
- * @param location_messages message list
+ * @param particleVariables_messages message list
  * @return        returns the first message from the message list (offset depending on agent block)
  */
-__FLAME_GPU_FUNC__ xmachine_message_location * get_next_location_message(xmachine_message_location* current, xmachine_message_location_list* location_messages);
+__FLAME_GPU_FUNC__ xmachine_message_particleVariables * get_next_particleVariables_message(xmachine_message_particleVariables* current, xmachine_message_particleVariables_list* particleVariables_messages);
 
   
 /* Message Function Prototypes for Brute force (No Partitioning) itNumMessage message implemented in FLAMEGPU_Kernels */
@@ -355,21 +355,21 @@ __FLAME_GPU_FUNC__ void add_simulationVarsAgent_agent(xmachine_memory_simulation
  * Adds a new continuous valued Particle agent to the xmachine_memory_Particle_list list using a linear mapping
  * @param agents xmachine_memory_Particle_list agent list
  * @param id	agent agent variable of type int
- * @param mass	agent agent variable of type float
  * @param isDark	agent agent variable of type int
+ * @param isActive	agent agent variable of type int
+ * @param initialOffset	agent agent variable of type int
+ * @param mass	agent agent variable of type float
  * @param x	agent agent variable of type float
  * @param y	agent agent variable of type float
  * @param z	agent agent variable of type float
  * @param xVel	agent agent variable of type float
  * @param yVel	agent agent variable of type float
  * @param zVel	agent agent variable of type float
- * @param isActive	agent agent variable of type int
- * @param initialOffset	agent agent variable of type int
  * @param debug1	agent agent variable of type float
  * @param debug2	agent agent variable of type float
  * @param debug3	agent agent variable of type float
  */
-__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, float mass, int isDark, float x, float y, float z, float xVel, float yVel, float zVel, int isActive, int initialOffset, float debug1, float debug2, float debug3);
+__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, int isDark, int isActive, int initialOffset, float mass, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3);
 
 
   
@@ -402,7 +402,7 @@ extern "C" void singleIteration();
  * @param d_Particles Pointer to agent list on the GPU device
  * @param h_xmachine_memory_Particle_count Pointer to agent counter
  */
-extern "C" void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_settingActive, xmachine_memory_Particle_list* d_Particles_settingActive, int h_xmachine_memory_Particle_settingActive_count,xmachine_memory_Particle_list* h_Particles_sendingData, xmachine_memory_Particle_list* d_Particles_sendingData, int h_xmachine_memory_Particle_sendingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count);
+extern "C" void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_testingActive, xmachine_memory_Particle_list* d_Particles_testingActive, int h_xmachine_memory_Particle_testingActive_count,xmachine_memory_Particle_list* h_Particles_outputingData, xmachine_memory_Particle_list* d_Particles_outputingData, int h_xmachine_memory_Particle_outputingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count);
 
 
 /** readInitialStates
@@ -460,56 +460,56 @@ void sort_simulationVarsAgents_default(void (*generate_key_value_pairs)(unsigned
 extern "C" int get_agent_Particle_MAX_count();
 
 
-/** get_agent_Particle_settingActive_count
- * Gets the agent count for the Particle agent type in state settingActive
- * @return		the current Particle agent count in state settingActive
+/** get_agent_Particle_testingActive_count
+ * Gets the agent count for the Particle agent type in state testingActive
+ * @return		the current Particle agent count in state testingActive
  */
-extern "C" int get_agent_Particle_settingActive_count();
+extern "C" int get_agent_Particle_testingActive_count();
 
-/** get_device_Particle_settingActive_agents
+/** get_device_Particle_testingActive_agents
  * Gets a pointer to xmachine_memory_Particle_list on the GPU device
  * @return		a xmachine_memory_Particle_list on the GPU device
  */
-extern "C" xmachine_memory_Particle_list* get_device_Particle_settingActive_agents();
+extern "C" xmachine_memory_Particle_list* get_device_Particle_testingActive_agents();
 
-/** get_host_Particle_settingActive_agents
+/** get_host_Particle_testingActive_agents
  * Gets a pointer to xmachine_memory_Particle_list on the CPU host
  * @return		a xmachine_memory_Particle_list on the CPU host
  */
-extern "C" xmachine_memory_Particle_list* get_host_Particle_settingActive_agents();
+extern "C" xmachine_memory_Particle_list* get_host_Particle_testingActive_agents();
 
 
-/** sort_Particles_settingActive
+/** sort_Particles_testingActive
  * Sorts an agent state list by providing a CUDA kernal to generate key value pairs
  * @param		a pointer CUDA kernal function to generate key value pairs
  */
-void sort_Particles_settingActive(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
+void sort_Particles_testingActive(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
 
 
-/** get_agent_Particle_sendingData_count
- * Gets the agent count for the Particle agent type in state sendingData
- * @return		the current Particle agent count in state sendingData
+/** get_agent_Particle_outputingData_count
+ * Gets the agent count for the Particle agent type in state outputingData
+ * @return		the current Particle agent count in state outputingData
  */
-extern "C" int get_agent_Particle_sendingData_count();
+extern "C" int get_agent_Particle_outputingData_count();
 
-/** get_device_Particle_sendingData_agents
+/** get_device_Particle_outputingData_agents
  * Gets a pointer to xmachine_memory_Particle_list on the GPU device
  * @return		a xmachine_memory_Particle_list on the GPU device
  */
-extern "C" xmachine_memory_Particle_list* get_device_Particle_sendingData_agents();
+extern "C" xmachine_memory_Particle_list* get_device_Particle_outputingData_agents();
 
-/** get_host_Particle_sendingData_agents
+/** get_host_Particle_outputingData_agents
  * Gets a pointer to xmachine_memory_Particle_list on the CPU host
  * @return		a xmachine_memory_Particle_list on the CPU host
  */
-extern "C" xmachine_memory_Particle_list* get_host_Particle_sendingData_agents();
+extern "C" xmachine_memory_Particle_list* get_host_Particle_outputingData_agents();
 
 
-/** sort_Particles_sendingData
+/** sort_Particles_outputingData
  * Sorts an agent state list by providing a CUDA kernal to generate key value pairs
  * @param		a pointer CUDA kernal function to generate key value pairs
  */
-void sort_Particles_sendingData(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
+void sort_Particles_outputingData(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
 
 
 /** get_agent_Particle_updatingPosition_count

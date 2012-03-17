@@ -30,13 +30,13 @@ float3 agent_minimum;
 
 
     
-void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_settingActive, xmachine_memory_Particle_list* d_Particles_settingActive, int h_xmachine_memory_Particle_settingActive_count,xmachine_memory_Particle_list* h_Particles_sendingData, xmachine_memory_Particle_list* d_Particles_sendingData, int h_xmachine_memory_Particle_sendingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count)
+void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_testingActive, xmachine_memory_Particle_list* d_Particles_testingActive, int h_xmachine_memory_Particle_testingActive_count,xmachine_memory_Particle_list* h_Particles_outputingData, xmachine_memory_Particle_list* d_Particles_outputingData, int h_xmachine_memory_Particle_outputingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count)
 {
 	//Device to host memory transfer
 	
 	CUDA_SAFE_CALL( cudaMemcpy( h_simulationVarsAgents_default, d_simulationVarsAgents_default, sizeof(xmachine_memory_simulationVarsAgent_list), cudaMemcpyDeviceToHost));
-	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_settingActive, d_Particles_settingActive, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
-	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_sendingData, d_Particles_sendingData, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_testingActive, d_Particles_testingActive, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_outputingData, d_Particles_outputingData, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_updatingPosition, d_Particles_updatingPosition, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
 	
 	/* Pointer to file */
@@ -66,154 +66,154 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_s
 		fputs("</xagent>\n", file);
 	}
 	//Write each Particle agent to xml
-	for (int i=0; i<h_xmachine_memory_Particle_settingActive_count; i++){
+	for (int i=0; i<h_xmachine_memory_Particle_testingActive_count; i++){
 		fputs("<xagent>\n" , file);
 		fputs("<name>Particle</name>\n", file);
 		
 		fputs("<id>", file);
-		sprintf(data, "%i", h_Particles_settingActive->id[i]);
+		sprintf(data, "%i", h_Particles_testingActive->id[i]);
 		fputs(data, file);
 		fputs("</id>\n", file);
 		
-		fputs("<mass>", file);
-		sprintf(data, "%f", h_Particles_settingActive->mass[i]);
-		fputs(data, file);
-		fputs("</mass>\n", file);
-		
 		fputs("<isDark>", file);
-		sprintf(data, "%i", h_Particles_settingActive->isDark[i]);
+		sprintf(data, "%i", h_Particles_testingActive->isDark[i]);
 		fputs(data, file);
 		fputs("</isDark>\n", file);
 		
-		fputs("<x>", file);
-		sprintf(data, "%f", h_Particles_settingActive->x[i]);
-		fputs(data, file);
-		fputs("</x>\n", file);
-		
-		fputs("<y>", file);
-		sprintf(data, "%f", h_Particles_settingActive->y[i]);
-		fputs(data, file);
-		fputs("</y>\n", file);
-		
-		fputs("<z>", file);
-		sprintf(data, "%f", h_Particles_settingActive->z[i]);
-		fputs(data, file);
-		fputs("</z>\n", file);
-		
-		fputs("<xVel>", file);
-		sprintf(data, "%f", h_Particles_settingActive->xVel[i]);
-		fputs(data, file);
-		fputs("</xVel>\n", file);
-		
-		fputs("<yVel>", file);
-		sprintf(data, "%f", h_Particles_settingActive->yVel[i]);
-		fputs(data, file);
-		fputs("</yVel>\n", file);
-		
-		fputs("<zVel>", file);
-		sprintf(data, "%f", h_Particles_settingActive->zVel[i]);
-		fputs(data, file);
-		fputs("</zVel>\n", file);
-		
 		fputs("<isActive>", file);
-		sprintf(data, "%i", h_Particles_settingActive->isActive[i]);
+		sprintf(data, "%i", h_Particles_testingActive->isActive[i]);
 		fputs(data, file);
 		fputs("</isActive>\n", file);
 		
 		fputs("<initialOffset>", file);
-		sprintf(data, "%i", h_Particles_settingActive->initialOffset[i]);
+		sprintf(data, "%i", h_Particles_testingActive->initialOffset[i]);
 		fputs(data, file);
 		fputs("</initialOffset>\n", file);
 		
+		fputs("<mass>", file);
+		sprintf(data, "%f", h_Particles_testingActive->mass[i]);
+		fputs(data, file);
+		fputs("</mass>\n", file);
+		
+		fputs("<x>", file);
+		sprintf(data, "%f", h_Particles_testingActive->x[i]);
+		fputs(data, file);
+		fputs("</x>\n", file);
+		
+		fputs("<y>", file);
+		sprintf(data, "%f", h_Particles_testingActive->y[i]);
+		fputs(data, file);
+		fputs("</y>\n", file);
+		
+		fputs("<z>", file);
+		sprintf(data, "%f", h_Particles_testingActive->z[i]);
+		fputs(data, file);
+		fputs("</z>\n", file);
+		
+		fputs("<xVel>", file);
+		sprintf(data, "%f", h_Particles_testingActive->xVel[i]);
+		fputs(data, file);
+		fputs("</xVel>\n", file);
+		
+		fputs("<yVel>", file);
+		sprintf(data, "%f", h_Particles_testingActive->yVel[i]);
+		fputs(data, file);
+		fputs("</yVel>\n", file);
+		
+		fputs("<zVel>", file);
+		sprintf(data, "%f", h_Particles_testingActive->zVel[i]);
+		fputs(data, file);
+		fputs("</zVel>\n", file);
+		
 		fputs("<debug1>", file);
-		sprintf(data, "%f", h_Particles_settingActive->debug1[i]);
+		sprintf(data, "%f", h_Particles_testingActive->debug1[i]);
 		fputs(data, file);
 		fputs("</debug1>\n", file);
 		
 		fputs("<debug2>", file);
-		sprintf(data, "%f", h_Particles_settingActive->debug2[i]);
+		sprintf(data, "%f", h_Particles_testingActive->debug2[i]);
 		fputs(data, file);
 		fputs("</debug2>\n", file);
 		
 		fputs("<debug3>", file);
-		sprintf(data, "%f", h_Particles_settingActive->debug3[i]);
+		sprintf(data, "%f", h_Particles_testingActive->debug3[i]);
 		fputs(data, file);
 		fputs("</debug3>\n", file);
 		
 		fputs("</xagent>\n", file);
 	}
 	//Write each Particle agent to xml
-	for (int i=0; i<h_xmachine_memory_Particle_sendingData_count; i++){
+	for (int i=0; i<h_xmachine_memory_Particle_outputingData_count; i++){
 		fputs("<xagent>\n" , file);
 		fputs("<name>Particle</name>\n", file);
 		
 		fputs("<id>", file);
-		sprintf(data, "%i", h_Particles_sendingData->id[i]);
+		sprintf(data, "%i", h_Particles_outputingData->id[i]);
 		fputs(data, file);
 		fputs("</id>\n", file);
 		
-		fputs("<mass>", file);
-		sprintf(data, "%f", h_Particles_sendingData->mass[i]);
-		fputs(data, file);
-		fputs("</mass>\n", file);
-		
 		fputs("<isDark>", file);
-		sprintf(data, "%i", h_Particles_sendingData->isDark[i]);
+		sprintf(data, "%i", h_Particles_outputingData->isDark[i]);
 		fputs(data, file);
 		fputs("</isDark>\n", file);
 		
-		fputs("<x>", file);
-		sprintf(data, "%f", h_Particles_sendingData->x[i]);
-		fputs(data, file);
-		fputs("</x>\n", file);
-		
-		fputs("<y>", file);
-		sprintf(data, "%f", h_Particles_sendingData->y[i]);
-		fputs(data, file);
-		fputs("</y>\n", file);
-		
-		fputs("<z>", file);
-		sprintf(data, "%f", h_Particles_sendingData->z[i]);
-		fputs(data, file);
-		fputs("</z>\n", file);
-		
-		fputs("<xVel>", file);
-		sprintf(data, "%f", h_Particles_sendingData->xVel[i]);
-		fputs(data, file);
-		fputs("</xVel>\n", file);
-		
-		fputs("<yVel>", file);
-		sprintf(data, "%f", h_Particles_sendingData->yVel[i]);
-		fputs(data, file);
-		fputs("</yVel>\n", file);
-		
-		fputs("<zVel>", file);
-		sprintf(data, "%f", h_Particles_sendingData->zVel[i]);
-		fputs(data, file);
-		fputs("</zVel>\n", file);
-		
 		fputs("<isActive>", file);
-		sprintf(data, "%i", h_Particles_sendingData->isActive[i]);
+		sprintf(data, "%i", h_Particles_outputingData->isActive[i]);
 		fputs(data, file);
 		fputs("</isActive>\n", file);
 		
 		fputs("<initialOffset>", file);
-		sprintf(data, "%i", h_Particles_sendingData->initialOffset[i]);
+		sprintf(data, "%i", h_Particles_outputingData->initialOffset[i]);
 		fputs(data, file);
 		fputs("</initialOffset>\n", file);
 		
+		fputs("<mass>", file);
+		sprintf(data, "%f", h_Particles_outputingData->mass[i]);
+		fputs(data, file);
+		fputs("</mass>\n", file);
+		
+		fputs("<x>", file);
+		sprintf(data, "%f", h_Particles_outputingData->x[i]);
+		fputs(data, file);
+		fputs("</x>\n", file);
+		
+		fputs("<y>", file);
+		sprintf(data, "%f", h_Particles_outputingData->y[i]);
+		fputs(data, file);
+		fputs("</y>\n", file);
+		
+		fputs("<z>", file);
+		sprintf(data, "%f", h_Particles_outputingData->z[i]);
+		fputs(data, file);
+		fputs("</z>\n", file);
+		
+		fputs("<xVel>", file);
+		sprintf(data, "%f", h_Particles_outputingData->xVel[i]);
+		fputs(data, file);
+		fputs("</xVel>\n", file);
+		
+		fputs("<yVel>", file);
+		sprintf(data, "%f", h_Particles_outputingData->yVel[i]);
+		fputs(data, file);
+		fputs("</yVel>\n", file);
+		
+		fputs("<zVel>", file);
+		sprintf(data, "%f", h_Particles_outputingData->zVel[i]);
+		fputs(data, file);
+		fputs("</zVel>\n", file);
+		
 		fputs("<debug1>", file);
-		sprintf(data, "%f", h_Particles_sendingData->debug1[i]);
+		sprintf(data, "%f", h_Particles_outputingData->debug1[i]);
 		fputs(data, file);
 		fputs("</debug1>\n", file);
 		
 		fputs("<debug2>", file);
-		sprintf(data, "%f", h_Particles_sendingData->debug2[i]);
+		sprintf(data, "%f", h_Particles_outputingData->debug2[i]);
 		fputs(data, file);
 		fputs("</debug2>\n", file);
 		
 		fputs("<debug3>", file);
-		sprintf(data, "%f", h_Particles_sendingData->debug3[i]);
+		sprintf(data, "%f", h_Particles_outputingData->debug3[i]);
 		fputs(data, file);
 		fputs("</debug3>\n", file);
 		
@@ -229,15 +229,25 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_s
 		fputs(data, file);
 		fputs("</id>\n", file);
 		
-		fputs("<mass>", file);
-		sprintf(data, "%f", h_Particles_updatingPosition->mass[i]);
-		fputs(data, file);
-		fputs("</mass>\n", file);
-		
 		fputs("<isDark>", file);
 		sprintf(data, "%i", h_Particles_updatingPosition->isDark[i]);
 		fputs(data, file);
 		fputs("</isDark>\n", file);
+		
+		fputs("<isActive>", file);
+		sprintf(data, "%i", h_Particles_updatingPosition->isActive[i]);
+		fputs(data, file);
+		fputs("</isActive>\n", file);
+		
+		fputs("<initialOffset>", file);
+		sprintf(data, "%i", h_Particles_updatingPosition->initialOffset[i]);
+		fputs(data, file);
+		fputs("</initialOffset>\n", file);
+		
+		fputs("<mass>", file);
+		sprintf(data, "%f", h_Particles_updatingPosition->mass[i]);
+		fputs(data, file);
+		fputs("</mass>\n", file);
 		
 		fputs("<x>", file);
 		sprintf(data, "%f", h_Particles_updatingPosition->x[i]);
@@ -268,16 +278,6 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_s
 		sprintf(data, "%f", h_Particles_updatingPosition->zVel[i]);
 		fputs(data, file);
 		fputs("</zVel>\n", file);
-		
-		fputs("<isActive>", file);
-		sprintf(data, "%i", h_Particles_updatingPosition->isActive[i]);
-		fputs(data, file);
-		fputs("</isActive>\n", file);
-		
-		fputs("<initialOffset>", file);
-		sprintf(data, "%i", h_Particles_updatingPosition->initialOffset[i]);
-		fputs(data, file);
-		fputs("</initialOffset>\n", file);
 		
 		fputs("<debug1>", file);
 		sprintf(data, "%f", h_Particles_updatingPosition->debug1[i]);
@@ -325,16 +325,16 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 	int in_tag, in_itno, in_name;
 	int in_simulationVarsAgent_itNum;
 	int in_Particle_id;
-	int in_Particle_mass;
 	int in_Particle_isDark;
+	int in_Particle_isActive;
+	int in_Particle_initialOffset;
+	int in_Particle_mass;
 	int in_Particle_x;
 	int in_Particle_y;
 	int in_Particle_z;
 	int in_Particle_xVel;
 	int in_Particle_yVel;
 	int in_Particle_zVel;
-	int in_Particle_isActive;
-	int in_Particle_initialOffset;
 	int in_Particle_debug1;
 	int in_Particle_debug2;
 	int in_Particle_debug3;
@@ -346,16 +346,16 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 	/* Variables for initial state data */
 	int simulationVarsAgent_itNum;
 	int Particle_id;
-	float Particle_mass;
 	int Particle_isDark;
+	int Particle_isActive;
+	int Particle_initialOffset;
+	float Particle_mass;
 	float Particle_x;
 	float Particle_y;
 	float Particle_z;
 	float Particle_xVel;
 	float Particle_yVel;
 	float Particle_zVel;
-	int Particle_isActive;
-	int Particle_initialOffset;
 	float Particle_debug1;
 	float Particle_debug2;
 	float Particle_debug3;
@@ -381,16 +381,16 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 	in_name = 0;
 	in_simulationVarsAgent_itNum = 0;
 	in_Particle_id = 0;
-	in_Particle_mass = 0;
 	in_Particle_isDark = 0;
+	in_Particle_isActive = 0;
+	in_Particle_initialOffset = 0;
+	in_Particle_mass = 0;
 	in_Particle_x = 0;
 	in_Particle_y = 0;
 	in_Particle_z = 0;
 	in_Particle_xVel = 0;
 	in_Particle_yVel = 0;
 	in_Particle_zVel = 0;
-	in_Particle_isActive = 0;
-	in_Particle_initialOffset = 0;
 	in_Particle_debug1 = 0;
 	in_Particle_debug2 = 0;
 	in_Particle_debug3 = 0;
@@ -406,16 +406,16 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 	for (int k=0; k<xmachine_memory_Particle_MAX; k++)
 	{	
 		h_Particles->id[k] = 0;
-		h_Particles->mass[k] = 0;
 		h_Particles->isDark[k] = 0;
+		h_Particles->isActive[k] = 0;
+		h_Particles->initialOffset[k] = 0;
+		h_Particles->mass[k] = 0;
 		h_Particles->x[k] = 0;
 		h_Particles->y[k] = 0;
 		h_Particles->z[k] = 0;
 		h_Particles->xVel[k] = 0;
 		h_Particles->yVel[k] = 0;
 		h_Particles->zVel[k] = 0;
-		h_Particles->isActive[k] = 0;
-		h_Particles->initialOffset[k] = 0;
 		h_Particles->debug1[k] = 0;
 		h_Particles->debug2[k] = 0;
 		h_Particles->debug3[k] = 0;
@@ -425,16 +425,16 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 	/* Default variables for memory */
 	simulationVarsAgent_itNum = 0;
 	Particle_id = 0;
-	Particle_mass = 0;
 	Particle_isDark = 0;
+	Particle_isActive = 0;
+	Particle_initialOffset = 0;
+	Particle_mass = 0;
 	Particle_x = 0;
 	Particle_y = 0;
 	Particle_z = 0;
 	Particle_xVel = 0;
 	Particle_yVel = 0;
 	Particle_zVel = 0;
-	Particle_isActive = 0;
-	Particle_initialOffset = 0;
 	Particle_debug1 = 0;
 	Particle_debug2 = 0;
 	Particle_debug3 = 0;
@@ -485,9 +485,13 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
                     
 					h_Particles->id[*h_xmachine_memory_Particle_count] = Particle_id;
                     
-					h_Particles->mass[*h_xmachine_memory_Particle_count] = Particle_mass;
-                    
 					h_Particles->isDark[*h_xmachine_memory_Particle_count] = Particle_isDark;
+                    
+					h_Particles->isActive[*h_xmachine_memory_Particle_count] = Particle_isActive;
+                    
+					h_Particles->initialOffset[*h_xmachine_memory_Particle_count] = Particle_initialOffset;
+                    
+					h_Particles->mass[*h_xmachine_memory_Particle_count] = Particle_mass;
                     
 					h_Particles->x[*h_xmachine_memory_Particle_count] = Particle_x;
                     //Check maximum x value
@@ -519,10 +523,6 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
                     
 					h_Particles->zVel[*h_xmachine_memory_Particle_count] = Particle_zVel;
                     
-					h_Particles->isActive[*h_xmachine_memory_Particle_count] = Particle_isActive;
-                    
-					h_Particles->initialOffset[*h_xmachine_memory_Particle_count] = Particle_initialOffset;
-                    
 					h_Particles->debug1[*h_xmachine_memory_Particle_count] = Particle_debug1;
                     
 					h_Particles->debug2[*h_xmachine_memory_Particle_count] = Particle_debug2;
@@ -543,16 +543,16 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 				/* Reset xagent variables */
 				simulationVarsAgent_itNum = 0;
 				Particle_id = 0;
-				Particle_mass = 0;
 				Particle_isDark = 0;
+				Particle_isActive = 0;
+				Particle_initialOffset = 0;
+				Particle_mass = 0;
 				Particle_x = 0;
 				Particle_y = 0;
 				Particle_z = 0;
 				Particle_xVel = 0;
 				Particle_yVel = 0;
 				Particle_zVel = 0;
-				Particle_isActive = 0;
-				Particle_initialOffset = 0;
 				Particle_debug1 = 0;
 				Particle_debug2 = 0;
 				Particle_debug3 = 0;
@@ -561,10 +561,14 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 			if(strcmp(buffer, "/itNum") == 0) in_simulationVarsAgent_itNum = 0;
 			if(strcmp(buffer, "id") == 0) in_Particle_id = 1;
 			if(strcmp(buffer, "/id") == 0) in_Particle_id = 0;
-			if(strcmp(buffer, "mass") == 0) in_Particle_mass = 1;
-			if(strcmp(buffer, "/mass") == 0) in_Particle_mass = 0;
 			if(strcmp(buffer, "isDark") == 0) in_Particle_isDark = 1;
 			if(strcmp(buffer, "/isDark") == 0) in_Particle_isDark = 0;
+			if(strcmp(buffer, "isActive") == 0) in_Particle_isActive = 1;
+			if(strcmp(buffer, "/isActive") == 0) in_Particle_isActive = 0;
+			if(strcmp(buffer, "initialOffset") == 0) in_Particle_initialOffset = 1;
+			if(strcmp(buffer, "/initialOffset") == 0) in_Particle_initialOffset = 0;
+			if(strcmp(buffer, "mass") == 0) in_Particle_mass = 1;
+			if(strcmp(buffer, "/mass") == 0) in_Particle_mass = 0;
 			if(strcmp(buffer, "x") == 0) in_Particle_x = 1;
 			if(strcmp(buffer, "/x") == 0) in_Particle_x = 0;
 			if(strcmp(buffer, "y") == 0) in_Particle_y = 1;
@@ -577,10 +581,6 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 			if(strcmp(buffer, "/yVel") == 0) in_Particle_yVel = 0;
 			if(strcmp(buffer, "zVel") == 0) in_Particle_zVel = 1;
 			if(strcmp(buffer, "/zVel") == 0) in_Particle_zVel = 0;
-			if(strcmp(buffer, "isActive") == 0) in_Particle_isActive = 1;
-			if(strcmp(buffer, "/isActive") == 0) in_Particle_isActive = 0;
-			if(strcmp(buffer, "initialOffset") == 0) in_Particle_initialOffset = 1;
-			if(strcmp(buffer, "/initialOffset") == 0) in_Particle_initialOffset = 0;
 			if(strcmp(buffer, "debug1") == 0) in_Particle_debug1 = 1;
 			if(strcmp(buffer, "/debug1") == 0) in_Particle_debug1 = 0;
 			if(strcmp(buffer, "debug2") == 0) in_Particle_debug2 = 1;
@@ -611,11 +611,17 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 				if(in_Particle_id){ 
 					Particle_id = (int) atoi(buffer);
 				}
-				if(in_Particle_mass){ 
-					Particle_mass = (float) atof(buffer);
-				}
 				if(in_Particle_isDark){ 
 					Particle_isDark = (int) atoi(buffer);
+				}
+				if(in_Particle_isActive){ 
+					Particle_isActive = (int) atoi(buffer);
+				}
+				if(in_Particle_initialOffset){ 
+					Particle_initialOffset = (int) atoi(buffer);
+				}
+				if(in_Particle_mass){ 
+					Particle_mass = (float) atof(buffer);
 				}
 				if(in_Particle_x){ 
 					Particle_x = (float) atof(buffer);
@@ -634,12 +640,6 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 				}
 				if(in_Particle_zVel){ 
 					Particle_zVel = (float) atof(buffer);
-				}
-				if(in_Particle_isActive){ 
-					Particle_isActive = (int) atoi(buffer);
-				}
-				if(in_Particle_initialOffset){ 
-					Particle_initialOffset = (int) atoi(buffer);
 				}
 				if(in_Particle_debug1){ 
 					Particle_debug1 = (float) atof(buffer);

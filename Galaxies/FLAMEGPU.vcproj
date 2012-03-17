@@ -1173,6 +1173,18 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\visualisation\customVisualisation.cu"
+				>
+			</File>
+			<File
+				RelativePath=".\src\visualisation\GlobalsController.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\visualisation\GlobalsController.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\visualisation\visualisation.h"
 				>
 			</File>
@@ -1635,54 +1647,6 @@
 			<File
 				RelativePath=".\src\dynamic\visualisation.cu"
 				>
-				<FileConfiguration
-					Name="Debug_Console|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_Console|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Console|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Console|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Console|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Console|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter

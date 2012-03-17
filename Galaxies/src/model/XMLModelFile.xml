@@ -47,7 +47,7 @@
       </memory>
       <functions>
         <gpu:function>
-          <name>increaseIterationNum</name>
+          <name>broadcastItNum</name>
           <currentState>default</currentState>
           <nextState>default</nextState>
           <outputs>
@@ -78,13 +78,22 @@
           <name>id</name>
         </gpu:variable>
         <gpu:variable>
-          <type>float</type>
-          <name>mass</name>
-        </gpu:variable>
-        <gpu:variable>
           <type>int</type>
           <name>isDark</name>
         </gpu:variable>
+        <gpu:variable>
+          <type>int</type>
+          <name>isActive</name>
+        </gpu:variable>
+        <gpu:variable>
+          <type>int</type>
+          <name>initialOffset</name>
+        </gpu:variable>
+        <gpu:variable>
+          <type>float</type>
+          <name>mass</name>
+        </gpu:variable>
+
         <gpu:variable>
           <type>float</type>
           <name>x</name>
@@ -97,6 +106,7 @@
           <type>float</type>
           <name>z</name>
         </gpu:variable>
+        
         <gpu:variable>
           <type>float</type>
           <name>xVel</name>
@@ -109,14 +119,7 @@
           <type>float</type>
           <name>zVel</name>
         </gpu:variable>
-        <gpu:variable>
-          <type>int</type>
-          <name>isActive</name>
-        </gpu:variable>
-        <gpu:variable>
-          <type>int</type>
-          <name>initialOffset</name>
-        </gpu:variable>
+
         <gpu:variable>
           <type>float</type>
           <name>debug1</name>
@@ -133,9 +136,10 @@
       <functions>
 
         <gpu:function>
-          <name>setActive</name>
-          <currentState>settingActive</currentState>
-          <nextState>sendingData</nextState>
+          <name>setIsActive</name>
+          <description></description>
+          <currentState>testingActive</currentState>
+          <nextState>outputingData</nextState>
           <inputs>
             <gpu:input>
               <messageName>itNumMessage</messageName>
@@ -146,12 +150,12 @@
         </gpu:function>
         
         <gpu:function>
-          <name>outputdata</name>
-          <currentState>sendingData</currentState>
+          <name>broadcastVariables</name>
+          <currentState>outputingData</currentState>
           <nextState>updatingPosition</nextState>
           <outputs>
             <gpu:output>
-              <messageName>location</messageName>
+              <messageName>particleVariables</messageName>
               <gpu:type>single_message</gpu:type>
             </gpu:output>
           </outputs>
@@ -169,9 +173,9 @@
         </gpu:function>
 
         <gpu:function>
-          <name>notoutputdata</name>
-          <currentState>sendingData</currentState>
-          <nextState>settingActive</nextState>
+          <name>skipBroadcastingVariables</name>
+          <currentState>outputingData</currentState>
+          <nextState>testingActive</nextState>
           <condition>
             <lhs>
               <agentVariable>isActive</agentVariable>
@@ -186,12 +190,12 @@
         </gpu:function>
         
         <gpu:function>
-          <name>inputdata</name>
+          <name>updatePosition</name>
           <currentState>updatingPosition</currentState>
-          <nextState>settingActive</nextState>
+          <nextState>testingActive</nextState>
           <inputs>
             <gpu:input>
-              <messageName>location</messageName>
+              <messageName>particleVariables</messageName>
             </gpu:input>
           </inputs>
           <gpu:reallocate>false</gpu:reallocate>
@@ -201,15 +205,15 @@
       
       <states>
         <gpu:state>
-          <name>settingActive</name>
+          <name>testingActive</name>
         </gpu:state>
         <gpu:state>
-          <name>sendingData</name>
+          <name>outputingData</name>
         </gpu:state>
         <gpu:state>
           <name>updatingPosition</name>
         </gpu:state>
-        <initialState>settingActive</initialState>
+        <initialState>testingActive</initialState>
       </states>
       <gpu:type>continuous</gpu:type>
       <gpu:bufferSize>32768</gpu:bufferSize>
@@ -218,7 +222,7 @@
   
   <messages>
     <gpu:message>
-      <name>location</name>
+      <name>particleVariables</name>
       <description>A message holding agent location and mass</description>
       <variables>
         <gpu:variable>
@@ -255,29 +259,29 @@
       <gpu:bufferSize>1</gpu:bufferSize>
     </gpu:message>
   </messages>
-  
+
   <layers>
     <layer>
       <gpu:layerFunction>
-        <name>increaseIterationNum</name>
+        <name>broadcastItNum</name>
       </gpu:layerFunction>
     </layer>
     <layer>
       <gpu:layerFunction>
-        <name>setActive</name>
+        <name>setIsActive</name>
       </gpu:layerFunction>
     </layer>
     <layer>
       <gpu:layerFunction>
-        <name>outputdata</name>
+        <name>broadcastVariables</name>
       </gpu:layerFunction>
       <gpu:layerFunction>
-        <name>notoutputdata</name>
+        <name>skipBroadcastingVariables</name>
       </gpu:layerFunction>
     </layer>
     <layer>
       <gpu:layerFunction>
-        <name>inputdata</name>
+        <name>updatePosition</name>
       </gpu:layerFunction>
     </layer>
   </layers>

@@ -1,1 +1,1 @@
-python ./makeT0.py
+python ./python/makeT0.py

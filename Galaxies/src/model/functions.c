@@ -20,60 +20,35 @@
 
 #include <header.h>
 #include <stdio.h>
+#include "GlobalsController.c"
 
 __FLAME_GPU_INIT_FUNC__ void initConstants(){
 
-	float dt=0.0001f; 
-	float gravConstant=1;
-    float velocityDamper=0.25;
-    float sphereRadius = 0.0035;
-	int numPartitions=2;
-
-	/*
-	printf("Input dt\n");
-	scanf("%f", &dt);
-	printf("\nInput gravitational constant:\n");
-	scanf("%f", &gravConstant);
-	printf("\nInput velocity dampening factor:\n");
-	scanf("%f", &velocityDamper);
-	printf("\nInput minimum radius of interraction:\n");
-	scanf("%f", &velocityDamper);
-	printf("\nInput number of timestep slices (optimisation):\n");
-	scanf("%d", &numPartitions);
-	*/
-
-	set_DELTA_T(&dt);
-	set_GRAV_CONST(&gravConstant);
-	set_VELOCITY_DAMP(&velocityDamper);
-	set_MIN_INTERRACTION_RAD(&sphereRadius);
-	set_NUM_PARTITIONS(&numPartitions);
+	updateSimulationVars();
 
 }
 
-/**
- * outputdata FLAMEGPU Agent Function
- * Automatically generated using functions.xslt
- * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
- * @param location_messages Pointer to output message list of type xmachine_message_location_list. Must be passed as an argument to the add_location_message function ??.
- */
-__FLAME_GPU_FUNC__ int outputdata(xmachine_memory_Particle* xmemory, xmachine_message_location_list* location_messages){
+
+__FLAME_GPU_FUNC__ int broadcastVariables(xmachine_memory_Particle* xmemory, xmachine_message_particleVariables_list* particleVariables_messages){
     
-	add_location_message(location_messages, xmemory->mass, xmemory->x, xmemory->y, xmemory->z);
-    
+	add_particleVariables_message(particleVariables_messages, xmemory->mass, xmemory->x, xmemory->y, xmemory->z);
     return 0;
 }
 
-/**
-optimisation
+__FLAME_GPU_FUNC__ int skipBroadcastingVariables(xmachine_memory_Particle* xmemory){
+    //Do nothing - this just moves states. hack?
+    return 0;
+}
 
-*/
-__FLAME_GPU_FUNC__ int setActive(xmachine_memory_Particle* xmemory, xmachine_message_itNumMessage_list* itNumMessage_messages){
 
-	
+
+__FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* xmemory, xmachine_message_itNumMessage_list* itNumMessage_messages){
+
 	int itNum;
 	int offset=xmemory->initialOffset;
 
 	xmachine_message_itNumMessage* current_message = get_first_itNumMessage_message(itNumMessage_messages);
+	
 	while(current_message){
 	  itNum=current_message->itNum;
 
@@ -85,29 +60,31 @@ __FLAME_GPU_FUNC__ int setActive(xmachine_memory_Particle* xmemory, xmachine_mes
 	  }
       current_message = get_next_itNumMessage_message(current_message, itNumMessage_messages);
 	}
-	xmemory->debug1=xmemory->id;
     return 0;
 }
 
-__FLAME_GPU_FUNC__ int notoutputdata(xmachine_memory_Particle* xmemory){
-    //Do nothing - this just moves states. hack?
-    return 0;
-}
 
-__FLAME_GPU_FUNC__ int increaseIterationNum(xmachine_memory_simulationVarsAgent* xmemory, xmachine_message_itNumMessage_list* itNumMessage_messages){
+/**
+ * outputdata FLAMEGPU Agent Function
+ * Automatically generated using functions.xslt
+ * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
+ * @param particleVariables_messages Pointer to output message list of type xmachine_message_particleVariables_list. Must be passed as an argument to the add_particleVariables_message function ??.
+ */
+__FLAME_GPU_FUNC__ int broadcastItNum(xmachine_memory_simulationVarsAgent* xmemory, xmachine_message_itNumMessage_list* itNumMessage_messages){
     int currentState=xmemory->itNum;
-    currentState++;
+    add_itNumMessage_message(itNumMessage_messages, xmemory->itNum);
+	
+	currentState++;
 	xmemory->itNum=currentState;
 
-	add_itNumMessage_message(itNumMessage_messages, xmemory->itNum);
     return 0;
 }
 
 /**
- * inputdata FLAMEGPU Agent Function
+ * updatePosition FLAMEGPU Agent Function
  * Automatically generated using functions.xslt
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
- * @param location_messages  location_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_location_message and get_next_location_message functions.
+ * @param particleVariables_messages  particleVariables_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_particleVariables_message and get_next_particleVariables_message functions.
 	
 	SHOCK HORROR!
 	IT'S ITERATION THAT SLOWS IT...
@@ -119,11 +96,11 @@ __FLAME_GPU_FUNC__ int increaseIterationNum(xmachine_memory_simulationVarsAgent*
 	15K AGENTS
 	*/
 
-__FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_message_location_list* location_messages){
+__FLAME_GPU_FUNC__ int updatePosition(xmachine_memory_Particle* xmemory, xmachine_message_particleVariables_list* particleVariables_messages){
 
 	float3 agent_position = make_float3(xmemory->x, xmemory->y, xmemory->z);
 	float3 agent_accn=make_float3(0.0,0.0,0.0);
-	xmachine_message_location* current_message = get_first_location_message(location_messages);
+	xmachine_message_particleVariables* current_message = get_first_particleVariables_message(particleVariables_messages);
 	
 	while (current_message){
 		float3 accn = make_float3(0,0,0);
@@ -139,7 +116,7 @@ __FLAME_GPU_FUNC__ int inputdata(xmachine_memory_Particle* xmemory, xmachine_mes
 		}
 
 		agent_accn+=accn;
-		current_message = get_next_location_message(current_message, location_messages);
+		current_message = get_next_particleVariables_message(current_message, particleVariables_messages);
 	}
         
 	float3 vels=make_float3(xmemory->xVel, xmemory->yVel, xmemory->zVel);
