@@ -42,7 +42,7 @@ void updateSimulationVars(){
     sphereRadius = 0.0035;
 	numPartitions=1;
 
-/*
+	/*
 	printf("\nInput dt\n");
 	scanf("%f", &dt);
 	printf("\nInput gravitational constant:\n");

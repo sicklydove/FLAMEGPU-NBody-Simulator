@@ -133,8 +133,8 @@
           <name>debug3</name>
         </gpu:variable>    
       </memory>
+      
       <functions>
-
         <gpu:function>
           <name>setIsActive</name>
           <description></description>

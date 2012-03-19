@@ -30,7 +30,7 @@ class ParticleDistribution:
       zDistrib=xDistrib
 
     if(not self.usingZAxis):
-      zDistrib=('fixed', 0)
+      zDistrib=ProbabilityDistribution('fixed', 0)
 
     if(yDistrib.getType() is 'circle'):
       for i in range(0, self.numAgents):
@@ -39,7 +39,7 @@ class ParticleDistribution:
           coords=(coords[0],coords[1],0)
 
 	self.particles[i][2]=coords
-    else:
+    else:	
       for i in range (0, self.numAgents):
         self.particles[i][2]=(xDistrib.getItem(), yDistrib.getItem(), zDistrib.getItem())
 

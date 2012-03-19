@@ -64,30 +64,25 @@ class ProbabilityDistribution:
 
 
 #archive code...
-    elif(self.distribType is 'kahfliahliahrg'):
+    elif(self.distribType is 'oldCircle'):
       randRadius=random.uniform(0, self.radius)
       randxPos=random.uniform(self.centre[0]-randRadius, self.centre[0]+randRadius)
 
-      xPosSq=(randxPos-self.centre[0])**2
       radiusSq=randRadius**2
+      xPosSq=(randxPos-self.centre[0])**2
 
-      maxYMinusBSq=radiusSq-xPosSq
-
-      maxY=quadratic(1, 0-(2*self.centre[1]), ((self.centre[1]**2)-maxYMinusBSq))[0]
+      maxY=quadratic(1, 0-(2*self.centre[1]), ((self.centre[1]**2)-(radiusSq-xPosSq))[0])
 
       randyPos=random.uniform(self.centre[1], maxY)
-
       randyPosSq=(randyPos-self.centre[1])**2
-      
+
+      zMinusC=sqrt(radiusSq-xPosSq-randyPosSq)
+
+      #invert positions
       if(random.random()>0.5):
         randyPos=self.centre[1]+(self.centre[1]-randyPos)
-
-      zMinusCSq=radiusSq-xPosSq-randyPosSq
-
-      zMinusC=sqrt(zMinusCSq)
-
-      if(random.random()>0.5):
         zPos=zMinusC+self.centre[2]
+
       else:
         zPos=self.centre[2]-zMinusC
 

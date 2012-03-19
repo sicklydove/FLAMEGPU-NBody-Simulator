@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2011 University of Sheffield.
  * Author: Dr Paul Richmond 
@@ -23,14 +22,11 @@
 #include "GlobalsController.c"
 
 __FLAME_GPU_INIT_FUNC__ void initConstants(){
-
 	updateSimulationVars();
-
 }
 
 
 __FLAME_GPU_FUNC__ int broadcastVariables(xmachine_memory_Particle* xmemory, xmachine_message_particleVariables_list* particleVariables_messages){
-    
 	add_particleVariables_message(particleVariables_messages, xmemory->mass, xmemory->x, xmemory->y, xmemory->z);
     return 0;
 }

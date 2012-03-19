@@ -44,9 +44,3 @@ class ParticleAgent:
     outStr+='</initialOffset>'
     outStr+='</xagent>\r\n'
     return outStr
-
-class Abc:
-	def __init__(self, a):
-		self.a=a
-	def out(self):
-		print self.a
