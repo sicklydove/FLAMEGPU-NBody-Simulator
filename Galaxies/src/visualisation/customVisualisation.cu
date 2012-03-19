@@ -110,26 +110,15 @@ const char vertexShaderSource[] =
     "{																			\n"
 	"	vec4 position = gl_Vertex;											    \n"
 	"	vec4 lookup = texelFetchBuffer(displacementMap, (int)mapIndex);		    \n"
-    "	if (lookup.w > 6.5){	                								\n"
+    "	//We're only using white and red. Set mat and ambient terms accordingly	\n"
+    "	if (lookup.w > 0){	                									\n"
     "		colour = vec4(1.0, 1.0, 1.0, 0.0);								    \n"
-	"		ambient = vec4(1.0, 1.0, 1.0, 0.0);									\n"
+	"		ambient = vec4(0.60, 0.60, 0.60, 0.60);								\n"
 	"	}																	    \n"
-    "	else if (lookup.w > 5.5)	                							\n"
-	"		colour = vec4(1.0, 0.0, 1.0, 0.0);								    \n"
-	"	else if (lookup.w > 4.5)	                							\n"
-	"		colour = vec4(0.0, 1.0, 1.0, 0.0);								    \n"
-    "	else if (lookup.w > 3.5)	                							\n"
-	"		colour = vec4(1.0, 1.0, 0.0, 0.0);								    \n"
-	"	else if (lookup.w > 2.5)	                							\n"
-	"		colour = vec4(0.0, 0.0, 1.0, 0.0);								    \n"
-	"	else if (lookup.w > 1.5)	                							\n"
-	"		colour = vec4(0.0, 1.0, 0.0, 0.0);								    \n"
-    "	else if (lookup.w > 0.5){                								\n"
+    "	else{                													\n"
 	"		colour = vec4(1.0, 0.0, 0.0, 0.0);								    \n"
-	"		ambient = vec4(0.25, 0.0, 0.0, 0.0);								\n"
-	"	}																			\n"
-    "	else                      	                							\n"
-	"		colour = vec4(0.0, 0.0, 0.0, 0.0);								    \n"
+	"		ambient = vec4(0.250, 0.0, 0.0, 0.0);								\n"
+	"	}																		\n"
 	"																    		\n"
 	"	lookup.w = 1.0;												    		\n"
 	"	position += lookup;											    		\n"
@@ -149,8 +138,8 @@ const char fragmentShaderSource[] =
 	"void main (void)															\n"
 	"{																			\n"
 	"	// Defining The Material Colors											\n"
-	"	vec4 AmbientColor = ambient;					\n"
-	"	vec4 DiffuseColor = colour;					                	\n"
+	"	vec4 AmbientColor = ambient;											\n"
+	"	vec4 DiffuseColor = colour;					                			\n"
 	"																			\n"
 	"	// Scaling The Input Vector To Length 1									\n"
 	"	vec3 n_normal = normalize(normal);							        	\n"
@@ -184,7 +173,8 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 			vbo[index].y = 999;
 			vbo[index].z = 999;
 		}
-		vbo[index].w = 10;
+		//Set colour white
+		vbo[index].w = 1;
 	}
 	
 	//dark matter
@@ -199,7 +189,8 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 			vbo[index].y = 999;
 			vbo[index].z = 999;
 		}
-		vbo[index].w = 1.0;
+		//Set colour red
+		vbo[index].w = 0;
 	}
 }
 
@@ -557,7 +548,7 @@ void display()
 	//Set light position
 	glLightfv(GL_LIGHT0, GL_POSITION, LIGHT_POSITION);
 
-	
+	//At the end of one full layer iteration, Particles can only be in the testingActive state. We therefore remove the other drawing functions
 	//Draw Particle Agents in testingActive state
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_BUFFER_EXT, Particle_testingActive_displacementTex);
@@ -599,7 +590,6 @@ void display()
 		frame_count++;
 	}
 
-
     glutSwapBuffers();
     glutPostRedisplay();
 
@@ -626,24 +616,30 @@ void keyboard( unsigned char key, int /*x*/, int /*y*/)
         exit( 0);
         break;
     
+    //Extra options
+    //Togle dark matter visualisation on/off
     case( 'd') :
         displayingDarkMatter=!displayingDarkMatter;
         break;
     
+    //Toggle baryonic matter visualisation on/off
     case( 'b') :
         displayingBaryonicMatter=!displayingBaryonicMatter;
         break;
 
+	//pause...
     case ('p'):
 		paused=!paused;
 		break;
 	
+	//Allow user to update simulation variables. The system is paused while they do this
     case ('u'):
 		paused=true;
 		updateSimulationVars();
 		paused=false;
 		break;
 	
+	//Print a snapshot of simulation information
 	case ('i'):
 		paused=true;
 		printSimulationInformation(itNum);

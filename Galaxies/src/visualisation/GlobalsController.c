@@ -16,10 +16,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
-#include <GL/glew.h>
-#include <GL/glut.h>
-
 
 extern void set_DELTA_T(float* h_DELTA_T);
 extern void set_GRAV_CONST(float* h_GRAV_CONST);
@@ -37,10 +33,10 @@ int numPartitions;
 void updateSimulationVars(){
 
 	dt=0.001f; 
-	gravConstant=1;
-    velocityDamper=0.3;
-    sphereRadius = 0.0035;
-	numPartitions=2;
+	gravConstant=1.0f;
+    velocityDamper=0.3f;
+    sphereRadius = 0.0035f;
+	numPartitions=1;
 
 	/*
 	printf("\nInput dt\n");

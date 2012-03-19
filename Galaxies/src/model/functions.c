@@ -33,22 +33,11 @@ __FLAME_GPU_FUNC__ int broadcastVariables(xmachine_memory_Particle* xmemory, xma
 
 
 __FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* xmemory, xmachine_message_itNumMessage_list* itNumMessage_messages){
-
-	int itNum;
 	int offset=xmemory->initialOffset;
-
 	xmachine_message_itNumMessage* current_message = get_first_itNumMessage_message(itNumMessage_messages);
-	
-	while(current_message){
-	  itNum=current_message->itNum;
-
+	int itNum=current_message->itNum;
 	  if((itNum+offset)%NUM_PARTITIONS==0){
 	    xmemory->isActive=1;
-	  }
-	  else{
-		  xmemory->isActive=0;
-	  }
-      current_message = get_next_itNumMessage_message(current_message, itNumMessage_messages);
 	}
     return 0;
 }
@@ -89,7 +78,7 @@ __FLAME_GPU_FUNC__ int broadcastItNum(xmachine_memory_simulationVarsAgent* xmemo
 __FLAME_GPU_FUNC__ int updatePosition(xmachine_memory_Particle* xmemory, xmachine_message_particleVariables_list* particleVariables_messages){
 
 	float3 agent_position = make_float3(xmemory->x, xmemory->y, xmemory->z);
-	float3 agent_accn=make_float3(0.0,0.0,0.0);
+	float3 agent_accn=make_float3(0.0, 0.0, 0.0);
 	xmachine_message_particleVariables* current_message = get_first_particleVariables_message(particleVariables_messages);
 	
 	while (current_message){

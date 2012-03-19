@@ -1,5 +1,5 @@
 class ParticleAgent:
-  def __init__(self, particleId, xPos, yPos, zPos, xVel, yVel, zVel, mass, isDark):
+  def __init__(self, particleId, xPos, yPos, zPos, xVel, yVel, zVel, mass, isDark, initialOffset):
     self.particleId=particleId
     self.xPos=xPos
     self.yPos=yPos
@@ -9,6 +9,7 @@ class ParticleAgent:
     self.zVel=zVel
     self.mass=mass
     self.isDark=isDark
+    self.initialOffset=initialOffset
 
   def writeAgent(self):
     outStr=""
@@ -20,7 +21,9 @@ class ParticleAgent:
     outStr+='<mass>'
     outStr+=str(self.mass)
     outStr+='</mass>'
-    outStr+='<isDark>0</isDark>'
+    outStr+='<isDark>'
+    outStr+=str(self.isDark)
+    outStr+='</isDark>'
     outStr+='<x>'
     outStr+=str(self.xPos)
     outStr+='</x>'
@@ -44,3 +47,26 @@ class ParticleAgent:
     outStr+='</initialOffset>'
     outStr+='</xagent>\r\n'
     return outStr
+
+  def setMass(mass):
+    self.mass=mass
+
+  def setIsDark(isDark):
+    self.isDark=isDark
+
+  def setparticleId(uID):
+    self.particleId=uID
+
+  def setOffset(offset):
+    self.initialOffset=offset
+  
+  def setPositions(x,y,z):
+    self.xPos=x
+    self.yPos=y
+    self.zPos=z
+
+  def setVels(x,y,z):
+    self.xVel=x
+    self.yVel=y
+    self.zVel=z
+

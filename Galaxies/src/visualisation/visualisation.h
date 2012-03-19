@@ -2,7 +2,7 @@
 #define __VISUALISATION_H
 
 // constants
-const int SIMULATION_DELAY = 5000;
+//const int SIMULATION_DELAY = 5000;
 const unsigned int WINDOW_WIDTH = 1600;
 const unsigned int WINDOW_HEIGHT = 900;
 

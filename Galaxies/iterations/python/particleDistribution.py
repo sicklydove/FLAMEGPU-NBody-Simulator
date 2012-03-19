@@ -2,25 +2,34 @@ import sys
 sys.dont_write_bytecode=True
 from probabilityDistribution import ProbabilityDistribution
 from particleAgent import *
+import random
 
 class ParticleDistribution:
-  def __init__(self, numAgents, usingZAxis):
+  def __init__(self, numAgents, usingZAxis, darkMatterPercentage=0, numParticleGroups=1):
    self.numAgents=numAgents
    self.usingZAxis=usingZAxis
    self.particles={}
    self.massesSet=False
    self.positionsSet=False
    self.velocitiesSet=False
+   self.darkMatterPercentage=darkMatterPercentage
+   self.numParticleGroups=numParticleGroups
 
+   #Particles: [id, mass, (xyz pos), (xyz vel)]
    for counter in range (0, self.numAgents):
-     self.particles[counter]=[0,False,(0,0,0),(0,0,0)]
+     self.particles[counter]=[0,0,(0,0,0),(0,0,0)]
 
   def setMasses(self, massDistribution):
+    prob=self.darkMatterPercentage/100
     for count in range (0, self.numAgents):
       self.particles[count][0]=massDistribution.getItem()
 
-    #darkMatter
-    self.particles[count][1]=False
+      #Dark Matter. No booleans in FLAMEGPU, so use 0/1
+      if random.random()>prob:
+        self.particles[count][1]=0
+      else:
+        self.particles[count][1]=1
+		    
     self.massesSet=True
   
   def setPositions(self, xDistrib, yDistrib=None, zDistrib=None):
@@ -28,7 +37,6 @@ class ParticleDistribution:
     if((yDistrib and zDistrib) is None):
       yDistrib=xDistrib
       zDistrib=xDistrib
-
     if(not self.usingZAxis):
       zDistrib=ProbabilityDistribution('fixed', 0)
 
@@ -37,8 +45,8 @@ class ParticleDistribution:
         coords=(xDistrib.getItem())
         if(not self.usingZAxis):
           coords=(coords[0],coords[1],0)
-
 	self.particles[i][2]=coords
+
     else:	
       for i in range (0, self.numAgents):
         self.particles[i][2]=(xDistrib.getItem(), yDistrib.getItem(), zDistrib.getItem())
@@ -51,15 +59,39 @@ class ParticleDistribution:
       yVelDistrib=xVelDistrib
       zVelDistrib=xVelDistrib
 
+    if(not self.usingZAxis):
+      zDistrib.ProbabilityDistribution('fixed',0)
+
     for i in range (0, self.numAgents):
       self.particles[i][3]=(xVelDistrib.getItem(), yVelDistrib.getItem(), zVelDistrib.getItem())
 
     self.velocitiesSet=True
 
+  def getParticleAgents(self):
+
+    particleAgents=[]
+    if(not(self.massesSet and self.positionsSet and self.velocitiesSet)):
+      print "ERROR: Can't write particles until masses, positions and velocities have been set"
+  
+    else:
+      for key, val in self.particles.iteritems():
+        mass=val[0]
+        isDark=val[1]
+        xPos=val[2][0]
+        yPos=val[2][1]
+        zPos=val[2][2]
+        xVel=val[3][0]
+        yVel=val[3][1]
+        zVel=val[3][2]
+        thisParticle=ParticleAgent(key, xPos, yPos, zPos, xVel, yVel, zVel, mass, isDark)
+        particleAgents.append(thisParticle)
+
+    return particleAgents
+
+#File loading code --- not necessary any more?
   def makeAgentsFromFile(self, fileloc):
     agentsDict={}
 
-    #File loading code
     scaleFactor=1
     velScaleFactor=1
     massScale=1
@@ -90,23 +122,3 @@ class ParticleDistribution:
       agentXML=newAgent.writeAgent()
       self.outputFile.write(agentXML)
 
-  def getParticleAgents(self):
-
-    particleAgents=[]
-    if(not(self.massesSet and self.positionsSet and self.velocitiesSet)):
-      print "ERROR: Can't write particle positions until masses, positions and velocities have been set"
-  
-    else:
-      for key, val in self.particles.iteritems():
-        mass=val[0]
-        isDark=val[1]
-        xPos=val[2][0]
-        yPos=val[2][1]
-        zPos=val[2][2]
-        xVel=val[3][0]
-        yVel=val[3][1]
-        zVel=val[3][2]
-        thisParticle=ParticleAgent(key, xPos, yPos, zPos, xVel, yVel, zVel, mass, isDark)
-        particleAgents.append(thisParticle)
-
-    return particleAgents
