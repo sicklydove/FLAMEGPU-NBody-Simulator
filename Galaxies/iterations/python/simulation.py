@@ -4,9 +4,8 @@ from particleDistribution import *
 from math import *
 
 class Simulation:
-  def  __init__(self, filename, numParticleGroups):
+  def  __init__(self, filename):
     self.filename=filename
-    self.numParticleGroups=numParticleGroups
 
   def initOutput(self):
     self.outputFile=open(self.filename,  'w')
@@ -18,6 +17,6 @@ class Simulation:
     self.outputFile.close()
 
   def writeAgents(self, ls):
-    for  agent  in  ls:
+    for agent in ls:
       agentXML=agent.writeAgent()
       self.outputFile.write(agentXML)

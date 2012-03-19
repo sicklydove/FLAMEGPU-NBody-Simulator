@@ -8,28 +8,29 @@ class ParticleDistribution:
   def __init__(self, numAgents, usingZAxis, darkMatterPercentage=0, numParticleGroups=1):
    self.numAgents=numAgents
    self.usingZAxis=usingZAxis
-   self.particles={}
+   self.particles=[]
    self.massesSet=False
    self.positionsSet=False
    self.velocitiesSet=False
    self.darkMatterPercentage=darkMatterPercentage
    self.numParticleGroups=numParticleGroups
+   prob=self.darkMatterPercentage/100
 
    #Particles: [id, mass, (xyz pos), (xyz vel)]
    for counter in range (0, self.numAgents):
-     self.particles[counter]=[0,0,(0,0,0),(0,0,0)]
+     #Dark Matter. No booleans in FLAMEGPU, so use 0/1
+     if (random.random() > prob):
+       isDark=0 
+     else:
+       isDark=1
+     particleGroup=int(random.uniform(0,numParticleGroups-1))
+
+     self.particles.append(ParticleAgent(counter,0,isDark,particleGroup,(0,0,0),(0,0,0)))
 
   def setMasses(self, massDistribution):
-    prob=self.darkMatterPercentage/100
     for count in range (0, self.numAgents):
-      self.particles[count][0]=massDistribution.getItem()
+      self.particles[count].setMass(massDistribution.getItem())
 
-      #Dark Matter. No booleans in FLAMEGPU, so use 0/1
-      if random.random()>prob:
-        self.particles[count][1]=0
-      else:
-        self.particles[count][1]=1
-		    
     self.massesSet=True
   
   def setPositions(self, xDistrib, yDistrib=None, zDistrib=None):
@@ -45,11 +46,10 @@ class ParticleDistribution:
         coords=(xDistrib.getItem())
         if(not self.usingZAxis):
           coords=(coords[0],coords[1],0)
-	self.particles[i][2]=coords
-
+        self.particles[i].setPositions(coords[0], coords[1], coords[2])
     else:	
       for i in range (0, self.numAgents):
-        self.particles[i][2]=(xDistrib.getItem(), yDistrib.getItem(), zDistrib.getItem())
+        self.particles[i].setPositions(xDistrib.getItem(), yDistrib.getItem(), zDistrib.getItem())
 
     self.positionsSet=True
   
@@ -63,30 +63,31 @@ class ParticleDistribution:
       zDistrib.ProbabilityDistribution('fixed',0)
 
     for i in range (0, self.numAgents):
-      self.particles[i][3]=(xVelDistrib.getItem(), yVelDistrib.getItem(), zVelDistrib.getItem())
+      self.particles[i].setVels(xVelDistrib.getItem(), yVelDistrib.getItem(), zVelDistrib.getItem())
 
     self.velocitiesSet=True
 
   def getParticleAgents(self):
+    return self.particles
 
-    particleAgents=[]
-    if(not(self.massesSet and self.positionsSet and self.velocitiesSet)):
-      print "ERROR: Can't write particles until masses, positions and velocities have been set"
-  
-    else:
-      for key, val in self.particles.iteritems():
-        mass=val[0]
-        isDark=val[1]
-        xPos=val[2][0]
-        yPos=val[2][1]
-        zPos=val[2][2]
-        xVel=val[3][0]
-        yVel=val[3][1]
-        zVel=val[3][2]
-        thisParticle=ParticleAgent(key, xPos, yPos, zPos, xVel, yVel, zVel, mass, isDark)
-        particleAgents.append(thisParticle)
+#   particleAgents=[]
+#   if(not(self.massesSet and self.positionsSet and self.velocitiesSet)):
+#     print "ERROR: Can't write particles until masses, positions and velocities have been set"
+# 
+#   else:
+#     for key, val in self.particles.iteritems():
+#       mass=val[0]
+#       isDark=val[1]
+#       xPos=val[2][0]
+#       yPos=val[2][1]
+#       zPos=val[2][2]
+#       xVel=val[3][0]
+#       yVel=val[3][1]
+#       zVel=val[3][2]
+#       thisParticle=ParticleAgent(key, xPos, yPos, zPos, xVel, yVel, zVel, mass, isDark)
+#       particleAgents.append(thisParticle)
 
-    return particleAgents
+#   return particleAgents
 
 #File loading code --- not necessary any more?
   def makeAgentsFromFile(self, fileloc):
