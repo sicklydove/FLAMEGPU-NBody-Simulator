@@ -270,13 +270,6 @@ __FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* agent, xmachine_mes
 __FLAME_GPU_FUNC__ int broadcastVariables(xmachine_memory_Particle* agent, xmachine_message_particleVariables_list* particleVariables_messages);
 
 /**
- * skipBroadcastingVariables FLAMEGPU Agent Function
- * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
- 
- */
-__FLAME_GPU_FUNC__ int skipBroadcastingVariables(xmachine_memory_Particle* agent);
-
-/**
  * updatePosition FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
  * @param particleVariables_messages  particleVariables_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_particleVariables_message and get_next_particleVariables_message functions.

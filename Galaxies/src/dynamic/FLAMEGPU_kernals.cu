@@ -188,48 +188,6 @@ __device__ int next_cell2D(int3* relative_cell)
 	}
  }
 
-/** skipBroadcastingVariables_function_filter
- *	Standard agent condition function. Filters agents from one state list to the next depending on the condition
- * @param currentState xmachine_memory_Particle_list representing agent i the current state
- * @param nextState xmachine_memory_Particle_list representing agent i the next state
- */
- __global__ void skipBroadcastingVariables_function_filter(xmachine_memory_Particle_list* currentState, xmachine_memory_Particle_list* nextState)
- {
-	//global thread index
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-	
-	//check thread max
-	if (index < d_xmachine_memory_Particle_count){
-	
-		//apply the filter
-		if (currentState->isActive[index]<1)
-		{	//copy agent data to newstate list
-			nextState->id[index] = currentState->id[index];
-			nextState->isDark[index] = currentState->isDark[index];
-			nextState->isActive[index] = currentState->isActive[index];
-			nextState->initialOffset[index] = currentState->initialOffset[index];
-			nextState->mass[index] = currentState->mass[index];
-			nextState->x[index] = currentState->x[index];
-			nextState->y[index] = currentState->y[index];
-			nextState->z[index] = currentState->z[index];
-			nextState->xVel[index] = currentState->xVel[index];
-			nextState->yVel[index] = currentState->yVel[index];
-			nextState->zVel[index] = currentState->zVel[index];
-			nextState->debug1[index] = currentState->debug1[index];
-			nextState->debug2[index] = currentState->debug2[index];
-			nextState->debug3[index] = currentState->debug3[index];
-			//set scan input flag to 1
-			nextState->_scan_input[index] = 1;
-		}
-		else
-		{
-			//set scan input flag of current state to 1 (keep agent)
-			currentState->_scan_input[index] = 1;
-		}
-	
-	}
- }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Dyanamically created simulationVarsAgent agent functions */
 
@@ -947,59 +905,6 @@ __global__ void GPUFLAME_broadcastVariables(xmachine_memory_Particle_list* agent
 	agents->_scan_input[index]  = dead; 
 
 	//AoS to SoA - xmachine_memory_broadcastVariables Coalesced memory write
-	agents->id[index] = agent.id;
-	agents->isDark[index] = agent.isDark;
-	agents->isActive[index] = agent.isActive;
-	agents->initialOffset[index] = agent.initialOffset;
-	agents->mass[index] = agent.mass;
-	agents->x[index] = agent.x;
-	agents->y[index] = agent.y;
-	agents->z[index] = agent.z;
-	agents->xVel[index] = agent.xVel;
-	agents->yVel[index] = agent.yVel;
-	agents->zVel[index] = agent.zVel;
-	agents->debug1[index] = agent.debug1;
-	agents->debug2[index] = agent.debug2;
-	agents->debug3[index] = agent.debug3;
-}
-
-/**
- *
- */
-__global__ void GPUFLAME_skipBroadcastingVariables(xmachine_memory_Particle_list* agents){
-	
-	//continuous agent: index is agent position in 1D agent list
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-  
-    //For agents not using non partitioned message input check the agent bounds
-    if (index > d_xmachine_memory_Particle_count)
-        return;
-    
-
-	//SoA to AoS - xmachine_memory_skipBroadcastingVariables Coalesced memory read
-	xmachine_memory_Particle agent;
-	agent.id = agents->id[index];
-	agent.isDark = agents->isDark[index];
-	agent.isActive = agents->isActive[index];
-	agent.initialOffset = agents->initialOffset[index];
-	agent.mass = agents->mass[index];
-	agent.x = agents->x[index];
-	agent.y = agents->y[index];
-	agent.z = agents->z[index];
-	agent.xVel = agents->xVel[index];
-	agent.yVel = agents->yVel[index];
-	agent.zVel = agents->zVel[index];
-	agent.debug1 = agents->debug1[index];
-	agent.debug2 = agents->debug2[index];
-	agent.debug3 = agents->debug3[index];
-
-	//FLAME function call
-	int dead = !skipBroadcastingVariables(&agent);
-	
-	//continuous agent: set reallocation flag
-	agents->_scan_input[index]  = dead; 
-
-	//AoS to SoA - xmachine_memory_skipBroadcastingVariables Coalesced memory write
 	agents->id[index] = agent.id;
 	agents->isDark[index] = agent.isDark;
 	agents->isActive[index] = agent.isActive;

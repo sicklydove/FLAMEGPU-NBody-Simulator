@@ -40,7 +40,7 @@ void updateSimulationVars(){
 	gravConstant=1;
     velocityDamper=0.3;
     sphereRadius = 0.0035;
-	numPartitions=1;
+	numPartitions=2;
 
 	/*
 	printf("\nInput dt\n");

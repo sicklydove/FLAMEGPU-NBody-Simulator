@@ -139,7 +139,7 @@
           <name>setIsActive</name>
           <description></description>
           <currentState>testingActive</currentState>
-          <nextState>outputingData</nextState>
+          <nextState>testingActive</nextState>
           <inputs>
             <gpu:input>
               <messageName>itNumMessage</messageName>
@@ -151,7 +151,7 @@
         
         <gpu:function>
           <name>broadcastVariables</name>
-          <currentState>outputingData</currentState>
+          <currentState>testingActive</currentState>
           <nextState>updatingPosition</nextState>
           <outputs>
             <gpu:output>
@@ -171,24 +171,7 @@
           <gpu:reallocate>false</gpu:reallocate>
           <gpu:RNG>false</gpu:RNG>
         </gpu:function>
-
-        <gpu:function>
-          <name>skipBroadcastingVariables</name>
-          <currentState>outputingData</currentState>
-          <nextState>testingActive</nextState>
-          <condition>
-            <lhs>
-              <agentVariable>isActive</agentVariable>
-            </lhs>
-            <operator>&lt;</operator>
-            <rhs>
-              <value>1</value>
-            </rhs>
-          </condition>
-          <gpu:reallocate>false</gpu:reallocate>
-          <gpu:RNG>false</gpu:RNG>
-        </gpu:function>
-        
+ 
         <gpu:function>
           <name>updatePosition</name>
           <currentState>updatingPosition</currentState>
@@ -274,9 +257,6 @@
     <layer>
       <gpu:layerFunction>
         <name>broadcastVariables</name>
-      </gpu:layerFunction>
-      <gpu:layerFunction>
-        <name>skipBroadcastingVariables</name>
       </gpu:layerFunction>
     </layer>
     <layer>

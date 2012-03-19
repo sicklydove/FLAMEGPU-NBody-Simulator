@@ -119,11 +119,6 @@ void Particle_setIsActive();
  */
 void Particle_broadcastVariables();
 
-/** Particle_skipBroadcastingVariables
- * Agent function prototype for skipBroadcastingVariables function of Particle agent
- */
-void Particle_skipBroadcastingVariables();
-
 /** Particle_updatePosition
  * Agent function prototype for updatePosition function of Particle agent
  */
@@ -502,7 +497,6 @@ void singleIteration(){
 	
 	/* Layer 3*/
 	Particle_broadcastVariables();
-	Particle_skipBroadcastingVariables();
 	
 	/* Layer 4*/
 	Particle_updatePosition();
@@ -769,16 +763,16 @@ void Particle_setIsActive(){
 	//************************ MOVE AGENTS TO NEXT STATE ****************************
     
 	//check the working agents wont exceed the buffer size in the new state list
-	if (h_xmachine_memory_Particle_outputingData_count+h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
-		printf("Error: Buffer size of setIsActive agents in state outputingData will be exceeded moving working agents to next state in function setIsActive\n");
+	if (h_xmachine_memory_Particle_testingActive_count+h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
+		printf("Error: Buffer size of setIsActive agents in state testingActive will be exceeded moving working agents to next state in function setIsActive\n");
 		exit(0);
 	}
 	//append agents to next state list
-	append_Particle_Agents<<<grid, threads>>>(d_Particles_outputingData, d_Particles, h_xmachine_memory_Particle_outputingData_count, h_xmachine_memory_Particle_count);
+	append_Particle_Agents<<<grid, threads>>>(d_Particles_testingActive, d_Particles, h_xmachine_memory_Particle_testingActive_count, h_xmachine_memory_Particle_count);
 	CUT_CHECK_ERROR("Kernel execution failed");
 	//update new state agent size
-	h_xmachine_memory_Particle_outputingData_count += h_xmachine_memory_Particle_count;
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_outputingData_count, &h_xmachine_memory_Particle_outputingData_count, sizeof(int)));	
+	h_xmachine_memory_Particle_testingActive_count += h_xmachine_memory_Particle_count;
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_testingActive_count, &h_xmachine_memory_Particle_testingActive_count, sizeof(int)));	
 	
 	
 }
@@ -795,7 +789,7 @@ void Particle_broadcastVariables(){
 	
 	//CHECK THE CURRENT STATE LIST COUNT IS NOT EQUAL TO 0
 	
-	if (h_xmachine_memory_Particle_outputingData_count == 0)
+	if (h_xmachine_memory_Particle_testingActive_count == 0)
 	{
 		return;
 	}
@@ -803,7 +797,7 @@ void Particle_broadcastVariables(){
 	
 	//SET GRID AND BLOCK SIZES
 	//set tile size depending on agent count, set a 1d grid and block
-	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_outputingData_count/THREADS_PER_TILE);
+	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_testingActive_count/THREADS_PER_TILE);
 	grid.x = tile_size;
 	threads.x = THREADS_PER_TILE;
 	sm_size = SM_START;
@@ -814,39 +808,39 @@ void Particle_broadcastVariables(){
 	//CONTINUOUS AGENT FUNCTION AND THERE IS A FUNCTION CONDITION
   	
 	//COPY CURRENT STATE COUNT TO WORKING COUNT (host and device)
-	h_xmachine_memory_Particle_count = h_xmachine_memory_Particle_outputingData_count;
+	h_xmachine_memory_Particle_count = h_xmachine_memory_Particle_testingActive_count;
 	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_count, &h_xmachine_memory_Particle_count, sizeof(int)));	
 	
 	//RESET SCAN INPUTS
 	//reset scan input for currentState
-	reset_Particle_scan_input<<<grid, threads>>>(d_Particles_outputingData);
+	reset_Particle_scan_input<<<grid, threads>>>(d_Particles_testingActive);
 	CUT_CHECK_ERROR("Kernel execution failed");
 	//reset scan input for working lists
 	reset_Particle_scan_input<<<grid, threads>>>(d_Particles);
 	CUT_CHECK_ERROR("Kernel execution failed");
 
 	//APPLY FUNCTION FILTER
-	broadcastVariables_function_filter<<<grid, threads>>>(d_Particles_outputingData, d_Particles);
+	broadcastVariables_function_filter<<<grid, threads>>>(d_Particles_testingActive, d_Particles);
 	CUT_CHECK_ERROR("Kernel execution failed");
 		
 	//COMPACT CURRENT STATE LIST
-	cudppScan(cudpp_scanplan, d_Particles_outputingData->_position, d_Particles_outputingData->_scan_input, h_xmachine_memory_Particle_count);
+	cudppScan(cudpp_scanplan, d_Particles_testingActive->_position, d_Particles_testingActive->_scan_input, h_xmachine_memory_Particle_count);
 	//reset agent count
-	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_sum, &d_Particles_outputingData->_position[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
-	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_included, &d_Particles_outputingData->_scan_input[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_sum, &d_Particles_testingActive->_position[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_included, &d_Particles_testingActive->_scan_input[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
 	if (cudpp_last_included == 1)
-		h_xmachine_memory_Particle_outputingData_count = cudpp_last_sum+1;
+		h_xmachine_memory_Particle_testingActive_count = cudpp_last_sum+1;
 	else		
-		h_xmachine_memory_Particle_outputingData_count = cudpp_last_sum;
+		h_xmachine_memory_Particle_testingActive_count = cudpp_last_sum;
 	//Scatter into swap
-	scatter_Particle_Agents<<<grid, threads>>>(d_Particles_swap, d_Particles_outputingData, 0, h_xmachine_memory_Particle_count);
+	scatter_Particle_Agents<<<grid, threads>>>(d_Particles_swap, d_Particles_testingActive, 0, h_xmachine_memory_Particle_count);
 	CUT_CHECK_ERROR("Kernel execution failed");
 	//use a temp pointer change working swap list with current state list
-	xmachine_memory_Particle_list* Particles_outputingData_temp = d_Particles_outputingData;
-	d_Particles_outputingData = d_Particles_swap;
-	d_Particles_swap = Particles_outputingData_temp;
+	xmachine_memory_Particle_list* Particles_testingActive_temp = d_Particles_testingActive;
+	d_Particles_testingActive = d_Particles_swap;
+	d_Particles_swap = Particles_testingActive_temp;
 	//update the device count
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_outputingData_count, &h_xmachine_memory_Particle_outputingData_count, sizeof(int)));	
+	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_testingActive_count, &h_xmachine_memory_Particle_testingActive_count, sizeof(int)));	
 		
 	//COMPACT WORKING STATE LIST
 	cudppScan(cudpp_scanplan, d_Particles->_position, d_Particles->_scan_input, h_xmachine_memory_Particle_count);
@@ -925,134 +919,6 @@ void Particle_broadcastVariables(){
 	//update new state agent size
 	h_xmachine_memory_Particle_updatingPosition_count += h_xmachine_memory_Particle_count;
 	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_updatingPosition_count, &h_xmachine_memory_Particle_updatingPosition_count, sizeof(int)));	
-	
-	
-}
-
-
-
-/** Particle_skipBroadcastingVariables
- * Agent function prototype for skipBroadcastingVariables function of Particle agent
- */
-void Particle_skipBroadcastingVariables(){
-	dim3 grid;
-	dim3 threads;
-	int sm_size;
-	
-	//CHECK THE CURRENT STATE LIST COUNT IS NOT EQUAL TO 0
-	
-	if (h_xmachine_memory_Particle_outputingData_count == 0)
-	{
-		return;
-	}
-	
-	
-	//SET GRID AND BLOCK SIZES
-	//set tile size depending on agent count, set a 1d grid and block
-	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_outputingData_count/THREADS_PER_TILE);
-	grid.x = tile_size;
-	threads.x = THREADS_PER_TILE;
-	sm_size = SM_START;
-
-	
-
-	//******************************** AGENT FUNCTION CONDITION *********************
-	//CONTINUOUS AGENT FUNCTION AND THERE IS A FUNCTION CONDITION
-  	
-	//COPY CURRENT STATE COUNT TO WORKING COUNT (host and device)
-	h_xmachine_memory_Particle_count = h_xmachine_memory_Particle_outputingData_count;
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_count, &h_xmachine_memory_Particle_count, sizeof(int)));	
-	
-	//RESET SCAN INPUTS
-	//reset scan input for currentState
-	reset_Particle_scan_input<<<grid, threads>>>(d_Particles_outputingData);
-	CUT_CHECK_ERROR("Kernel execution failed");
-	//reset scan input for working lists
-	reset_Particle_scan_input<<<grid, threads>>>(d_Particles);
-	CUT_CHECK_ERROR("Kernel execution failed");
-
-	//APPLY FUNCTION FILTER
-	skipBroadcastingVariables_function_filter<<<grid, threads>>>(d_Particles_outputingData, d_Particles);
-	CUT_CHECK_ERROR("Kernel execution failed");
-		
-	//COMPACT CURRENT STATE LIST
-	cudppScan(cudpp_scanplan, d_Particles_outputingData->_position, d_Particles_outputingData->_scan_input, h_xmachine_memory_Particle_count);
-	//reset agent count
-	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_sum, &d_Particles_outputingData->_position[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
-	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_included, &d_Particles_outputingData->_scan_input[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
-	if (cudpp_last_included == 1)
-		h_xmachine_memory_Particle_outputingData_count = cudpp_last_sum+1;
-	else		
-		h_xmachine_memory_Particle_outputingData_count = cudpp_last_sum;
-	//Scatter into swap
-	scatter_Particle_Agents<<<grid, threads>>>(d_Particles_swap, d_Particles_outputingData, 0, h_xmachine_memory_Particle_count);
-	CUT_CHECK_ERROR("Kernel execution failed");
-	//use a temp pointer change working swap list with current state list
-	xmachine_memory_Particle_list* Particles_outputingData_temp = d_Particles_outputingData;
-	d_Particles_outputingData = d_Particles_swap;
-	d_Particles_swap = Particles_outputingData_temp;
-	//update the device count
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_outputingData_count, &h_xmachine_memory_Particle_outputingData_count, sizeof(int)));	
-		
-	//COMPACT WORKING STATE LIST
-	cudppScan(cudpp_scanplan, d_Particles->_position, d_Particles->_scan_input, h_xmachine_memory_Particle_count);
-	//reset agent count
-	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_sum, &d_Particles->_position[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
-	CUDA_SAFE_CALL( cudaMemcpy( &cudpp_last_included, &d_Particles->_scan_input[h_xmachine_memory_Particle_count-1], sizeof(int), cudaMemcpyDeviceToHost));
-	//Scatter into swap
-	scatter_Particle_Agents<<<grid, threads>>>(d_Particles_swap, d_Particles, 0, h_xmachine_memory_Particle_count);
-    CUT_CHECK_ERROR("Kernel execution failed");
-	//update working agent count after the scatter
-    if (cudpp_last_included == 1)
-		h_xmachine_memory_Particle_count = cudpp_last_sum+1;
-	else		
-		h_xmachine_memory_Particle_count = cudpp_last_sum;
-    //use a temp pointer change working swap list with current state list
-	xmachine_memory_Particle_list* Particles_temp = d_Particles;
-	d_Particles = d_Particles_swap;
-	d_Particles_swap = Particles_temp;
-	//update the device count
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_count, &h_xmachine_memory_Particle_count, sizeof(int)));	
-	
-	//CHECK WORKING LIST COUNT IS NOT EQUAL TO 0
-	if (h_xmachine_memory_Particle_count == 0)
-	{
-		return;
-	}
-	
-	//Update the grid and block size for the working list size of continuous agent
-	tile_size = (int)ceil((float)h_xmachine_memory_Particle_count/THREADS_PER_TILE);
-	grid.x = tile_size;
-	threads.x = THREADS_PER_TILE;
-	
-
-	//******************************** AGENT FUNCTION *******************************
-
-	
-	
-	//MAIN XMACHINE FUNCTION CALL (skipBroadcastingVariables)
-	//Reallocate   : false
-	//Input        : 
-	//Output       : 
-	//Agent Output : 
-	GPUFLAME_skipBroadcastingVariables<<<grid, threads, sm_size>>>(d_Particles);
-	CUT_CHECK_ERROR("Kernel execution failed");
-    
-    
-	
-	//************************ MOVE AGENTS TO NEXT STATE ****************************
-    
-	//check the working agents wont exceed the buffer size in the new state list
-	if (h_xmachine_memory_Particle_testingActive_count+h_xmachine_memory_Particle_count > xmachine_memory_Particle_MAX){
-		printf("Error: Buffer size of skipBroadcastingVariables agents in state testingActive will be exceeded moving working agents to next state in function skipBroadcastingVariables\n");
-		exit(0);
-	}
-	//append agents to next state list
-	append_Particle_Agents<<<grid, threads>>>(d_Particles_testingActive, d_Particles, h_xmachine_memory_Particle_testingActive_count, h_xmachine_memory_Particle_count);
-	CUT_CHECK_ERROR("Kernel execution failed");
-	//update new state agent size
-	h_xmachine_memory_Particle_testingActive_count += h_xmachine_memory_Particle_count;
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_xmachine_memory_Particle_testingActive_count, &h_xmachine_memory_Particle_testingActive_count, sizeof(int)));	
 	
 	
 }

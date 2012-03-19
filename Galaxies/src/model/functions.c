@@ -31,12 +31,6 @@ __FLAME_GPU_FUNC__ int broadcastVariables(xmachine_memory_Particle* xmemory, xma
     return 0;
 }
 
-__FLAME_GPU_FUNC__ int skipBroadcastingVariables(xmachine_memory_Particle* xmemory){
-    //Do nothing - this just moves states. hack?
-    return 0;
-}
-
-
 
 __FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* xmemory, xmachine_message_itNumMessage_list* itNumMessage_messages){
 
