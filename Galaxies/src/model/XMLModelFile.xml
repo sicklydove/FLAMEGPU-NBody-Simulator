@@ -191,9 +191,6 @@
           <name>testingActive</name>
         </gpu:state>
         <gpu:state>
-          <name>outputingData</name>
-        </gpu:state>
-        <gpu:state>
           <name>updatingPosition</name>
         </gpu:state>
         <initialState>testingActive</initialState>

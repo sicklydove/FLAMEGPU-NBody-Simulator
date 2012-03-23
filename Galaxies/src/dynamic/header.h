@@ -30,13 +30,13 @@
 
 /* Agent population size definifions must be a multiple of THREADS_PER_TILE (defualt 64) */
 //Maximum buffer size (largest agent buffer size)
-#define buffer_size_MAX 32768
+#define buffer_size_MAX 65536
 
 //Maximum population size of xmachine_memory_simulationVarsAgent
 #define xmachine_memory_simulationVarsAgent_MAX 1
 
 //Maximum population size of xmachine_memory_Particle
-#define xmachine_memory_Particle_MAX 32768
+#define xmachine_memory_Particle_MAX 65536
   
   
 /* Message poulation size definitions */
@@ -395,7 +395,7 @@ extern "C" void singleIteration();
  * @param d_Particles Pointer to agent list on the GPU device
  * @param h_xmachine_memory_Particle_count Pointer to agent counter
  */
-extern "C" void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_testingActive, xmachine_memory_Particle_list* d_Particles_testingActive, int h_xmachine_memory_Particle_testingActive_count,xmachine_memory_Particle_list* h_Particles_outputingData, xmachine_memory_Particle_list* d_Particles_outputingData, int h_xmachine_memory_Particle_outputingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count);
+extern "C" void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_testingActive, xmachine_memory_Particle_list* d_Particles_testingActive, int h_xmachine_memory_Particle_testingActive_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count);
 
 
 /** readInitialStates
@@ -477,32 +477,6 @@ extern "C" xmachine_memory_Particle_list* get_host_Particle_testingActive_agents
  * @param		a pointer CUDA kernal function to generate key value pairs
  */
 void sort_Particles_testingActive(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
-
-
-/** get_agent_Particle_outputingData_count
- * Gets the agent count for the Particle agent type in state outputingData
- * @return		the current Particle agent count in state outputingData
- */
-extern "C" int get_agent_Particle_outputingData_count();
-
-/** get_device_Particle_outputingData_agents
- * Gets a pointer to xmachine_memory_Particle_list on the GPU device
- * @return		a xmachine_memory_Particle_list on the GPU device
- */
-extern "C" xmachine_memory_Particle_list* get_device_Particle_outputingData_agents();
-
-/** get_host_Particle_outputingData_agents
- * Gets a pointer to xmachine_memory_Particle_list on the CPU host
- * @return		a xmachine_memory_Particle_list on the CPU host
- */
-extern "C" xmachine_memory_Particle_list* get_host_Particle_outputingData_agents();
-
-
-/** sort_Particles_outputingData
- * Sorts an agent state list by providing a CUDA kernal to generate key value pairs
- * @param		a pointer CUDA kernal function to generate key value pairs
- */
-void sort_Particles_outputingData(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents));
 
 
 /** get_agent_Particle_updatingPosition_count

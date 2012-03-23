@@ -8,7 +8,7 @@ class Simulation:
     self.filename=filename
 
   def initOutput(self):
-    self.outputFile=open(self.filename,  'w')
+    self.outputFile=open(self.filename, 'w')
     self.outputFile.write('<states>\r\n<itno>0</itno>\r\n')
     self.outputFile.write('<xagent><name>simulationVarsAgent</name><iterationNum>0</iterationNum></xagent>\r\n')
 

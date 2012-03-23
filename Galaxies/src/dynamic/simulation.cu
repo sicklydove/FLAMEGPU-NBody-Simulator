@@ -60,11 +60,6 @@ xmachine_memory_Particle_list* d_Particles_testingActive;      /**< Pointer to a
 int h_xmachine_memory_Particle_testingActive_count;   /**< Agent population size counter */ 
 
 /* Particle state variables */
-xmachine_memory_Particle_list* h_Particles_outputingData;      /**< Pointer to agent list (population) on host*/
-xmachine_memory_Particle_list* d_Particles_outputingData;      /**< Pointer to agent list (population) on the device*/
-int h_xmachine_memory_Particle_outputingData_count;   /**< Agent population size counter */ 
-
-/* Particle state variables */
 xmachine_memory_Particle_list* h_Particles_updatingPosition;      /**< Pointer to agent list (population) on host*/
 xmachine_memory_Particle_list* d_Particles_updatingPosition;      /**< Pointer to agent list (population) on the device*/
 int h_xmachine_memory_Particle_updatingPosition_count;   /**< Agent population size counter */ 
@@ -202,14 +197,13 @@ void initialise(char * inputfile){
     setPaddingAndOffset();
   
 
-	printf("Allocating Host and Device memeory\n");
+	printf("Allocating Host and Device memory\n");
   
 	/* Agent memory allocation (CPU) */
 	int xmachine_simulationVarsAgent_SoA_size = sizeof(xmachine_memory_simulationVarsAgent_list);
 	h_simulationVarsAgents_default = (xmachine_memory_simulationVarsAgent_list*)malloc(xmachine_simulationVarsAgent_SoA_size);
 	int xmachine_Particle_SoA_size = sizeof(xmachine_memory_Particle_list);
 	h_Particles_testingActive = (xmachine_memory_Particle_list*)malloc(xmachine_Particle_SoA_size);
-	h_Particles_outputingData = (xmachine_memory_Particle_list*)malloc(xmachine_Particle_SoA_size);
 	h_Particles_updatingPosition = (xmachine_memory_Particle_list*)malloc(xmachine_Particle_SoA_size);
 
 	/* Message memory allocation (CPU) */
@@ -246,10 +240,6 @@ void initialise(char * inputfile){
 	/* testingActive memory allocation (GPU) */
 	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Particles_testingActive, xmachine_Particle_SoA_size));
 	CUDA_SAFE_CALL( cudaMemcpy( d_Particles_testingActive, h_Particles_testingActive, xmachine_Particle_SoA_size, cudaMemcpyHostToDevice));
-    
-	/* outputingData memory allocation (GPU) */
-	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Particles_outputingData, xmachine_Particle_SoA_size));
-	CUDA_SAFE_CALL( cudaMemcpy( d_Particles_outputingData, h_Particles_outputingData, xmachine_Particle_SoA_size, cudaMemcpyHostToDevice));
     
 	/* updatingPosition memory allocation (GPU) */
 	CUDA_SAFE_CALL( cudaMalloc( (void**) &d_Particles_updatingPosition, xmachine_Particle_SoA_size));
@@ -381,32 +371,6 @@ void sort_Particles_testingActive(void (*generate_key_value_pairs)(unsigned int*
 	d_Particles_swap = d_Particles_temp;	
 }
 
-void sort_Particles_outputingData(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents))
-{
-	dim3 grid;
-	dim3 threads;
-	int tile_size = (int)ceil((float)h_xmachine_memory_Particle_outputingData_count/THREADS_PER_TILE);
-	grid.x = tile_size;
-	threads.x = THREADS_PER_TILE;
-
-	//generate sort keys
-	generate_key_value_pairs<<<grid, threads>>>(d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, d_Particles_outputingData);
-	CUT_CHECK_ERROR("Kernel execution failed");
-	
-	//sort
-	cudppSort(cudpp_sortplan, d_xmachine_memory_Particle_keys, d_xmachine_memory_Particle_values, radix_keybits, h_xmachine_memory_Particle_outputingData_count);
-	CUT_CHECK_ERROR("Kernel execution failed");
-
-	//reorder agents
-	reorder_Particle_agents<<<grid, threads>>>(d_xmachine_memory_Particle_values, d_Particles_outputingData, d_Particles_swap);
-	CUT_CHECK_ERROR("Kernel execution failed");
-
-	//swap
-	xmachine_memory_Particle_list* d_Particles_temp = d_Particles_outputingData;
-	d_Particles_outputingData = d_Particles_swap;
-	d_Particles_swap = d_Particles_temp;	
-}
-
 void sort_Particles_updatingPosition(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_Particle_list* agents))
 {
 	dim3 grid;
@@ -453,9 +417,6 @@ void cleanup(){
 	
 	free( h_Particles_testingActive);
 	CUDA_SAFE_CALL(cudaFree(d_Particles_testingActive));
-	
-	free( h_Particles_outputingData);
-	CUDA_SAFE_CALL(cudaFree(d_Particles_outputingData));
 	
 	free( h_Particles_updatingPosition);
 	CUDA_SAFE_CALL(cudaFree(d_Particles_updatingPosition));
@@ -571,20 +532,6 @@ xmachine_memory_Particle_list* get_device_Particle_testingActive_agents(){
 
 xmachine_memory_Particle_list* get_host_Particle_testingActive_agents(){
 	return h_Particles_testingActive;
-}
-
-int get_agent_Particle_outputingData_count(){
-	//continuous agent
-	return h_xmachine_memory_Particle_outputingData_count;
-	
-}
-
-xmachine_memory_Particle_list* get_device_Particle_outputingData_agents(){
-	return d_Particles_outputingData;
-}
-
-xmachine_memory_Particle_list* get_host_Particle_outputingData_agents(){
-	return h_Particles_outputingData;
 }
 
 int get_agent_Particle_updatingPosition_count(){

@@ -30,13 +30,12 @@ float3 agent_minimum;
 
 
     
-void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_testingActive, xmachine_memory_Particle_list* d_Particles_testingActive, int h_xmachine_memory_Particle_testingActive_count,xmachine_memory_Particle_list* h_Particles_outputingData, xmachine_memory_Particle_list* d_Particles_outputingData, int h_xmachine_memory_Particle_outputingData_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count)
+void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_testingActive, xmachine_memory_Particle_list* d_Particles_testingActive, int h_xmachine_memory_Particle_testingActive_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count)
 {
 	//Device to host memory transfer
 	
 	CUDA_SAFE_CALL( cudaMemcpy( h_simulationVarsAgents_default, d_simulationVarsAgents_default, sizeof(xmachine_memory_simulationVarsAgent_list), cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_testingActive, d_Particles_testingActive, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
-	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_outputingData, d_Particles_outputingData, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
 	CUDA_SAFE_CALL( cudaMemcpy( h_Particles_updatingPosition, d_Particles_updatingPosition, sizeof(xmachine_memory_Particle_list), cudaMemcpyDeviceToHost));
 	
 	/* Pointer to file */
@@ -137,83 +136,6 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_s
 		
 		fputs("<debug3>", file);
 		sprintf(data, "%f", h_Particles_testingActive->debug3[i]);
-		fputs(data, file);
-		fputs("</debug3>\n", file);
-		
-		fputs("</xagent>\n", file);
-	}
-	//Write each Particle agent to xml
-	for (int i=0; i<h_xmachine_memory_Particle_outputingData_count; i++){
-		fputs("<xagent>\n" , file);
-		fputs("<name>Particle</name>\n", file);
-		
-		fputs("<id>", file);
-		sprintf(data, "%i", h_Particles_outputingData->id[i]);
-		fputs(data, file);
-		fputs("</id>\n", file);
-		
-		fputs("<isDark>", file);
-		sprintf(data, "%i", h_Particles_outputingData->isDark[i]);
-		fputs(data, file);
-		fputs("</isDark>\n", file);
-		
-		fputs("<isActive>", file);
-		sprintf(data, "%i", h_Particles_outputingData->isActive[i]);
-		fputs(data, file);
-		fputs("</isActive>\n", file);
-		
-		fputs("<initialOffset>", file);
-		sprintf(data, "%i", h_Particles_outputingData->initialOffset[i]);
-		fputs(data, file);
-		fputs("</initialOffset>\n", file);
-		
-		fputs("<mass>", file);
-		sprintf(data, "%f", h_Particles_outputingData->mass[i]);
-		fputs(data, file);
-		fputs("</mass>\n", file);
-		
-		fputs("<x>", file);
-		sprintf(data, "%f", h_Particles_outputingData->x[i]);
-		fputs(data, file);
-		fputs("</x>\n", file);
-		
-		fputs("<y>", file);
-		sprintf(data, "%f", h_Particles_outputingData->y[i]);
-		fputs(data, file);
-		fputs("</y>\n", file);
-		
-		fputs("<z>", file);
-		sprintf(data, "%f", h_Particles_outputingData->z[i]);
-		fputs(data, file);
-		fputs("</z>\n", file);
-		
-		fputs("<xVel>", file);
-		sprintf(data, "%f", h_Particles_outputingData->xVel[i]);
-		fputs(data, file);
-		fputs("</xVel>\n", file);
-		
-		fputs("<yVel>", file);
-		sprintf(data, "%f", h_Particles_outputingData->yVel[i]);
-		fputs(data, file);
-		fputs("</yVel>\n", file);
-		
-		fputs("<zVel>", file);
-		sprintf(data, "%f", h_Particles_outputingData->zVel[i]);
-		fputs(data, file);
-		fputs("</zVel>\n", file);
-		
-		fputs("<debug1>", file);
-		sprintf(data, "%f", h_Particles_outputingData->debug1[i]);
-		fputs(data, file);
-		fputs("</debug1>\n", file);
-		
-		fputs("<debug2>", file);
-		sprintf(data, "%f", h_Particles_outputingData->debug2[i]);
-		fputs(data, file);
-		fputs("</debug2>\n", file);
-		
-		fputs("<debug3>", file);
-		sprintf(data, "%f", h_Particles_outputingData->debug3[i]);
 		fputs(data, file);
 		fputs("</debug3>\n", file);
 		

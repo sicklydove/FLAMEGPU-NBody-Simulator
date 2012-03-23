@@ -37,8 +37,6 @@ __constant__ int d_xmachine_memory_simulationVarsAgent_default_count;
 
 __constant__ int d_xmachine_memory_Particle_testingActive_count;
 
-__constant__ int d_xmachine_memory_Particle_outputingData_count;
-
 __constant__ int d_xmachine_memory_Particle_updatingPosition_count;
 
 

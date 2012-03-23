@@ -81,9 +81,11 @@ __FLAME_GPU_FUNC__ int updatePosition(xmachine_memory_Particle* xmemory, xmachin
 	float3 agent_accn=make_float3(0.0, 0.0, 0.0);
 	xmachine_message_particleVariables* current_message = get_first_particleVariables_message(particleVariables_messages);
 	
+	//For each other agent...
 	while (current_message){
 		float3 accn = make_float3(0,0,0);
 		float3 currentMessagePosition=make_float3(current_message->x, current_message->y, current_message->z);
+		
 		float3 positionDifference=currentMessagePosition-agent_position;
 		float abs_distance=sqrt(pow(positionDifference.x,2)+pow(positionDifference.y,2)+pow(positionDifference.z,2));
 
@@ -98,31 +100,32 @@ __FLAME_GPU_FUNC__ int updatePosition(xmachine_memory_Particle* xmemory, xmachin
 		current_message = get_next_particleVariables_message(current_message, particleVariables_messages);
 	}
         
-	float3 vels=make_float3(xmemory->xVel, xmemory->yVel, xmemory->zVel);
-	float varPos=agent_position.x;
+	//use CUDA float types wherever possible
+	float4 velsAndPos=make_float4(xmemory->xVel, xmemory->yVel, xmemory->zVel, agent_position.x);
 
-	varPos+=(DELTA_T*vels.x);
-	varPos+=(0.5*(agent_accn.x)*(DELTA_T*DELTA_T));
-	xmemory->x=varPos;		
+	//calculate new positions
+	velsAndPos.w+=(DELTA_T*velsAndPos.x);
+	velsAndPos.w+=(0.5*(agent_accn.x)*(DELTA_T*DELTA_T));
+	xmemory->x=velsAndPos.w;		
 
-	varPos=agent_position.y;
-	varPos+=(DELTA_T*vels.y);
-	varPos+=(0.5*(agent_accn.y)*(DELTA_T*DELTA_T));
-	xmemory->y=varPos;
+	velsAndPos.w=agent_position.y;
+	velsAndPos.w+=(DELTA_T*velsAndPos.y);
+	velsAndPos.w+=(0.5*(agent_accn.y)*(DELTA_T*DELTA_T));
+	xmemory->y=velsAndPos.w;
 
-	varPos=agent_position.z;
-	varPos+=(DELTA_T*vels.z);
-	varPos+=(0.5*(agent_accn.z)*(DELTA_T*DELTA_T));
-	xmemory->z=varPos;
+	velsAndPos.w=agent_position.z;
+	velsAndPos.w+=(DELTA_T*velsAndPos.z);
+	velsAndPos.w+=(0.5*(agent_accn.z)*(DELTA_T*DELTA_T));
+	xmemory->z=velsAndPos.w;
 
-	//Velocities
-	vels.x+=(agent_accn.x*DELTA_T);
-	vels.y+=(agent_accn.y*DELTA_T);
-	vels.z+=(agent_accn.z*DELTA_T);
+	//update velocities
+	velsAndPos.x+=(agent_accn.x*DELTA_T);
+	velsAndPos.y+=(agent_accn.y*DELTA_T);
+	velsAndPos.z+=(agent_accn.z*DELTA_T);
 
-	xmemory->xVel=vels.x;
-	xmemory->yVel=vels.y;
-	xmemory->zVel=vels.z;
+	xmemory->xVel=velsAndPos.x;
+	xmemory->yVel=velsAndPos.y;
+	xmemory->zVel=velsAndPos.z;
 	return 0;
 }
 

@@ -172,8 +172,6 @@ int main( int argc, char** argv)
 				get_host_simulationVarsAgent_default_agents(), get_device_simulationVarsAgent_default_agents(), get_agent_simulationVarsAgent_default_count(),
 				//testingActive state Particle agents
 				get_host_Particle_testingActive_agents(), get_device_Particle_testingActive_agents(), get_agent_Particle_testingActive_count(),
-				//outputingData state Particle agents
-				get_host_Particle_outputingData_agents(), get_device_Particle_outputingData_agents(), get_agent_Particle_outputingData_count(),
 				//updatingPosition state Particle agents
 				get_host_Particle_updatingPosition_agents(), get_device_Particle_updatingPosition_agents(), get_agent_Particle_updatingPosition_count());
 			
