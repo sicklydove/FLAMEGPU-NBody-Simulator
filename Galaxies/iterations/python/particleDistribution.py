@@ -5,13 +5,10 @@ from particleAgent import *
 import random
 
 class ParticleDistribution:
-  def __init__(self, numAgents, usingZAxis, darkMatterPercentage=0, numParticleGroups=1):
+  def __init__(self, numAgents, usingZAxis=True, darkMatterPercentage=0, numParticleGroups=1):
    self.numAgents=numAgents
    self.usingZAxis=usingZAxis
    self.particles=[]
-   self.massesSet=False
-   self.positionsSet=False
-   self.velocitiesSet=False
    self.darkMatterPercentage=darkMatterPercentage
    self.numParticleGroups=numParticleGroups
    prob=self.darkMatterPercentage/100
@@ -31,8 +28,6 @@ class ParticleDistribution:
     for count in range (0, self.numAgents):
       self.particles[count].setMass(massDistribution.getItem())
 
-    self.massesSet=True
-  
   def setPositions(self, xDistrib, yDistrib=None, zDistrib=None):
     #If not set, use same distribution for all dimensions
     if((yDistrib and zDistrib) is None):
@@ -42,6 +37,10 @@ class ParticleDistribution:
       zDistrib=ProbabilityDistribution('fixed', 0)
 
     if(yDistrib.getType() is 'circle'):
+
+      #if(not(yDistrib and zDistrib) is None):
+       # print 'Error! Cannot specify multiple position distributions if using a circle'
+        #exit()
       for i in range(0, self.numAgents):
         coords=(xDistrib.getItem())
         if(not self.usingZAxis):
@@ -51,8 +50,6 @@ class ParticleDistribution:
       for i in range (0, self.numAgents):
         self.particles[i].setPositions(xDistrib.getItem(), yDistrib.getItem(), zDistrib.getItem())
 
-    self.positionsSet=True
-  
   def setVelocities(self, xVelDistrib, yVelDistrib=None, zVelDistrib=None):
     #If not set, use same distribution for all dimensions
     if((yVelDistrib and zVelDistrib) is None):
@@ -60,36 +57,14 @@ class ParticleDistribution:
       zVelDistrib=xVelDistrib
 
     if(not self.usingZAxis):
-      zDistrib.ProbabilityDistribution('fixed',0)
+      zVelDistrib=ProbabilityDistribution('fixed',0)
 
     for i in range (0, self.numAgents):
       self.particles[i].setVels(xVelDistrib.getItem(), yVelDistrib.getItem(), zVelDistrib.getItem())
 
-    self.velocitiesSet=True
-
   def getParticleAgents(self):
     return self.particles
 
-#   particleAgents=[]
-#   if(not(self.massesSet and self.positionsSet and self.velocitiesSet)):
-#     print "ERROR: Can't write particles until masses, positions and velocities have been set"
-# 
-#   else:
-#     for key, val in self.particles.iteritems():
-#       mass=val[0]
-#       isDark=val[1]
-#       xPos=val[2][0]
-#       yPos=val[2][1]
-#       zPos=val[2][2]
-#       xVel=val[3][0]
-#       yVel=val[3][1]
-#       zVel=val[3][2]
-#       thisParticle=ParticleAgent(key, xPos, yPos, zPos, xVel, yVel, zVel, mass, isDark)
-#       particleAgents.append(thisParticle)
-
-#   return particleAgents
-
-#File loading code --- not necessary any more?
   def makeAgentsFromFile(self, fileloc):
     agentsDict={}
 
@@ -122,4 +97,3 @@ class ParticleDistribution:
       newAgent=ParticleAgent(item, ls[1], ls[2], ls[3], ls[4], ls[5], ls[6], ls[0], False)
       agentXML=newAgent.writeAgent()
       self.outputFile.write(agentXML)
-

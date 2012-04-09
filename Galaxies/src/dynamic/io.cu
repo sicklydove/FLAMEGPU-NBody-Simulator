@@ -84,10 +84,10 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_s
 		fputs(data, file);
 		fputs("</isActive>\n", file);
 		
-		fputs("<initialOffset>", file);
-		sprintf(data, "%i", h_Particles_testingActive->initialOffset[i]);
+		fputs("<particleGroup>", file);
+		sprintf(data, "%i", h_Particles_testingActive->particleGroup[i]);
 		fputs(data, file);
-		fputs("</initialOffset>\n", file);
+		fputs("</particleGroup>\n", file);
 		
 		fputs("<mass>", file);
 		sprintf(data, "%f", h_Particles_testingActive->mass[i]);
@@ -161,10 +161,10 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_s
 		fputs(data, file);
 		fputs("</isActive>\n", file);
 		
-		fputs("<initialOffset>", file);
-		sprintf(data, "%i", h_Particles_updatingPosition->initialOffset[i]);
+		fputs("<particleGroup>", file);
+		sprintf(data, "%i", h_Particles_updatingPosition->particleGroup[i]);
 		fputs(data, file);
-		fputs("</initialOffset>\n", file);
+		fputs("</particleGroup>\n", file);
 		
 		fputs("<mass>", file);
 		sprintf(data, "%f", h_Particles_updatingPosition->mass[i]);
@@ -249,7 +249,7 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 	int in_Particle_id;
 	int in_Particle_isDark;
 	int in_Particle_isActive;
-	int in_Particle_initialOffset;
+	int in_Particle_particleGroup;
 	int in_Particle_mass;
 	int in_Particle_x;
 	int in_Particle_y;
@@ -270,7 +270,7 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 	int Particle_id;
 	int Particle_isDark;
 	int Particle_isActive;
-	int Particle_initialOffset;
+	int Particle_particleGroup;
 	float Particle_mass;
 	float Particle_x;
 	float Particle_y;
@@ -305,7 +305,7 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 	in_Particle_id = 0;
 	in_Particle_isDark = 0;
 	in_Particle_isActive = 0;
-	in_Particle_initialOffset = 0;
+	in_Particle_particleGroup = 0;
 	in_Particle_mass = 0;
 	in_Particle_x = 0;
 	in_Particle_y = 0;
@@ -330,7 +330,7 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 		h_Particles->id[k] = 0;
 		h_Particles->isDark[k] = 0;
 		h_Particles->isActive[k] = 0;
-		h_Particles->initialOffset[k] = 0;
+		h_Particles->particleGroup[k] = 0;
 		h_Particles->mass[k] = 0;
 		h_Particles->x[k] = 0;
 		h_Particles->y[k] = 0;
@@ -349,7 +349,7 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 	Particle_id = 0;
 	Particle_isDark = 0;
 	Particle_isActive = 0;
-	Particle_initialOffset = 0;
+	Particle_particleGroup = 0;
 	Particle_mass = 0;
 	Particle_x = 0;
 	Particle_y = 0;
@@ -411,7 +411,7 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
                     
 					h_Particles->isActive[*h_xmachine_memory_Particle_count] = Particle_isActive;
                     
-					h_Particles->initialOffset[*h_xmachine_memory_Particle_count] = Particle_initialOffset;
+					h_Particles->particleGroup[*h_xmachine_memory_Particle_count] = Particle_particleGroup;
                     
 					h_Particles->mass[*h_xmachine_memory_Particle_count] = Particle_mass;
                     
@@ -467,7 +467,7 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 				Particle_id = 0;
 				Particle_isDark = 0;
 				Particle_isActive = 0;
-				Particle_initialOffset = 0;
+				Particle_particleGroup = 0;
 				Particle_mass = 0;
 				Particle_x = 0;
 				Particle_y = 0;
@@ -487,8 +487,8 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 			if(strcmp(buffer, "/isDark") == 0) in_Particle_isDark = 0;
 			if(strcmp(buffer, "isActive") == 0) in_Particle_isActive = 1;
 			if(strcmp(buffer, "/isActive") == 0) in_Particle_isActive = 0;
-			if(strcmp(buffer, "initialOffset") == 0) in_Particle_initialOffset = 1;
-			if(strcmp(buffer, "/initialOffset") == 0) in_Particle_initialOffset = 0;
+			if(strcmp(buffer, "particleGroup") == 0) in_Particle_particleGroup = 1;
+			if(strcmp(buffer, "/particleGroup") == 0) in_Particle_particleGroup = 0;
 			if(strcmp(buffer, "mass") == 0) in_Particle_mass = 1;
 			if(strcmp(buffer, "/mass") == 0) in_Particle_mass = 0;
 			if(strcmp(buffer, "x") == 0) in_Particle_x = 1;
@@ -539,8 +539,8 @@ void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list
 				if(in_Particle_isActive){ 
 					Particle_isActive = (int) atoi(buffer);
 				}
-				if(in_Particle_initialOffset){ 
-					Particle_initialOffset = (int) atoi(buffer);
+				if(in_Particle_particleGroup){ 
+					Particle_particleGroup = (int) atoi(buffer);
 				}
 				if(in_Particle_mass){ 
 					Particle_mass = (float) atof(buffer);

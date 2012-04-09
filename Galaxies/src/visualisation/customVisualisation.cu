@@ -113,7 +113,7 @@ const char vertexShaderSource[] =
     "	//We're only using white and red. Set mat and ambient terms accordingly	\n"
     "	if (lookup.w > 0){	                									\n"
     "		colour = vec4(1.0, 1.0, 1.0, 0.0);								    \n"
-	"		ambient = vec4(0.60, 0.60, 0.60, 0.60);								\n"
+	"		ambient = vec4(0.60, 0.60, 0.60, 0.0);								\n"
 	"	}																	    \n"
     "	else{                													\n"
 	"		colour = vec4(1.0, 0.0, 0.0, 0.0);								    \n"
@@ -226,7 +226,6 @@ void initVisualisation()
 	setVertexBufferData();
 
 	// create TBO
-	createTBO( &simulationVarsAgent_default_tbo, &simulationVarsAgent_default_displacementTex, xmachine_memory_simulationVarsAgent_MAX * sizeof( float4));
 	
 	createTBO( &Particle_testingActive_tbo, &Particle_testingActive_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
 	
@@ -260,8 +259,8 @@ void runCuda()
 	}
 #else
 	if(!paused){
-	singleIteration();
-	itNum++;
+		singleIteration();
+		itNum++;
 	}
 #endif
 
@@ -294,7 +293,6 @@ void runCuda()
 		// unmap buffer object
 		CUDA_SAFE_CALL(cudaGLUnmapBufferObject(Particle_testingActive_tbo));
 	}
-	
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -523,7 +521,8 @@ void setVertexBufferData()
 ////////////////////////////////////////////////////////////////////////////////
 void display()
 {
-    
+
+
 	//CUDA start Timing
 	CUT_SAFE_CALL( cutStartTimer( timer));
 
@@ -570,6 +569,7 @@ void display()
 
 		glDisableClientState(GL_NORMAL_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);
+	
 	}
 
 
@@ -592,8 +592,9 @@ void display()
 
     glutSwapBuffers();
     glutPostRedisplay();
+    }
 
-}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Keyboard events handler

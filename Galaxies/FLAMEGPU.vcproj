@@ -1185,6 +1185,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\dynamic\main.cu"
+				>
+			</File>
+			<File
 				RelativePath=".\src\visualisation\visualisation.h"
 				>
 			</File>
@@ -1634,10 +1638,6 @@
 			</File>
 			<File
 				RelativePath=".\src\dynamic\io.cu"
-				>
-			</File>
-			<File
-				RelativePath=".\src\dynamic\main.cu"
 				>
 			</File>
 			<File

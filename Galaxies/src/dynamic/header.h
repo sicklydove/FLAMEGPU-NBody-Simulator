@@ -90,7 +90,7 @@ struct __align__(16) xmachine_memory_Particle
     int id;    /**< X-machine memory variable id of type int.*/
     int isDark;    /**< X-machine memory variable isDark of type int.*/
     int isActive;    /**< X-machine memory variable isActive of type int.*/
-    int initialOffset;    /**< X-machine memory variable initialOffset of type int.*/
+    int particleGroup;    /**< X-machine memory variable particleGroup of type int.*/
     float mass;    /**< X-machine memory variable mass of type float.*/
     float x;    /**< X-machine memory variable x of type float.*/
     float y;    /**< X-machine memory variable y of type float.*/
@@ -164,7 +164,7 @@ struct xmachine_memory_Particle_list
     int id [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list id of type int.*/
     int isDark [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list isDark of type int.*/
     int isActive [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list isActive of type int.*/
-    int initialOffset [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list initialOffset of type int.*/
+    int particleGroup [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list particleGroup of type int.*/
     float mass [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list mass of type float.*/
     float x [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list x of type float.*/
     float y [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list y of type float.*/
@@ -263,11 +263,18 @@ __FLAME_GPU_FUNC__ int broadcastItNum(xmachine_memory_simulationVarsAgent* agent
 __FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* agent, xmachine_message_itNumMessage_list* itNumMessage_messages);
 
 /**
- * broadcastVariables FLAMEGPU Agent Function
+ * broadcastAndMoveState FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
  * @param particleVariables_messages Pointer to output message list of type xmachine_message_particleVariables_list. Must be passed as an argument to the add_particleVariables_message function ??.
  */
-__FLAME_GPU_FUNC__ int broadcastVariables(xmachine_memory_Particle* agent, xmachine_message_particleVariables_list* particleVariables_messages);
+__FLAME_GPU_FUNC__ int broadcastAndMoveState(xmachine_memory_Particle* agent, xmachine_message_particleVariables_list* particleVariables_messages);
+
+/**
+ * broadcastAndKeepState FLAMEGPU Agent Function
+ * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
+ * @param particleVariables_messages Pointer to output message list of type xmachine_message_particleVariables_list. Must be passed as an argument to the add_particleVariables_message function ??.
+ */
+__FLAME_GPU_FUNC__ int broadcastAndKeepState(xmachine_memory_Particle* agent, xmachine_message_particleVariables_list* particleVariables_messages);
 
 /**
  * updatePosition FLAMEGPU Agent Function
@@ -350,7 +357,7 @@ __FLAME_GPU_FUNC__ void add_simulationVarsAgent_agent(xmachine_memory_simulation
  * @param id	agent agent variable of type int
  * @param isDark	agent agent variable of type int
  * @param isActive	agent agent variable of type int
- * @param initialOffset	agent agent variable of type int
+ * @param particleGroup	agent agent variable of type int
  * @param mass	agent agent variable of type float
  * @param x	agent agent variable of type float
  * @param y	agent agent variable of type float
@@ -362,7 +369,7 @@ __FLAME_GPU_FUNC__ void add_simulationVarsAgent_agent(xmachine_memory_simulation
  * @param debug2	agent agent variable of type float
  * @param debug3	agent agent variable of type float
  */
-__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, int isDark, int isActive, int initialOffset, float mass, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3);
+__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, int isDark, int isActive, int particleGroup, float mass, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3);
 
 
   

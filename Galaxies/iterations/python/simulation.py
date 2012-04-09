@@ -1,7 +1,6 @@
 import sys
 sys.dont_write_bytecode=True
 from particleDistribution import *
-from math import *
 
 class Simulation:
   def  __init__(self, filename):
@@ -16,7 +15,7 @@ class Simulation:
     self.outputFile.write('</states>')
     self.outputFile.close()
 
-  def writeAgents(self, ls):
-    for agent in ls:
-      agentXML=agent.writeAgent()
+  def writeAgents(self, agentList):
+    for agent in agentList:
+      agentXML=agent.getAgentXML()
       self.outputFile.write(agentXML)

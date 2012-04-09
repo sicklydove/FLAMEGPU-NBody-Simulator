@@ -11,7 +11,7 @@ class ParticleAgent:
     self.isDark=isDark
     self.initialOffset=initialOffset
 
-  def writeAgent(self):
+  def getAgentXML(self):
     outStr=""
     outStr+='<xagent>'
     outStr+='<name>Particle</name>'
@@ -43,7 +43,7 @@ class ParticleAgent:
     outStr+=str(self.zVel)
     outStr+='</zVel>'
     outStr+='<initialOffset>'
-    outStr+=str(0)
+    outStr+=str(self.initialOffset)
     outStr+='</initialOffset>'
     outStr+='</xagent>\r\n'
     return outStr

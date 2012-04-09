@@ -31,11 +31,11 @@ int numPartitions;
 
 
 void updateSimulationVars(){
-
+	
 	dt=0.001f; 
 	gravConstant=1.0f;
-    velocityDamper=0.3f;
-    sphereRadius = 0.0035f;
+    velocityDamper=0.05f;
+    sphereRadius = 0.000;
 	numPartitions=1;
 
 	/*

@@ -26,19 +26,24 @@ __FLAME_GPU_INIT_FUNC__ void initConstants(){
 }
 
 
-__FLAME_GPU_FUNC__ int broadcastVariables(xmachine_memory_Particle* xmemory, xmachine_message_particleVariables_list* particleVariables_messages){
+__FLAME_GPU_FUNC__ int broadcastAndKeepState(xmachine_memory_Particle* xmemory, xmachine_message_particleVariables_list* particleVariables_messages){
 	add_particleVariables_message(particleVariables_messages, xmemory->mass, xmemory->x, xmemory->y, xmemory->z);
     return 0;
 }
 
+__FLAME_GPU_FUNC__ int broadcastAndMoveState(xmachine_memory_Particle* xmemory, xmachine_message_particleVariables_list* particleVariables_messages){
+	add_particleVariables_message(particleVariables_messages, xmemory->mass, xmemory->x, xmemory->y, xmemory->z);
+    return 0;
+}
 
 __FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* xmemory, xmachine_message_itNumMessage_list* itNumMessage_messages){
-	int offset=xmemory->initialOffset;
+	int particleGroup=xmemory->particleGroup;
 	xmachine_message_itNumMessage* current_message = get_first_itNumMessage_message(itNumMessage_messages);
 	int itNum=current_message->itNum;
-	  if((itNum+offset)%NUM_PARTITIONS==0){
-	    xmemory->isActive=1;
-	}
+	if((itNum+particleGroup)%NUM_PARTITIONS==0)
+		xmemory->isActive=1;
+	else
+		xmemory->isActive=0;
     return 0;
 }
 
@@ -91,15 +96,17 @@ __FLAME_GPU_FUNC__ int updatePosition(xmachine_memory_Particle* xmemory, xmachin
 
 		float3 topHalfEqn=positionDifference*current_message->mass*GRAV_CONST;
 
-		if(abs_distance>5*MIN_INTERRACTION_RAD){
-			float lowerHalfEqn=pow((pow(abs_distance, 2)+pow(VELOCITY_DAMP,2)), (3/2));
+		if(abs_distance>MIN_INTERRACTION_RAD){
+			float sum=pow(abs_distance, 2)+pow(VELOCITY_DAMP,2);
+			float lowerHalfEqn=pow((float)sum, float(1.5));
 			accn=topHalfEqn/lowerHalfEqn;
 		}
 
 		agent_accn+=accn;
 		current_message = get_next_particleVariables_message(current_message, particleVariables_messages);
 	}
-        
+
+      
 	//use CUDA float types wherever possible
 	float4 velsAndPos=make_float4(xmemory->xVel, xmemory->yVel, xmemory->zVel, agent_position.x);
 

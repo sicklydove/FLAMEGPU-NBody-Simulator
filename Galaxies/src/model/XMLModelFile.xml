@@ -87,7 +87,7 @@
         </gpu:variable>
         <gpu:variable>
           <type>int</type>
-          <name>initialOffset</name>
+          <name>particleGroup</name>
         </gpu:variable>
         <gpu:variable>
           <type>float</type>
@@ -148,11 +148,11 @@
           <gpu:reallocate>false</gpu:reallocate>
           <gpu:RNG>false</gpu:RNG>
         </gpu:function>
-        
+
         <gpu:function>
-          <name>broadcastVariables</name>
+          <name>broadcastAndMoveState</name>
           <currentState>testingActive</currentState>
-          <nextState>updatingPosition</nextState>
+          <nextState>updatingPosition</nextState>     
           <outputs>
             <gpu:output>
               <messageName>particleVariables</messageName>
@@ -166,6 +166,29 @@
             <operator>&gt;</operator>
             <rhs>
               <value>0</value>
+            </rhs>
+          </condition>
+          <gpu:reallocate>false</gpu:reallocate>
+          <gpu:RNG>false</gpu:RNG>
+        </gpu:function>
+
+        <gpu:function>
+          <name>broadcastAndKeepState</name>
+          <currentState>testingActive</currentState>
+          <nextState>testingActive</nextState>
+          <outputs>
+            <gpu:output>
+              <messageName>particleVariables</messageName>
+              <gpu:type>single_message</gpu:type>
+            </gpu:output>
+          </outputs>
+          <condition>
+            <lhs>
+              <agentVariable>isActive</agentVariable>
+            </lhs>
+            <operator>&lt;</operator>
+            <rhs>
+              <value>1</value>
             </rhs>
           </condition>
           <gpu:reallocate>false</gpu:reallocate>
@@ -253,7 +276,10 @@
     </layer>
     <layer>
       <gpu:layerFunction>
-        <name>broadcastVariables</name>
+        <name>broadcastAndKeepState</name>
+      </gpu:layerFunction>
+      <gpu:layerFunction>
+        <name>broadcastAndMoveState</name>
       </gpu:layerFunction>
     </layer>
     <layer>
