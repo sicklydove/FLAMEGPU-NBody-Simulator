@@ -29,8 +29,8 @@
 #include <cuda_gl_interop.h>
     
 #include <header.h>
-#include <visualisation.h>
-#include "GlobalsController.h"
+#include <customVisualisation.h>
+#include <globalsController.c>
 
 // bo variables
 GLuint sphereVerts;
@@ -64,7 +64,8 @@ GLuint shaderProgram;
 GLuint vs_displacementMap;
 GLuint vs_mapIndex;
 
-
+//light position
+GLfloat LIGHT_POSITION[] = {1.0f, 1.0f, 1.0f, 1.0f};
 
 //timer
 GLuint timer;
@@ -75,6 +76,11 @@ int frame_count;
 //delay
 int delay_count = 0;
 #endif
+
+bool displayingDarkMatter=false;
+bool displayingBaryonicMatter=true;
+bool paused=false;
+int itNum=0;
 
 // prototypes
 CUTBoolean initGL();
@@ -91,10 +97,6 @@ void motion(int x, int y);
 void runCuda();
 void checkGLError();
 
-bool displayingDarkMatter=false;
-bool displayingBaryonicMatter=true;
-bool paused=false;
-int itNum=0;
 
 
 
@@ -197,6 +199,8 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 
 void initVisualisation()
 {
+	setWindowSize();
+
     //set the CUDA GL device: Will cause an error without this since CUDA 3.0
     cudaGLSetGLDevice(0);
 
@@ -228,11 +232,6 @@ void initVisualisation()
 	// create TBO
 	
 	createTBO( &Particle_testingActive_tbo, &Particle_testingActive_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
-	
-	createTBO( &Particle_outputingData_tbo, &Particle_outputingData_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
-	
-	createTBO( &Particle_updatingPosition_tbo, &Particle_updatingPosition_displacementTex, xmachine_memory_Particle_MAX * sizeof( float4));
-	
 
 	//set shader uniforms
 	glUseProgram(shaderProgram);
@@ -605,15 +604,7 @@ void keyboard( unsigned char key, int /*x*/, int /*y*/)
     case( 27) :
         deleteVBO( &sphereVerts);
 		deleteVBO( &sphereNormals);
-		
-		deleteTBO( &simulationVarsAgent_default_tbo);
-		
 		deleteTBO( &Particle_testingActive_tbo);
-		
-		deleteTBO( &Particle_outputingData_tbo);
-		
-		deleteTBO( &Particle_updatingPosition_tbo);
-		
         exit( 0);
         break;
     
@@ -629,22 +620,32 @@ void keyboard( unsigned char key, int /*x*/, int /*y*/)
         break;
 
 	//pause...
-    case ('p'):
+    case ( 'p'):
 		paused=!paused;
 		break;
 	
 	//Allow user to update simulation variables. The system is paused while they do this
-    case ('u'):
-		paused=true;
-		updateSimulationVars();
-		paused=false;
+    case ( 'u'):
+		if(!paused){
+			paused=true;
+			updateSimulationVars();
+			paused=false;
+		}
+		else{
+			updateSimulationVars();
+		}
 		break;
 	
 	//Print a snapshot of simulation information
-	case ('i'):
-		paused=true;
-		printSimulationInformation(itNum);
-		paused=false;
+	case ( 'i'):
+		if(!paused){
+			paused=true;
+			printSimulationInformation(itNum);
+			paused=false;
+		}
+		else{
+			printSimulationInformation(itNum);
+		}
 	}
     
 }

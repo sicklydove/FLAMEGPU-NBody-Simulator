@@ -16,29 +16,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "customVisualisation.h"
+#include "globalsController.h"
 
-extern void set_DELTA_T(float* h_DELTA_T);
-extern void set_GRAV_CONST(float* h_GRAV_CONST);
-extern void set_VELOCITY_DAMP(float* h_VELOCITY_DAMP);
-extern void set_MIN_INTERRACTION_RAD(float* h_MIN_INTERRACTION);
-extern void set_NUM_PARTITIONS(float* h_NUM_PARTITIONS);
-
-float dt; 
-float gravConstant;
-float velocityDamper;
-float sphereRadius;
-int numPartitions;
-
+float dt=0.001; 
+float gravConstant=1;
+float velocityDamper=0.2;
+float minInteractionRadius=0;
+int numPartitions=1;
 
 void updateSimulationVars(){
-	
-	dt=0.001f; 
-	gravConstant=1.0f;
-    velocityDamper=0.05f;
-    sphereRadius = 0.000;
-	numPartitions=1;
 
-	/*
 	printf("\nInput dt\n");
 	scanf("%f", &dt);
 	printf("\nInput gravitational constant:\n");
@@ -46,20 +34,56 @@ void updateSimulationVars(){
 	printf("\nInput velocity dampening factor:\n");
 	scanf("%f", &velocityDamper);
 	printf("\nInput minimum radius of interraction:\n");
-	scanf("%f", &velocityDamper);
+	scanf("%f", &minInteractionRadius);
 	printf("\nInput number of timestep slices (optimisation):\n");
 	scanf("%d", &numPartitions);
-	*/
+	
+	set_DELTA_T(&dt);
+	set_GRAV_CONST(&gravConstant);
+	set_VELOCITY_DAMP(&velocityDamper);
+	set_MIN_INTERRACTION_RAD(&minInteractionRadius);
+	set_NUM_PARTITIONS(&numPartitions);
+
+}
+
+void setVisualisationVars(){
+
+	printf("\nInput near clip\n");
+	scanf("%lf", &NEAR_CLIP);
+	printf("\nInput far clip\n");
+	scanf("%lf", &FAR_CLIP);
+
+	printf("\nInput number of sphere slices\n");
+	scanf("%d", &SPHERE_SLICES);
+	printf("\nInput number of sphere stacks\n");
+	scanf("%d", &SPHERE_STACKS);
+	
+	printf("\nInput sphere radius\n");
+	scanf("%lf", &SPHERE_RADIUS );
+
+	printf("\nInput initial view distance\n");
+	scanf("%lf", &VIEW_DISTANCE);
+}
+
+void setSimulationDefaults(){
 
 	set_DELTA_T(&dt);
 	set_GRAV_CONST(&gravConstant);
 	set_VELOCITY_DAMP(&velocityDamper);
-	set_MIN_INTERRACTION_RAD(&sphereRadius);
+	set_MIN_INTERRACTION_RAD(&minInteractionRadius);
 	set_NUM_PARTITIONS(&numPartitions);
 }
 
+void setWindowSize(){
+
+	printf("Enter window width (px):\n");
+	scanf("%d", &WINDOW_WIDTH);
+	printf("Enter window height (px):\n");
+	scanf("%d", &WINDOW_HEIGHT);
+}
+
 void printSimulationInformation(int itNum){
-	
+
 	printf("\nIteration number: ");
 	printf("%d", itNum);
 	printf("\nTimestep size: ");
@@ -69,7 +93,7 @@ void printSimulationInformation(int itNum){
 	printf("\nCelocity dampening factor: ");
 	printf("%f", velocityDamper);
 	printf("\nMinimum radius of interraction: ");
-	printf("%f", sphereRadius);
+	printf("%f", minInteractionRadius);
 	printf("\nNumber of timestep slices: ");
 	printf("%d", numPartitions);
 }

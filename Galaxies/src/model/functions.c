@@ -19,12 +19,52 @@
 
 #include <header.h>
 #include <stdio.h>
-#include "GlobalsController.c"
+#include <GlobalsController.h>
 
 __FLAME_GPU_INIT_FUNC__ void initConstants(){
-	updateSimulationVars();
+	
+	char input;
+	bool set=false;
+	
+	printf("Use default visualisation settings? y/n \n");
+	while(!set){
+		input=getchar();
+		while(input == '\n') input=getchar();
+		switch(input){
+		case 'y': case 'Y':
+			set=true;
+			break;		
+		case 'n': case 'N':
+			setVisualisationVars();
+			set=true;
+			break;
+		default:
+			printf("Invalid input. Use default visualisation settings? y/n \n");
+			break;
+		}
+	}
+	input=0;
+	set=false;
+	
+	printf("Use default simulation parameters y/n \n");
+	while(!set){
+		input=getchar();
+		while(input == '\n') input=getchar();
+		switch(input){
+		case 'y': case 'Y':
+			setSimulationDefaults();
+			set=true;
+			break;
+		case 'n': case 'N':
+			updateSimulationVars();
+			set=true;
+			break;
+		default:
+			printf("Invalid input. Use default simulation parameters? y/n \n");
+			break;
+		}
+	}
 }
-
 
 __FLAME_GPU_FUNC__ int broadcastAndKeepState(xmachine_memory_Particle* xmemory, xmachine_message_particleVariables_list* particleVariables_messages){
 	add_particleVariables_message(particleVariables_messages, xmemory->mass, xmemory->x, xmemory->y, xmemory->z);

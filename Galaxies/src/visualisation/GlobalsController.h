@@ -3,5 +3,6 @@
 
 void updateSimulationVars();
 void printSimulationInformation(int itNum);
+void setSimulationDefaults();
 
 #endif __GLOBALS_CONTROLLER
