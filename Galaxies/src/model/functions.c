@@ -22,7 +22,8 @@
 #include <GlobalsController.h>
 
 __FLAME_GPU_INIT_FUNC__ void initConstants(){
-	
+	int itnum=1;
+	set_SIMULATION_ITNUM(&itnum);
 	char input;
 	bool set=false;
 	
@@ -60,31 +61,12 @@ __FLAME_GPU_FUNC__ int broadcastAndMoveState(xmachine_memory_Particle* xmemory, 
     return 0;
 }
 
-__FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* xmemory, xmachine_message_itNumMessage_list* itNumMessage_messages){
+__FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* xmemory){
 	int particleGroup=xmemory->particleGroup;
-	xmachine_message_itNumMessage* current_message = get_first_itNumMessage_message(itNumMessage_messages);
-	int itNum=current_message->itNum;
-	if((itNum+particleGroup)%NUM_PARTITIONS==0)
+	if((SIMULATION_ITNUM+particleGroup)%NUM_PARTITIONS==0)
 		xmemory->isActive=1;
 	else
 		xmemory->isActive=0;
-    return 0;
-}
-
-
-/**
- * outputdata FLAMEGPU Agent Function
- * Automatically generated using functions.xslt
- * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
- * @param particleVariables_messages Pointer to output message list of type xmachine_message_particleVariables_list. Must be passed as an argument to the add_particleVariables_message function ??.
- */
-__FLAME_GPU_FUNC__ int broadcastItNum(xmachine_memory_simulationVarsAgent* xmemory, xmachine_message_itNumMessage_list* itNumMessage_messages){
-    int currentState=xmemory->itNum;
-    add_itNumMessage_message(itNumMessage_messages, xmemory->itNum);
-	
-	currentState++;
-	xmemory->itNum=currentState;
-
     return 0;
 }
 
@@ -148,6 +130,8 @@ __FLAME_GPU_FUNC__ int updatePosition(xmachine_memory_Particle* xmemory, xmachin
 	xmemory->xVel=velsAndPos.x;
 	xmemory->yVel=velsAndPos.y;
 	xmemory->zVel=velsAndPos.z;
+
+	xmemory->debug1=SIMULATION_ITNUM;
 	return 0;
 }
 

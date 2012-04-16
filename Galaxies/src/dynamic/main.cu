@@ -18,6 +18,7 @@
 #include <header.h>
 #include <stdio.h>
 #include <cutil.h>
+#include <globalsController.h>
 #ifdef VISUALISATION
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -29,7 +30,7 @@ char outputpath[100];         /**< Output path char buffer*/
 int CUDA_argc;				  /**< number of CUDA arguments*/
 char** CUDA_argv;			  /**< CUDA arguments*/
 
-#define OUTPUT_TO_XML 0
+#define OUTPUT_TO_XML 1
 
 
 /** checkUsage
@@ -159,17 +160,16 @@ int main( int argc, char** argv)
 	CUT_SAFE_CALL( cutStartTimer( timer));
 
 	for (int i=0; i< itterations; i++)
-	{
-		printf("Processing Simulation Step %i", i+1);
+  {
+  printf("Processing Simulation Step %i", i+1);
 
-		//single simulation itteration
-		singleIteration();
+  //single simulation itteration
+  singleIteration();
+  incrementItNum();
 
-		if (OUTPUT_TO_XML)
-		{
-			saveIterationData(outputpath, i+1, 
-				//default state simulationVarsAgent agents
-				get_host_simulationVarsAgent_default_agents(), get_device_simulationVarsAgent_default_agents(), get_agent_simulationVarsAgent_default_count(),
+  if (OUTPUT_TO_XML)
+  {
+  saveIterationData(outputpath, i+1, 
 				//testingActive state Particle agents
 				get_host_Particle_testingActive_agents(), get_device_Particle_testingActive_agents(), get_agent_Particle_testingActive_count(),
 				//updatingPosition state Particle agents

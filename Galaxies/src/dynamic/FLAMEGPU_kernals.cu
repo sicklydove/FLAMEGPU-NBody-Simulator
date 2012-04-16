@@ -27,13 +27,9 @@
 
 /* Agent count constants */
 
-__constant__ int d_xmachine_memory_simulationVarsAgent_count;
-
 __constant__ int d_xmachine_memory_Particle_count;
 
 /* Agent state count constants */
-
-__constant__ int d_xmachine_memory_simulationVarsAgent_default_count;
 
 __constant__ int d_xmachine_memory_Particle_testingActive_count;
 
@@ -47,11 +43,6 @@ __constant__ int d_xmachine_memory_Particle_updatingPosition_count;
 __constant__ int d_message_particleVariables_count;         /**< message list counter*/
 __constant__ int d_message_particleVariables_output_type;   /**< message output type (single or optional)*/
 
-/* itNumMessage Message variables */
-/* Non partitioned and spatial partitioned message variables  */
-__constant__ int d_message_itNumMessage_count;         /**< message list counter*/
-__constant__ int d_message_itNumMessage_output_type;   /**< message output type (single or optional)*/
-
 	
     
 //include each function file
@@ -59,7 +50,6 @@ __constant__ int d_message_itNumMessage_output_type;   /**< message output type 
 #include "functions.c"
     
 /* Texture bindings */
-
 
     
 #define WRAP(x,m) (((x)<m)?(x):(x%m)) /**< Simple wrap */
@@ -227,117 +217,6 @@ __device__ int next_cell2D(int3* relative_cell)
 	
 	}
  }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-/* Dyanamically created simulationVarsAgent agent functions */
-
-/** reset_simulationVarsAgent_scan_input
- * simulationVarsAgent agent reset scan input function
- * @param agents The xmachine_memory_simulationVarsAgent_list agent list
- */
-__global__ void reset_simulationVarsAgent_scan_input(xmachine_memory_simulationVarsAgent_list* agents){
-
-	//global thread index
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-
-	agents->_position[index] = 0;
-	agents->_scan_input[index] = 0;
-}
-
-
-
-/** scatter_simulationVarsAgent_Agents
- * simulationVarsAgent scatter agents function (used after agent birth/death)
- * @param agents_dst xmachine_memory_simulationVarsAgent_list agent list destination
- * @param agents_src xmachine_memory_simulationVarsAgent_list agent list source
- * @param dst_agent_count index to start scattering agents from
- */
-__global__ void scatter_simulationVarsAgent_Agents(xmachine_memory_simulationVarsAgent_list* agents_dst, xmachine_memory_simulationVarsAgent_list* agents_src, int dst_agent_count, int number_to_scatter){
-	//global thread index
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-
-	int _scan_input = agents_src->_scan_input[index];
-
-	//if optional message is to be written. 
-	//must check agent is within number to scatter as unused threads may have scan input = 1
-	if ((_scan_input == 1)&&(index < number_to_scatter)){
-		int output_index = agents_src->_position[index] + dst_agent_count;
-
-		//AoS - xmachine_message_location Un-Coalesced scattered memory write
-		agents_dst->_position[output_index] = output_index;
-		agents_dst->itNum[output_index] = agents_src->itNum[index];
-	}
-}
-
-/** append_simulationVarsAgent_Agents
- * simulationVarsAgent scatter agents function (used after agent birth/death)
- * @param agents_dst xmachine_memory_simulationVarsAgent_list agent list destination
- * @param agents_src xmachine_memory_simulationVarsAgent_list agent list source
- * @param dst_agent_count index to start scattering agents from
- */
-__global__ void append_simulationVarsAgent_Agents(xmachine_memory_simulationVarsAgent_list* agents_dst, xmachine_memory_simulationVarsAgent_list* agents_src, int dst_agent_count, int number_to_append){
-	//global thread index
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-
-	//must check agent is within number to append as unused threads may have scan input = 1
-    if (index < number_to_append){
-	    int output_index = index + dst_agent_count;
-
-	    //AoS - xmachine_message_location Un-Coalesced scattered memory write
-	    agents_dst->_position[output_index] = output_index;
-	    agents_dst->itNum[output_index] = agents_src->itNum[index];
-    }
-}
-
-/** add_simulationVarsAgent_agent
- * Continuous simulationVarsAgent agent add agent function writes agent data to agent swap
- * @param agents xmachine_memory_simulationVarsAgent_list to add agents to 
- * @param itNum agent variable of type int
- */
-template <int AGENT_TYPE>
-__device__ void add_simulationVarsAgent_agent(xmachine_memory_simulationVarsAgent_list* agents, int itNum){
-	
-	int index;
-    
-    //calculate the agents index in global agent list (depends on agent type)
-	if (AGENT_TYPE == DISCRETE_2D){
-		int width = __mul24(blockDim.x, gridDim.x);
-		int2 global_position;
-		global_position.x = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-		global_position.y = __mul24(blockIdx.y,blockDim.y) + threadIdx.y;
-		index = global_position.x + __mul24(global_position.y, width);
-	}else//AGENT_TYPE == CONTINOUS
-		index = threadIdx.x + blockIdx.x*blockDim.x;
-
-	//for prefix sum
-	agents->_position[index] = 0;
-	agents->_scan_input[index] = 1;
-
-	//write data to new buffer
-	agents->itNum[index] = itNum;
-
-}
-
-//non templated version assumes DISCRETE_2D but works also for CONTINUOUS
-__device__ void add_simulationVarsAgent_agent(xmachine_memory_simulationVarsAgent_list* agents, int itNum){
-    add_simulationVarsAgent_agent<DISCRETE_2D>(agents, itNum);
-}
-
-/** reorder_simulationVarsAgent_agents
- * Continuous simulationVarsAgent agent areorder function used after key value pairs have been sorted
- * @param values sorted index values
- * @param unordered_agents list of unordered agents
- * @ param ordered_agents list used to output ordered agents
- */
-__global__ void reorder_simulationVarsAgent_agents(unsigned int* values, xmachine_memory_simulationVarsAgent_list* unordered_agents, xmachine_memory_simulationVarsAgent_list* ordered_agents)
-{
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-
-	uint old_pos = values[index];
-
-	//reorder agent data
-	ordered_agents->itNum[index] = unordered_agents->itNum[old_pos];
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Dyanamically created Particle agent functions */
@@ -676,152 +555,6 @@ __device__ xmachine_message_particleVariables* get_next_particleVariables_messag
 	return ((xmachine_message_particleVariables*)&message_share[message_index]);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/* Dyanamically created itNumMessage message functions */
-
-
-/** add_itNumMessage_message
- * Add non partitioned or spatially partitioned itNumMessage message
- * @param messages xmachine_message_itNumMessage_list message list to add too
- * @param itNum agent variable of type int
- */
-__device__ void add_itNumMessage_message(xmachine_message_itNumMessage_list* messages, int itNum){
-
-	//global thread index
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x + d_message_itNumMessage_count;
-
-	int _position;
-	int _scan_input;
-
-	//decide output position
-	if(d_message_itNumMessage_output_type == single_message){
-		_position = index; //same as agent position
-		_scan_input = 0;
-	}else if (d_message_itNumMessage_output_type == optional_message){
-		_position = 0;	   //to be calculated using Prefix sum
-		_scan_input = 1;
-	}
-
-	//AoS - xmachine_message_itNumMessage Coalesced memory write
-	messages->_scan_input[index] = _scan_input;	
-	messages->_position[index] = _position;
-	messages->itNum[index] = itNum;
-
-}
-
-/**
- * Scatter non partitioned or spatially partitioned itNumMessage message (for optional messages)
- * @param messages scatter_optional_itNumMessage_messages Sparse xmachine_message_itNumMessage_list message list
- * @param message_swap temp xmachine_message_itNumMessage_list message list to scatter sparse messages to
- */
-__global__ void scatter_optional_itNumMessage_messages(xmachine_message_itNumMessage_list* messages, xmachine_message_itNumMessage_list* messages_swap){
-	//global thread index
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-
-	int _scan_input = messages_swap->_scan_input[index];
-
-	//if optional message is to be written
-	if (_scan_input == 1){
-		int output_index = messages_swap->_position[index] + d_message_itNumMessage_count;
-
-		//AoS - xmachine_message_itNumMessage Un-Coalesced scattered memory write
-		messages->_position[output_index] = output_index;
-		messages->itNum[output_index] = messages_swap->itNum[index];				
-	}
-}
-
-/** reset_itNumMessage_swaps
- * Reset non partitioned or spatially partitioned itNumMessage message swaps (for scattering optional messages)
- * @param message_swap message list to reset _position and _scan_input values back to 0
- */
-__global__ void reset_itNumMessage_swaps(xmachine_message_itNumMessage_list* messages_swap){
-
-	//global thread index
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-
-	messages_swap->_position[index] = 0;
-	messages_swap->_scan_input[index] = 0;
-}
-
-/* Message functions */
-
-__device__ xmachine_message_itNumMessage* get_first_itNumMessage_message(xmachine_message_itNumMessage_list* messages){
-
-	extern __shared__ int sm_data [];
-	char* message_share = (char*)&sm_data[0];
-	
-	//wrap size is the number of tiles required to load all messages
-	int wrap_size = __mul24(ceil((float)d_message_itNumMessage_count/ blockDim.x), blockDim.x);
-
-	//if no messages then return false
-	if (wrap_size == 0)
-		return false;
-
-	//global thread index
-	int global_index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-
-	//global thread index
-	int index = WRAP(global_index, wrap_size);
-
-	//SoA to AoS - xmachine_message_itNumMessage Coalesced memory read
-	xmachine_message_itNumMessage temp_message;
-	temp_message._position = messages->_position[index];
-	temp_message.itNum = messages->itNum[index];
-
-	//AoS to shared memory
-	int message_index = SHARE_INDEX(threadIdx.x, sizeof(xmachine_message_itNumMessage));
-	xmachine_message_itNumMessage* sm_message = ((xmachine_message_itNumMessage*)&message_share[message_index]);
-	sm_message[0] = temp_message;
-
-	__syncthreads();
-
-  //HACK FOR 64 bit addressing issue in sm
-	return ((xmachine_message_itNumMessage*)&message_share[d_SM_START]);
-}
-
-__device__ xmachine_message_itNumMessage* get_next_itNumMessage_message(xmachine_message_itNumMessage* message, xmachine_message_itNumMessage_list* messages){
-
-	extern __shared__ int sm_data [];
-	char* message_share = (char*)&sm_data[0];
-	
-	//wrap size is the number of tiles required to load all messages
-	int wrap_size = ceil((float)d_message_itNumMessage_count/ blockDim.x)*blockDim.x;
-
-	int i = WRAP((message->_position + 1),wrap_size);
-
-	//If end of messages (last message not multiple of gridsize) go to 0 index
-	if (i >= d_message_itNumMessage_count)
-		i = 0;
-
-	//Check if back to start position of first message
-	if (i == WRAP(__mul24(blockDim.x, blockIdx.x), wrap_size))
-		return false;
-
-	int tile = floor((float)i/(blockDim.x)); //tile is round down position over blockDim
-	i = i % blockDim.x;						 //mod i for shared memory index
-
-	//if count == Block Size load next tile int shared memory values
-	if (i == 0){
-		__syncthreads();					//make sure we dont change shared memeory until all threads are here (important for emu-debug mode)
-		
-		//SoA to AoS - xmachine_message_itNumMessage Coalesced memory read
-		int index = __mul24(tile, blockDim.x) + threadIdx.x;
-		xmachine_message_itNumMessage temp_message;
-		temp_message._position = messages->_position[index];
-		temp_message.itNum = messages->itNum[index];
-
-		//AoS to shared memory
-		int message_index = SHARE_INDEX(threadIdx.x, sizeof(xmachine_message_itNumMessage));
-		xmachine_message_itNumMessage* sm_message = ((xmachine_message_itNumMessage*)&message_share[message_index]);
-		sm_message[0] = temp_message;
-
-		__syncthreads();					//make sure we dont start returning messages untill all threads have updated shared memory
-	}
-
-	int message_index = SHARE_INDEX(i, sizeof(xmachine_message_itNumMessage));
-	return ((xmachine_message_itNumMessage*)&message_share[message_index]);
-}
-
 
 	
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -832,40 +565,14 @@ __device__ xmachine_message_itNumMessage* get_next_itNumMessage_message(xmachine
 /**
  *
  */
-__global__ void GPUFLAME_broadcastItNum(xmachine_memory_simulationVarsAgent_list* agents, xmachine_message_itNumMessage_list* itNumMessage_messages){
+__global__ void GPUFLAME_setIsActive(xmachine_memory_Particle_list* agents){
 	
 	//continuous agent: index is agent position in 1D agent list
 	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
   
     //For agents not using non partitioned message input check the agent bounds
-    if (index > d_xmachine_memory_simulationVarsAgent_count)
+    if (index > d_xmachine_memory_Particle_count)
         return;
-    
-
-	//SoA to AoS - xmachine_memory_broadcastItNum Coalesced memory read
-	xmachine_memory_simulationVarsAgent agent;
-	agent.itNum = agents->itNum[index];
-
-	//FLAME function call
-	int dead = !broadcastItNum(&agent, itNumMessage_messages	);
-	
-	//continuous agent: set reallocation flag
-	agents->_scan_input[index]  = dead; 
-
-	//AoS to SoA - xmachine_memory_broadcastItNum Coalesced memory write
-	agents->itNum[index] = agent.itNum;
-}
-
-/**
- *
- */
-__global__ void GPUFLAME_setIsActive(xmachine_memory_Particle_list* agents, xmachine_message_itNumMessage_list* itNumMessage_messages){
-	
-	//continuous agent: index is agent position in 1D agent list
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-  
-    
-    //No partitioned input requires threads to be launched beyond the agent count to ensure full block sizes
     
 
 	//SoA to AoS - xmachine_memory_setIsActive Coalesced memory read
@@ -886,7 +593,7 @@ __global__ void GPUFLAME_setIsActive(xmachine_memory_Particle_list* agents, xmac
 	agent.debug3 = agents->debug3[index];
 
 	//FLAME function call
-	int dead = !setIsActive(&agent, itNumMessage_messages);
+	int dead = !setIsActive(&agent);
 	
 	//continuous agent: set reallocation flag
 	agents->_scan_input[index]  = dead; 

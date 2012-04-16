@@ -8,10 +8,11 @@ extern void set_MIN_INTERRACTION_RAD(float* h_MIN_INTERRACTION);
 extern void set_NUM_PARTITIONS(float* h_NUM_PARTITIONS);
 
 void updateSimulationVars();
-void printSimulationInformation(int itNum);
+void printSimulationInformation();
 void setSimulationDefaults();
 void setVisualisationDefaults();
 void setVisualisationVars();
 void setWindowSize();
+void incrementItNum();
 
 #endif __GLOBALS_CONTROLLER

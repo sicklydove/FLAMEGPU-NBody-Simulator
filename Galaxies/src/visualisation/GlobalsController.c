@@ -24,6 +24,7 @@ float gravConstant=1;
 float velocityDamper=0.1;
 float minInteractionRadius=0.0;
 int numPartitions=1;
+int itNum=1;
 
 void updateSimulationVars(){
 
@@ -64,8 +65,14 @@ void setVisualisationVars(){
 	scanf("%lf", &VIEW_DISTANCE);
 }
 
-void setSimulationDefaults(){
+void incrementItNum(){
+	itNum++;
+	set_SIMULATION_ITNUM(&itNum);
+}
 
+void setSimulationDefaults(){
+	
+	set_SIMULATION_ITNUM(&itNum);
 	set_DELTA_T(&dt);
 	set_GRAV_CONST(&gravConstant);
 	set_VELOCITY_DAMP(&velocityDamper);
@@ -81,7 +88,7 @@ void setWindowSize(){
 	scanf("%d", &WINDOW_HEIGHT);
 }
 
-void printSimulationInformation(int itNum){
+void printSimulationInformation(){
 
 	printf("\nIteration number: ");
 	printf("%d", itNum);

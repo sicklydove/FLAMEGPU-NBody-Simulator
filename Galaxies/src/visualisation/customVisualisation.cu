@@ -80,7 +80,6 @@ int delay_count = 0;
 bool displayingDarkMatter=true;
 bool displayingBaryonicMatter=true;
 bool paused=true;
-int itNum=0;
 
 // prototypes
 CUTBoolean initGL();
@@ -272,12 +271,12 @@ void runCuda()
 	if (delay_count == SIMULATION_DELAY){
 		delay_count = 0;
 		singleIteration();
-		itNum++;
+		incrementItNum();
 	}
 #else
 	if(!paused){
 		singleIteration();
-		itNum++;
+		incrementItNum();
 	}
 #endif
 
@@ -657,11 +656,11 @@ void keyboard( unsigned char key, int /*x*/, int /*y*/)
 	case ( 'i'):
 		if(!paused){
 			paused=true;
-			printSimulationInformation(itNum);
+			printSimulationInformation();
 			paused=false;
 		}
 		else{
-			printSimulationInformation(itNum);
+			printSimulationInformation();
 		}
 	}
     

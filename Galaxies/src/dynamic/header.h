@@ -32,9 +32,6 @@
 //Maximum buffer size (largest agent buffer size)
 #define buffer_size_MAX 65536
 
-//Maximum population size of xmachine_memory_simulationVarsAgent
-#define xmachine_memory_simulationVarsAgent_MAX 1
-
 //Maximum population size of xmachine_memory_Particle
 #define xmachine_memory_Particle_MAX 65536
   
@@ -42,9 +39,6 @@
 /* Message poulation size definitions */
 //Maximum population size of xmachine_mmessage_particleVariables
 #define xmachine_message_particleVariables_MAX 65536
-
-//Maximum population size of xmachine_mmessage_itNumMessage
-#define xmachine_message_itNumMessage_MAX 1
 
 
 
@@ -71,15 +65,6 @@ enum AGENT_TYPE{
 
 
 /* Agent structures */
-
-/** struct xmachine_memory_simulationVarsAgent
- * continuous valued agent
- * Holds all agent variables and is aligned to help with coalesced reads on the GPU
- */
-struct __align__(16) xmachine_memory_simulationVarsAgent
-{
-    int itNum;    /**< X-machine memory variable itNum of type int.*/
-};
 
 /** struct xmachine_memory_Particle
  * continuous valued agent
@@ -122,34 +107,9 @@ struct __align__(16) xmachine_message_particleVariables
     float z;        /**< Message variable z of type float.*/
 };
 
-/** struct xmachine_message_itNumMessage
- * Brute force: No Partitioning
- * Holds all message variables and is aligned to help with coalesced reads on the GPU
- */
-struct __align__(16) xmachine_message_itNumMessage
-{	
-    /* Brute force Partitioning Variables */
-    int _position;          /**< 1D position of message in linear message list */   
-      
-    int itNum;        /**< Message variable itNum of type int.*/
-};
-
 
 
 /* Agent lists. Structure of Array (SoA) for memory coalescing on GPU */
-
-/** struct xmachine_memory_simulationVarsAgent_list
- * continuous valued agent
- * Variables lists for all agent variables
- */
-struct xmachine_memory_simulationVarsAgent_list
-{	
-    /* Temp variables for agents. Used for parallel operations such as prefix sum */
-    int _position [xmachine_memory_simulationVarsAgent_MAX];    /**< Holds agents position in the 1D agent list */
-    int _scan_input [xmachine_memory_simulationVarsAgent_MAX];  /**< Used during parallel prefix sum */
-    
-    int itNum [xmachine_memory_simulationVarsAgent_MAX];    /**< X-machine memory variable list itNum of type int.*/
-};
 
 /** struct xmachine_memory_Particle_list
  * continuous valued agent
@@ -198,20 +158,6 @@ struct xmachine_message_particleVariables_list
     
 };
 
-/** struct xmachine_message_itNumMessage_list
- * Brute force: No Partitioning
- * Structure of Array for memory coalescing 
- */
-struct xmachine_message_itNumMessage_list
-{
-    /* Non discrete messages have temp variables used for reductions with optional message outputs */
-    int _position [xmachine_message_itNumMessage_MAX];    /**< Holds agents position in the 1D agent list */
-    int _scan_input [xmachine_message_itNumMessage_MAX];  /**< Used during parallel prefix sum */
-    
-    int itNum [xmachine_message_itNumMessage_MAX];    /**< Message memory variable list itNum of type int.*/
-    
-};
-
 
 
 /* Spatialy Partitioned Message boundary Matrices */
@@ -249,18 +195,11 @@ __FLAME_GPU_FUNC__ float rnd(RNG_rand48* rand48);
 /* Agent function prototypes */
 
 /**
- * broadcastItNum FLAMEGPU Agent Function
- * @param agent Pointer to an agent structre of type xmachine_memory_simulationVarsAgent. This represents a single agent instance and can be modified directly.
- * @param itNumMessage_messages Pointer to output message list of type xmachine_message_itNumMessage_list. Must be passed as an argument to the add_itNumMessage_message function ??.
- */
-__FLAME_GPU_FUNC__ int broadcastItNum(xmachine_memory_simulationVarsAgent* agent, xmachine_message_itNumMessage_list* itNumMessage_messages);
-
-/**
  * setIsActive FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
- * @param itNumMessage_messages  itNumMessage_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_itNumMessage_message and get_next_itNumMessage_message functions.
+ 
  */
-__FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* agent, xmachine_message_itNumMessage_list* itNumMessage_messages);
+__FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* agent);
 
 /**
  * broadcastAndMoveState FLAMEGPU Agent Function
@@ -312,44 +251,10 @@ __FLAME_GPU_FUNC__ xmachine_message_particleVariables * get_first_particleVariab
  * @return        returns the first message from the message list (offset depending on agent block)
  */
 __FLAME_GPU_FUNC__ xmachine_message_particleVariables * get_next_particleVariables_message(xmachine_message_particleVariables* current, xmachine_message_particleVariables_list* particleVariables_messages);
-
-  
-/* Message Function Prototypes for Brute force (No Partitioning) itNumMessage message implemented in FLAMEGPU_Kernels */
-
-/** add_itNumMessage_agent
- * Function for all types of message partitioning
- * Adds a new itNumMessage agent to the xmachine_memory_itNumMessage_list list using a linear mapping
- * @param agents	xmachine_memory_itNumMessage_list agent list
- * @param itNum	message variable of type int
- */
- 
- __FLAME_GPU_FUNC__ void add_itNumMessage_message(xmachine_message_itNumMessage_list* itNumMessage_messages, int itNum);
- 
-/** get_first_itNumMessage_message
- * Get first message function for non partitioned (brute force) messages
- * @param itNumMessage_messages message list
- * @return        returns the first message from the message list (offset depending on agent block)
- */
-__FLAME_GPU_FUNC__ xmachine_message_itNumMessage * get_first_itNumMessage_message(xmachine_message_itNumMessage_list* itNumMessage_messages);
-
-/** get_next_itNumMessage_message
- * Get first message function for non partitioned (brute force) messages
- * @param current the current message struct
- * @param itNumMessage_messages message list
- * @return        returns the first message from the message list (offset depending on agent block)
- */
-__FLAME_GPU_FUNC__ xmachine_message_itNumMessage * get_next_itNumMessage_message(xmachine_message_itNumMessage* current, xmachine_message_itNumMessage_list* itNumMessage_messages);
   
   
   
 /* Agent Function Prototypes implemented in FLAMEGPU_Kernels */
-
-/** add_simulationVarsAgent_agent
- * Adds a new continuous valued simulationVarsAgent agent to the xmachine_memory_simulationVarsAgent_list list using a linear mapping
- * @param agents xmachine_memory_simulationVarsAgent_list agent list
- * @param itNum	agent agent variable of type int
- */
-__FLAME_GPU_FUNC__ void add_simulationVarsAgent_agent(xmachine_memory_simulationVarsAgent_list* agents, int itNum);
 
 /** add_Particle_agent
  * Adds a new continuous valued Particle agent to the xmachine_memory_Particle_list list using a linear mapping
@@ -395,62 +300,23 @@ extern "C" void singleIteration();
  * Reads the current agent data fromt he device and saves it to XML
  * @param	outputpath	file path to XML file used for output of agent data
  * @param	itteration_number
- * @param h_simulationVarsAgents Pointer to agent list on the host
- * @param d_simulationVarsAgents Pointer to agent list on the GPU device
- * @param h_xmachine_memory_simulationVarsAgent_count Pointer to agent counter
  * @param h_Particles Pointer to agent list on the host
  * @param d_Particles Pointer to agent list on the GPU device
  * @param h_xmachine_memory_Particle_count Pointer to agent counter
  */
-extern "C" void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents_default, xmachine_memory_simulationVarsAgent_list* d_simulationVarsAgents_default, int h_xmachine_memory_simulationVarsAgent_default_count,xmachine_memory_Particle_list* h_Particles_testingActive, xmachine_memory_Particle_list* d_Particles_testingActive, int h_xmachine_memory_Particle_testingActive_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count);
+extern "C" void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_Particle_list* h_Particles_testingActive, xmachine_memory_Particle_list* d_Particles_testingActive, int h_xmachine_memory_Particle_testingActive_count,xmachine_memory_Particle_list* h_Particles_updatingPosition, xmachine_memory_Particle_list* d_Particles_updatingPosition, int h_xmachine_memory_Particle_updatingPosition_count);
 
 
 /** readInitialStates
  * Reads the current agent data fromt he device and saves it to XML
  * @param	inputpath	file path to XML file used for input of agent data
- * @param h_simulationVarsAgents Pointer to agent list on the host
- * @param h_xmachine_memory_simulationVarsAgent_count Pointer to agent counter
  * @param h_Particles Pointer to agent list on the host
  * @param h_xmachine_memory_Particle_count Pointer to agent counter
  */
-extern "C" void readInitialStates(char* inputpath, xmachine_memory_simulationVarsAgent_list* h_simulationVarsAgents, int* h_xmachine_memory_simulationVarsAgent_count,xmachine_memory_Particle_list* h_Particles, int* h_xmachine_memory_Particle_count);
+extern "C" void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particles, int* h_xmachine_memory_Particle_count);
 
 
 /* Return functions used by external code to get agent data from device */
-
-    
-/** get_agent_simulationVarsAgent_MAX_count
- * Gets the max agent count for the simulationVarsAgent agent type 
- * @return		the maximum simulationVarsAgent agent count
- */
-extern "C" int get_agent_simulationVarsAgent_MAX_count();
-
-
-/** get_agent_simulationVarsAgent_default_count
- * Gets the agent count for the simulationVarsAgent agent type in state default
- * @return		the current simulationVarsAgent agent count in state default
- */
-extern "C" int get_agent_simulationVarsAgent_default_count();
-
-/** get_device_simulationVarsAgent_default_agents
- * Gets a pointer to xmachine_memory_simulationVarsAgent_list on the GPU device
- * @return		a xmachine_memory_simulationVarsAgent_list on the GPU device
- */
-extern "C" xmachine_memory_simulationVarsAgent_list* get_device_simulationVarsAgent_default_agents();
-
-/** get_host_simulationVarsAgent_default_agents
- * Gets a pointer to xmachine_memory_simulationVarsAgent_list on the CPU host
- * @return		a xmachine_memory_simulationVarsAgent_list on the CPU host
- */
-extern "C" xmachine_memory_simulationVarsAgent_list* get_host_simulationVarsAgent_default_agents();
-
-
-/** sort_simulationVarsAgents_default
- * Sorts an agent state list by providing a CUDA kernal to generate key value pairs
- * @param		a pointer CUDA kernal function to generate key value pairs
- */
-void sort_simulationVarsAgents_default(void (*generate_key_value_pairs)(unsigned int* keys, unsigned int* values, xmachine_memory_simulationVarsAgent_list* agents));
-
 
     
 /** get_agent_Particle_MAX_count
@@ -526,6 +392,8 @@ __constant__ float MIN_INTERRACTION_RAD;
 
 __constant__ int NUM_PARTITIONS;
 
+__constant__ int SIMULATION_ITNUM;
+
 /** set_DELTA_T
  * Sets the constant variable DELTA_T on the device which can then be used in the agent functions.
  * @param h_DELTA_T value to set the variable
@@ -555,6 +423,12 @@ extern "C" void set_MIN_INTERRACTION_RAD(float* h_MIN_INTERRACTION_RAD);
  * @param h_NUM_PARTITIONS value to set the variable
  */
 extern "C" void set_NUM_PARTITIONS(int* h_NUM_PARTITIONS);
+
+/** set_SIMULATION_ITNUM
+ * Sets the constant variable SIMULATION_ITNUM on the device which can then be used in the agent functions.
+ * @param h_SIMULATION_ITNUM value to set the variable
+ */
+extern "C" void set_SIMULATION_ITNUM(int* h_SIMULATION_ITNUM);
 
 
 /** getMaximumBound

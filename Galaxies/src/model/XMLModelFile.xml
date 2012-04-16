@@ -24,6 +24,10 @@
         <type>int</type>
         <name>NUM_PARTITIONS</name>
       </gpu:variable>
+      <gpu:variable>
+        <type>int</type>
+        <name>SIMULATION_ITNUM</name>
+      </gpu:variable>
     </gpu:constants>
     <gpu:functionFiles>
       <file>functions.c</file>
@@ -34,41 +38,8 @@
       </gpu:initFunction>
     </gpu:initFunctions>
   </gpu:environment>
-  
+
   <xagents>
-    <gpu:xagent>
-      <name>simulationVarsAgent</name>
-      <memory>
-        <gpu:variable>
-          <type>int</type>
-          <name>itNum</name>
-          <defaultValue>0</defaultValue>
-        </gpu:variable>
-      </memory>
-      <functions>
-        <gpu:function>
-          <name>broadcastItNum</name>
-          <currentState>default</currentState>
-          <nextState>default</nextState>
-          <outputs>
-            <gpu:output>
-              <messageName>itNumMessage</messageName>
-              <gpu:type>single_message</gpu:type>
-            </gpu:output>
-          </outputs>
-          <gpu:reallocate>false</gpu:reallocate>
-        </gpu:function>
-      </functions>
-      <states>
-        <gpu:state>
-          <name>default</name>
-        </gpu:state>
-        <initialState>default</initialState>
-      </states>
-      <gpu:type>continuous</gpu:type>
-      <gpu:bufferSize>1</gpu:bufferSize>
-    </gpu:xagent>
-    
     <gpu:xagent>
       <name>Particle</name>
       <description>Simple particle</description>
@@ -106,7 +77,7 @@
           <type>float</type>
           <name>z</name>
         </gpu:variable>
-        
+
         <gpu:variable>
           <type>float</type>
           <name>xVel</name>
@@ -131,20 +102,15 @@
         <gpu:variable>
           <type>float</type>
           <name>debug3</name>
-        </gpu:variable>    
+        </gpu:variable>
       </memory>
-      
+
       <functions>
         <gpu:function>
           <name>setIsActive</name>
           <description></description>
           <currentState>testingActive</currentState>
           <nextState>testingActive</nextState>
-          <inputs>
-            <gpu:input>
-              <messageName>itNumMessage</messageName>
-            </gpu:input>
-          </inputs>
           <gpu:reallocate>false</gpu:reallocate>
           <gpu:RNG>false</gpu:RNG>
         </gpu:function>
@@ -152,7 +118,7 @@
         <gpu:function>
           <name>broadcastAndMoveState</name>
           <currentState>testingActive</currentState>
-          <nextState>updatingPosition</nextState>     
+          <nextState>updatingPosition</nextState>
           <outputs>
             <gpu:output>
               <messageName>particleVariables</messageName>
@@ -194,7 +160,7 @@
           <gpu:reallocate>false</gpu:reallocate>
           <gpu:RNG>false</gpu:RNG>
         </gpu:function>
- 
+
         <gpu:function>
           <name>updatePosition</name>
           <currentState>updatingPosition</currentState>
@@ -208,7 +174,7 @@
           <gpu:RNG>false</gpu:RNG>
         </gpu:function>
       </functions>
-      
+
       <states>
         <gpu:state>
           <name>testingActive</name>
@@ -249,26 +215,9 @@
       <gpu:bufferSize>65536</gpu:bufferSize>
     </gpu:message>
 
-    <gpu:message>
-      <name>itNumMessage</name>
-      <description>The current simulation iteration</description>
-      <variables>
-        <gpu:variable>
-          <type>int</type>
-          <name>itNum</name>
-        </gpu:variable>
-      </variables>
-      <gpu:partitioningNone/>
-      <gpu:bufferSize>1</gpu:bufferSize>
-    </gpu:message>
   </messages>
 
   <layers>
-    <layer>
-      <gpu:layerFunction>
-        <name>broadcastItNum</name>
-      </gpu:layerFunction>
-    </layer>
     <layer>
       <gpu:layerFunction>
         <name>setIsActive</name>
