@@ -21,8 +21,8 @@
 
 float dt=0.001; 
 float gravConstant=1;
-float velocityDamper=0.2;
-float minInteractionRadius=0;
+float velocityDamper=0.1;
+float minInteractionRadius=0.0;
 int numPartitions=1;
 
 void updateSimulationVars(){
@@ -43,7 +43,6 @@ void updateSimulationVars(){
 	set_VELOCITY_DAMP(&velocityDamper);
 	set_MIN_INTERRACTION_RAD(&minInteractionRadius);
 	set_NUM_PARTITIONS(&numPartitions);
-
 }
 
 void setVisualisationVars(){

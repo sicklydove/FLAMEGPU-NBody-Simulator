@@ -15,7 +15,7 @@ int SPHERE_SLICES = 10;
 int SPHERE_STACKS = 10;
 
 //0.0035
-double SPHERE_RADIUS = 1.0000;
+double SPHERE_RADIUS = 0.0035;
 
 //Viewing Distance
 double VIEW_DISTANCE = 1;

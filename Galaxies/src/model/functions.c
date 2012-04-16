@@ -26,26 +26,10 @@ __FLAME_GPU_INIT_FUNC__ void initConstants(){
 	char input;
 	bool set=false;
 	
-	printf("Use default visualisation settings? y/n \n");
-	while(!set){
-		input=getchar();
-		while(input == '\n') input=getchar();
-		switch(input){
-		case 'y': case 'Y':
-			set=true;
-			break;		
-		case 'n': case 'N':
-			setVisualisationVars();
-			set=true;
-			break;
-		default:
-			printf("Invalid input. Use default visualisation settings? y/n \n");
-			break;
-		}
-	}
 	input=0;
 	set=false;
-	
+	//ask for vis settings in visualisation
+
 	printf("Use default simulation parameters y/n \n");
 	while(!set){
 		input=getchar();
@@ -109,15 +93,6 @@ __FLAME_GPU_FUNC__ int broadcastItNum(xmachine_memory_simulationVarsAgent* xmemo
  * Automatically generated using functions.xslt
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
  * @param particleVariables_messages  particleVariables_messages Pointer to input message list of type xmachine_message__list. Must be passed as an argument to the get_first_particleVariables_message and get_next_particleVariables_message functions.
-	
-	SHOCK HORROR!
-	IT'S ITERATION THAT SLOWS IT...
-	
-	W/O ITERATION: 55
-	W/ ITERATION AND NO CALCULATIONS: 18
-	W/ ITERATION AND CACLULATIONS: 8
-
-	15K AGENTS
 	*/
 
 __FLAME_GPU_FUNC__ int updatePosition(xmachine_memory_Particle* xmemory, xmachine_message_particleVariables_list* particleVariables_messages){

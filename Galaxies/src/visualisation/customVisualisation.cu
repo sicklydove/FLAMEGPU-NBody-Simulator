@@ -77,9 +77,9 @@ int frame_count;
 int delay_count = 0;
 #endif
 
-bool displayingDarkMatter=false;
+bool displayingDarkMatter=true;
 bool displayingBaryonicMatter=true;
-bool paused=false;
+bool paused=true;
 int itNum=0;
 
 // prototypes
@@ -96,8 +96,6 @@ void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
 void runCuda();
 void checkGLError();
-
-
 
 
 const char vertexShaderSource[] = 
@@ -158,7 +156,7 @@ const char fragmentShaderSource[] =
 
 //GPU Kernels
 
-__global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agents, float4* vbo, float3 centralise, bool displayingDarkMatter, bool displayingBaryonicMatter){
+__global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agents, float4* vbo, float3 centralise, bool displayingDarkMatter, bool displayingBaryonicMatter, float farClip){
 
 	//global thread index
 	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
@@ -171,9 +169,9 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 			vbo[index].z = agents->z[index] - centralise.z;
 		}
 		else{
-			vbo[index].x = 999;
-			vbo[index].y = 999;
-			vbo[index].z = 999;
+			vbo[index].x = centralise.x+farClip;
+			vbo[index].y = centralise.y+farClip;
+			vbo[index].z = centralise.z+farClip;
 		}
 		//Set colour white
 		vbo[index].w = 1;
@@ -187,9 +185,9 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 			vbo[index].z = agents->z[index] - centralise.z;
 		}
 		else{
-			vbo[index].x = 999;
-			vbo[index].y = 999;
-			vbo[index].z = 999;
+			vbo[index].x = centralise.x+farClip;
+			vbo[index].y = centralise.y+farClip;
+			vbo[index].z = centralise.z+farClip;
 		}
 		//Set colour red
 		vbo[index].w = 0;
@@ -199,6 +197,26 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 
 void initVisualisation()
 {
+	bool set=false;
+	char input;
+	printf("Use default visualisation settings? y/n \n");
+	while(!set){
+		input=getchar();
+		while(input == '\n') input=getchar();
+		switch(input){
+		case 'y': case 'Y':
+			set=true;
+			break;		
+		case 'n': case 'N':
+			setVisualisationVars();
+			set=true;
+			break;
+		default:
+			printf("Invalid input. Use default visualisation settings? y/n \n");
+			break;
+		}
+	}
+	
 	setWindowSize();
 
     //set the CUDA GL device: Will cause an error without this since CUDA 3.0
@@ -286,8 +304,7 @@ void runCuda()
         //continuous variables  
         centralise = getMaximumBounds() + getMinimumBounds();
         centralise /= 2;
-        
-		output_Particle_agent_to_VBO<<< grid, threads>>>(get_device_Particle_testingActive_agents(), dptr, centralise, displayingDarkMatter, displayingBaryonicMatter);
+		output_Particle_agent_to_VBO<<< grid, threads>>>(get_device_Particle_testingActive_agents(), dptr, centralise, displayingDarkMatter, displayingBaryonicMatter, (float)(FAR_CLIP));
 		CUT_CHECK_ERROR("Kernel execution failed");
 		// unmap buffer object
 		CUDA_SAFE_CALL(cudaGLUnmapBufferObject(Particle_testingActive_tbo));
