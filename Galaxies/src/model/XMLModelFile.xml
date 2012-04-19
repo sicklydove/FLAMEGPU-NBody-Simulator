@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <gpu:xmodel xmlns:gpu="http://www.dcs.shef.ac.uk/~paul/XMMLGPU"
         xmlns="http://www.dcs.shef.ac.uk/~paul/XMML">
-  <name>Galaxy Formation</name>
+  <!-- FLAME GPU XML template for gravitational N-body simulation
+       Author: Laurence James
+       Contact: ljames1@sheffield.ac.uk or laurence.james@gmail.com
+  -->
+  <name>N-body Simulation</name>
   <gpu:environment>
     <gpu:constants>
       <gpu:variable>
@@ -18,7 +22,7 @@
       </gpu:variable>
       <gpu:variable>
         <type>float</type>
-        <name>MIN_INTERRACTION_RAD</name>
+        <name>MIN_INTERACTION_RAD</name>
       </gpu:variable>
       <gpu:variable>
         <type>int</type>
@@ -142,12 +146,12 @@
           <name>broadcastAndKeepState</name>
           <currentState>testingActive</currentState>
           <nextState>testingActive</nextState>
-          <outputs>
+          <!--<outputs>
             <gpu:output>
               <messageName>particleVariables</messageName>
               <gpu:type>single_message</gpu:type>
             </gpu:output>
-          </outputs>
+          </outputs>-->
           <condition>
             <lhs>
               <agentVariable>isActive</agentVariable>

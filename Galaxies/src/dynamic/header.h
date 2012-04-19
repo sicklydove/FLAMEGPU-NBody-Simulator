@@ -211,9 +211,9 @@ __FLAME_GPU_FUNC__ int broadcastAndMoveState(xmachine_memory_Particle* agent, xm
 /**
  * broadcastAndKeepState FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
- * @param particleVariables_messages Pointer to output message list of type xmachine_message_particleVariables_list. Must be passed as an argument to the add_particleVariables_message function ??.
+ 
  */
-__FLAME_GPU_FUNC__ int broadcastAndKeepState(xmachine_memory_Particle* agent, xmachine_message_particleVariables_list* particleVariables_messages);
+__FLAME_GPU_FUNC__ int broadcastAndKeepState(xmachine_memory_Particle* agent);
 
 /**
  * updatePosition FLAMEGPU Agent Function
@@ -388,7 +388,7 @@ __constant__ float GRAV_CONST;
 
 __constant__ float VELOCITY_DAMP;
 
-__constant__ float MIN_INTERRACTION_RAD;
+__constant__ float MIN_INTERACTION_RAD;
 
 __constant__ int NUM_PARTITIONS;
 
@@ -412,11 +412,11 @@ extern "C" void set_GRAV_CONST(float* h_GRAV_CONST);
  */
 extern "C" void set_VELOCITY_DAMP(float* h_VELOCITY_DAMP);
 
-/** set_MIN_INTERRACTION_RAD
- * Sets the constant variable MIN_INTERRACTION_RAD on the device which can then be used in the agent functions.
- * @param h_MIN_INTERRACTION_RAD value to set the variable
+/** set_MIN_INTERACTION_RAD
+ * Sets the constant variable MIN_INTERACTION_RAD on the device which can then be used in the agent functions.
+ * @param h_MIN_INTERACTION_RAD value to set the variable
  */
-extern "C" void set_MIN_INTERRACTION_RAD(float* h_MIN_INTERRACTION_RAD);
+extern "C" void set_MIN_INTERACTION_RAD(float* h_MIN_INTERACTION_RAD);
 
 /** set_NUM_PARTITIONS
  * Sets the constant variable NUM_PARTITIONS on the device which can then be used in the agent functions.

@@ -12,13 +12,19 @@
  * For terms of licence agreement please attached licence or view licence 
  * on www.flamegpu.com website.
  * 
+
+ * Globals Controller --- manages simulation and visualisation variables
+ * Based on the pedestrians global controller, but all code by Laurence James
+ * Contact: ljames1@sheffield.ac.uk or laurence.james@gmail.com
  */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "customVisualisation.h"
-#include "globalsController.h"
+#include <customVisualisation.h>
+#include <globalsController.h>
 
+//Defaults
 float dt=0.001; 
 float gravConstant=1;
 float velocityDamper=0.1;
@@ -26,6 +32,19 @@ float minInteractionRadius=0.0;
 int numPartitions=1;
 int itNum=1;
 
+//Set the defaults into FLAME GPU memory 
+//Vis defaults are in customVisualisation.h, and don't need to be stored in FLAME memory
+void setSimulationDefaults(){
+	
+	set_SIMULATION_ITNUM(&itNum);
+	set_DELTA_T(&dt);
+	set_GRAV_CONST(&gravConstant);
+	set_VELOCITY_DAMP(&velocityDamper);
+	set_MIN_INTERACTION_RAD(&minInteractionRadius);
+	set_NUM_PARTITIONS(&numPartitions);
+}
+
+//Called when specifying user simulation vars, or when updating vars mid-simulation
 void updateSimulationVars(){
 
 	printf("\nInput dt\n");
@@ -39,13 +58,15 @@ void updateSimulationVars(){
 	printf("\nInput number of timestep slices (optimisation):\n");
 	scanf("%d", &numPartitions);
 	
+	//FLAME GPU constant functions
 	set_DELTA_T(&dt);
 	set_GRAV_CONST(&gravConstant);
 	set_VELOCITY_DAMP(&velocityDamper);
-	set_MIN_INTERRACTION_RAD(&minInteractionRadius);
+	set_MIN_INTERACTION_RAD(&minInteractionRadius);
 	set_NUM_PARTITIONS(&numPartitions);
 }
 
+//Called when specifying user visualisation vars at launch.
 void setVisualisationVars(){
 
 	printf("\nInput near clip\n");
@@ -57,7 +78,6 @@ void setVisualisationVars(){
 	scanf("%d", &SPHERE_SLICES);
 	printf("\nInput number of sphere stacks\n");
 	scanf("%d", &SPHERE_STACKS);
-	
 	printf("\nInput sphere radius\n");
 	scanf("%lf", &SPHERE_RADIUS );
 
@@ -65,21 +85,13 @@ void setVisualisationVars(){
 	scanf("%lf", &VIEW_DISTANCE);
 }
 
+//Increment iteration number and write to FLAME memory
 void incrementItNum(){
 	itNum++;
 	set_SIMULATION_ITNUM(&itNum);
 }
 
-void setSimulationDefaults(){
-	
-	set_SIMULATION_ITNUM(&itNum);
-	set_DELTA_T(&dt);
-	set_GRAV_CONST(&gravConstant);
-	set_VELOCITY_DAMP(&velocityDamper);
-	set_MIN_INTERRACTION_RAD(&minInteractionRadius);
-	set_NUM_PARTITIONS(&numPartitions);
-}
-
+//For visualisation, in case of different aspect ratios
 void setWindowSize(){
 
 	printf("Enter window width (px):\n");
@@ -88,6 +100,7 @@ void setWindowSize(){
 	scanf("%d", &WINDOW_HEIGHT);
 }
 
+//Dump simulation info to console.
 void printSimulationInformation(){
 
 	printf("\nIteration number: ");

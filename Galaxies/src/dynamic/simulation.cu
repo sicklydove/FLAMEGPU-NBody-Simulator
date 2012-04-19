@@ -397,8 +397,8 @@ void set_VELOCITY_DAMP(float* h_VELOCITY_DAMP){
 	CUDA_SAFE_CALL(cudaMemcpyToSymbol(VELOCITY_DAMP, h_VELOCITY_DAMP, sizeof(float)));
 }
 
-void set_MIN_INTERRACTION_RAD(float* h_MIN_INTERRACTION_RAD){
-	CUDA_SAFE_CALL(cudaMemcpyToSymbol(MIN_INTERRACTION_RAD, h_MIN_INTERRACTION_RAD, sizeof(float)));
+void set_MIN_INTERACTION_RAD(float* h_MIN_INTERACTION_RAD){
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(MIN_INTERACTION_RAD, h_MIN_INTERACTION_RAD, sizeof(float)));
 }
 
 void set_NUM_PARTITIONS(int* h_NUM_PARTITIONS){
@@ -767,34 +767,16 @@ void Particle_broadcastAndKeepState(){
 	//******************************** AGENT FUNCTION *******************************
 
 	
-	//CONTINUOUS AGENT CHECK FUNCTION OUTPUT BUFFERS FOR OUT OF BOUNDS
-	if (h_message_particleVariables_count + h_xmachine_memory_Particle_count > xmachine_message_particleVariables_MAX){
-		printf("Error: Buffer size of particleVariables message will be exceeded in function broadcastAndKeepState\n");
-		exit(0);
-	}
-	
-	//SET THE OUTPUT MESSAGE TYPE
-	//Set the message_type for non partitioned and spatially partitioned message outputs
-	h_message_particleVariables_output_type = single_message;
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_message_particleVariables_output_type, &h_message_particleVariables_output_type, sizeof(int)));
-	
 	
 	//MAIN XMACHINE FUNCTION CALL (broadcastAndKeepState)
 	//Reallocate   : false
 	//Input        : 
-	//Output       : particleVariables
+	//Output       : 
 	//Agent Output : 
-	GPUFLAME_broadcastAndKeepState<<<grid, threads, sm_size>>>(d_Particles, d_particleVariabless);
+	GPUFLAME_broadcastAndKeepState<<<grid, threads, sm_size>>>(d_Particles);
 	CUT_CHECK_ERROR("Kernel execution failed");
     
     
-	//CONTINUOUS AGENTS SCATTER NON PARTITIONED OPTIONAL OUTPUT MESSAGES
-	
-	//UPDATE MESSAGE COUNTS FOR CONTINUOUS AGENTS WITH NON PARTITIONED MESSAGE OUTPUT 
-	h_message_particleVariables_count += h_xmachine_memory_Particle_count;	
-	//Copy count to device
-	CUDA_SAFE_CALL( cudaMemcpyToSymbol( d_message_particleVariables_count, &h_message_particleVariables_count, sizeof(int)));	
-	
 	
 	//************************ MOVE AGENTS TO NEXT STATE ****************************
     

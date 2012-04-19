@@ -164,8 +164,8 @@ int main( int argc, char** argv)
   printf("Processing Simulation Step %i", i+1);
 
   //single simulation itteration
-  singleIteration();
   incrementItNum();
+  singleIteration();
 
   if (OUTPUT_TO_XML)
   {

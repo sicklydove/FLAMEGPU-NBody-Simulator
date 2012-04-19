@@ -13,6 +13,10 @@
  * For terms of licence agreement please attached licence or view licence 
  * on www.flamegpu.com website.
  * 
+ 
+ * Based on templated visualisation.c, adapted and modified for gravitational N-body simulation
+ * Author: Laurence James
+ * Contact: ljames1@sheffield.ac.uk or laurence.james@gmail.com
  */
 
 // includes, project
@@ -57,6 +61,10 @@ int mouse_buttons = 0;
 float rotate_x = 0.0, rotate_y = 0.0;
 float translate_z = -VIEW_DISTANCE;
 
+//Add x and y translation
+float translate_x = 0;
+float translate_y = 0;
+
 // vertex Shader
 GLuint vertexShader;
 GLuint fragmentShader;
@@ -77,6 +85,7 @@ int frame_count;
 int delay_count = 0;
 #endif
 
+//custom visualisation params
 bool displayingDarkMatter=true;
 bool displayingBaryonicMatter=true;
 bool paused=true;
@@ -167,6 +176,7 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 			vbo[index].y = agents->y[index] - centralise.y;
 			vbo[index].z = agents->z[index] - centralise.z;
 		}
+		//Render outside of the view frustrum if visualisation=false
 		else{
 			vbo[index].x = centralise.x+farClip;
 			vbo[index].y = centralise.y+farClip;
@@ -183,6 +193,7 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 			vbo[index].y = agents->y[index] - centralise.y;
 			vbo[index].z = agents->z[index] - centralise.z;
 		}
+		//Render outside of the view frustrum if visualisation=false
 		else{
 			vbo[index].x = centralise.x+farClip;
 			vbo[index].y = centralise.y+farClip;
@@ -196,6 +207,10 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 
 void initVisualisation()
 {
+	//Allow user to set window size for different aspect ratios
+	setWindowSize();
+	
+	//Handle defaults
 	bool set=false;
 	char input;
 	printf("Use default visualisation settings? y/n \n");
@@ -210,14 +225,14 @@ void initVisualisation()
 			setVisualisationVars();
 			set=true;
 			break;
+		case '\n':
+			break;
 		default:
 			printf("Invalid input. Use default visualisation settings? y/n \n");
 			break;
 		}
 	}
 	
-	setWindowSize();
-
     //set the CUDA GL device: Will cause an error without this since CUDA 3.0
     cudaGLSetGLDevice(0);
 
@@ -271,11 +286,14 @@ void runCuda()
 	if (delay_count == SIMULATION_DELAY){
 		delay_count = 0;
 		singleIteration();
+		//
 		incrementItNum();
 	}
 #else
+	//only step simulation if visualisation isn't paused
 	if(!paused){
 		singleIteration();
+		//itNum stored as simulation variable for optimisation approaches. Increment it here
 		incrementItNum();
 	}
 #endif
@@ -290,7 +308,8 @@ void runCuda()
 	//pointer
 	float4 *dptr;
 
-	
+	//We only draw agents in testingActive state...
+	//...bcause this is the only state it should be possible to be in!
 	if (get_agent_Particle_testingActive_count() > 0)
 	{
 		// map OpenGL buffer object for writing from CUDA
@@ -303,6 +322,8 @@ void runCuda()
         //continuous variables  
         centralise = getMaximumBounds() + getMinimumBounds();
         centralise /= 2;
+		
+		//cast FAR_CLIP to float for CUDA compatability
 		output_Particle_agent_to_VBO<<< grid, threads>>>(get_device_Particle_testingActive_agents(), dptr, centralise, displayingDarkMatter, displayingBaryonicMatter, (float)(FAR_CLIP));
 		CUT_CHECK_ERROR("Kernel execution failed");
 		// unmap buffer object
@@ -326,6 +347,8 @@ CUTBoolean initGL()
     }
 
     // default initialization
+    
+    //don't clear color - we want it black!
     //glClearColor( 255.0, 255.0, 255.0, 1.0);
     glEnable( GL_DEPTH_TEST);
 
@@ -342,8 +365,6 @@ CUTBoolean initGL()
 	//lighting
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-
-
 
     return CUTTrue;
 }
@@ -537,27 +558,23 @@ void setVertexBufferData()
 void display()
 {
 
-
 	//CUDA start Timing
 	CUT_SAFE_CALL( cutStartTimer( timer));
 
 	// run CUDA kernel to generate vertex positions
     runCuda();
+    
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
-
      //set view matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-       
 
-
-   	//zoom
-	glTranslatef(0.0, 0.0, translate_z); 
-	//move
+   	//zoom in z; translate x,y
+	glTranslatef(translate_x, translate_y, translate_z); 
+	//rotation about centre
     glRotatef(rotate_x, 1.0, 0.0, 0.0);
     glRotatef(rotate_y, 0.0, 0.0, 1.0);
-
 
 	//Set light position
 	glLightfv(GL_LIGHT0, GL_POSITION, LIGHT_POSITION);
@@ -587,7 +604,6 @@ void display()
 	
 	}
 
-
 	//CUDA stop timing
 	cudaThreadSynchronize();
 	glFlush();
@@ -608,7 +624,6 @@ void display()
     glutSwapBuffers();
     glutPostRedisplay();
     }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -635,13 +650,14 @@ void keyboard( unsigned char key, int /*x*/, int /*y*/)
         displayingBaryonicMatter=!displayingBaryonicMatter;
         break;
 
-	//pause...
+	//toggle pause
     case ( 'p'):
 		paused=!paused;
 		break;
 	
-	//Allow user to update simulation variables. The system is paused while they do this
+	//Allow user to update simulation variables.
     case ( 'u'):
+		//halt processing while getting info
 		if(!paused){
 			paused=true;
 			updateSimulationVars();
@@ -654,6 +670,7 @@ void keyboard( unsigned char key, int /*x*/, int /*y*/)
 	
 	//Print a snapshot of simulation information
 	case ( 'i'):
+		//halt processing while dumping info
 		if(!paused){
 			paused=true;
 			printSimulationInformation();
@@ -688,16 +705,25 @@ void motion(int x, int y)
     dx = x - mouse_old_x;
     dy = y - mouse_old_y;
 
+	//left 
     if (mouse_buttons & 1) {
         rotate_x += dy * 0.2;
         rotate_y += dx * 0.2;
-    } else if (mouse_buttons & 4) {
-  translate_z += dy * VIEW_DISTANCE* 0.001;
-  }
+    }
+    //right 
+    else if (mouse_buttons & 4) {
+		translate_z += dy * VIEW_DISTANCE* 0.001;
+	}
+	
+	//middle
+	else if (mouse_buttons & 3) {
+		translate_x += dx * 0.001;
+		translate_y += dy * 0.001;
+	}
 
-  mouse_old_x = x;
-  mouse_old_y = y;
-  }
+	mouse_old_x = x;
+	mouse_old_y = y;
+	}
 
 void checkGLError(){
   int Error;

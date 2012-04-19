@@ -1,7 +1,8 @@
 #ifndef __VISUALISATION_H
 #define __VISUALISATION_H
 
-// constants
+//Though these aren't changed mid-simulation, they are defined by user at the start
+//(So not constants)
 
 unsigned int WINDOW_WIDTH = 1600;
 unsigned int WINDOW_HEIGHT = 900;
@@ -14,7 +15,6 @@ double FAR_CLIP = 640;
 int SPHERE_SLICES = 10;
 int SPHERE_STACKS = 10;
 
-//0.0035
 double SPHERE_RADIUS = 0.0035;
 
 //Viewing Distance

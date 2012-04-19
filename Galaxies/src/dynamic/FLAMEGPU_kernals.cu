@@ -671,7 +671,7 @@ __global__ void GPUFLAME_broadcastAndMoveState(xmachine_memory_Particle_list* ag
 /**
  *
  */
-__global__ void GPUFLAME_broadcastAndKeepState(xmachine_memory_Particle_list* agents, xmachine_message_particleVariables_list* particleVariables_messages){
+__global__ void GPUFLAME_broadcastAndKeepState(xmachine_memory_Particle_list* agents){
 	
 	//continuous agent: index is agent position in 1D agent list
 	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
@@ -699,7 +699,7 @@ __global__ void GPUFLAME_broadcastAndKeepState(xmachine_memory_Particle_list* ag
 	agent.debug3 = agents->debug3[index];
 
 	//FLAME function call
-	int dead = !broadcastAndKeepState(&agent, particleVariables_messages	);
+	int dead = !broadcastAndKeepState(&agent);
 	
 	//continuous agent: set reallocation flag
 	agents->_scan_input[index]  = dead; 
