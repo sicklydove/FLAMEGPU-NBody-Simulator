@@ -1,6 +1,5 @@
 class ParticleAgent:
-  def __init__(self, particleId, mass, isDark, initialOffset, (xPos, yPos, zPos), (xVel, yVel, zVel)):
-    self.particleId=particleId
+  def __init__(self, mass, isDark, particleGroup, (xPos, yPos, zPos), (xVel, yVel, zVel)):
     self.xPos=xPos
     self.yPos=yPos
     self.zPos=zPos
@@ -9,15 +8,13 @@ class ParticleAgent:
     self.zVel=zVel
     self.mass=mass
     self.isDark=isDark
-    self.initialOffset=initialOffset
+    self.particleGroup=particleGroup
 
+  #Return XML for writing to t0 files
   def getAgentXML(self):
     outStr=""
     outStr+='<xagent>'
     outStr+='<name>Particle</name>'
-    outStr+='<id>'
-    outStr+=str(self.particleId)
-    outStr+='</id>'
     outStr+='<mass>'
     outStr+=str(self.mass)
     outStr+='</mass>'
@@ -42,9 +39,9 @@ class ParticleAgent:
     outStr+='<zVel>'
     outStr+=str(self.zVel)
     outStr+='</zVel>'
-    outStr+='<initialOffset>'
-    outStr+=str(self.initialOffset)
-    outStr+='</initialOffset>'
+    outStr+='<particleGroup>'
+    outStr+=str(self.particleGroup)
+    outStr+='</particleGroup>'
     outStr+='</xagent>\r\n'
     return outStr
 
@@ -54,11 +51,8 @@ class ParticleAgent:
   def setIsDark(self, isDark):
     self.isDark=isDark
 
-  def setparticleId(self, uID):
-    self.particleId=uID
-
-  def setOffset(self, offset):
-    self.initialOffset=offset
+  def setParticleGroup(self, offset):
+    self.particleGroup=offset
   
   def setPositions(self, x,y,z):
     self.xPos=x

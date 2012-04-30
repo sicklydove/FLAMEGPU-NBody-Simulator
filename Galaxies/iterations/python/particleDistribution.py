@@ -13,18 +13,30 @@ class ParticleDistribution:
    self.numParticleGroups=numParticleGroups
    prob=self.darkMatterPercentage/100
 
-   #Particles: [id, mass, (xyz pos), (xyz vel)]
+   #Particles: [mass, (xyz pos), (xyz vel)]
+   numParticlesPerGroup=numAgents/numParticleGroups
+   particleGroup=1
+
    for counter in range (0, self.numAgents):
+     particleGroup+=1
+     if(particleGroup>numParticleGroups):
+       particleGroup=1
+
      #Dark Matter. No booleans in FLAMEGPU, so use 0/1
      if (random.random() > prob):
        isDark=0 
      else:
        isDark=1
-     particleGroup=int(random.uniform(0,numParticleGroups-1))
-
-     self.particles.append(ParticleAgent(counter,0,isDark,particleGroup,(0,0,0),(0,0,0)))
+     self.particles.append(ParticleAgent(0,isDark,particleGroup,(0,0,0),(0,0,0)))
 
   def setMasses(self, massDistribution):
+
+    #catch and stop people setting masses as spheres.
+    #This won't error at runtime b/c values passed as tuples -> interpreted as null (0)
+    if(massDistribution.getType() is 'sphere'):
+      print "Error! Can't set masses with a spherical distribution"
+      exit()
+
     for count in range (0, self.numAgents):
       self.particles[count].setMass(massDistribution.getItem())
 
@@ -33,28 +45,36 @@ class ParticleDistribution:
     if((yDistrib and zDistrib) is None):
       yDistrib=xDistrib
       zDistrib=xDistrib
+
     if(not self.usingZAxis):
       zDistrib=ProbabilityDistribution('fixed', 0)
 
-    if(yDistrib.getType() is 'circle'):
-
-      #if(not(yDistrib and zDistrib) is None):
-       # print 'Error! Cannot specify multiple position distributions if using a circle'
-        #exit()
+    if(xDistrib.getType() is 'sphere'):
+      if(xDistrib.getRadius()<0):
+        print "Error! Can't define a spherical distribution with negative radius"
+        exit()
       for i in range(0, self.numAgents):
         coords=(xDistrib.getItem())
         if(not self.usingZAxis):
           coords=(coords[0],coords[1],0)
         self.particles[i].setPositions(coords[0], coords[1], coords[2])
+
     else:	
       for i in range (0, self.numAgents):
         self.particles[i].setPositions(xDistrib.getItem(), yDistrib.getItem(), zDistrib.getItem())
 
   def setVelocities(self, xVelDistrib, yVelDistrib=None, zVelDistrib=None):
     #If not set, use same distribution for all dimensions
+
     if((yVelDistrib and zVelDistrib) is None):
       yVelDistrib=xVelDistrib
       zVelDistrib=xVelDistrib
+
+    #catch and stop people setting velocities as spheres.
+    #This won't error at runtime b/c values passed as tuples -> interpreted as null (0)
+    if((xVelDistrib.getType() is 'sphere') or (yVelDistrib.getType() is 'sphere') or (zVelDistrib.getType() is 'sphere')):
+      print "Error! Can't set velocities with a spherical distribution"
+      exit()
 
     if(not self.usingZAxis):
       zVelDistrib=ProbabilityDistribution('fixed',0)
@@ -64,36 +84,3 @@ class ParticleDistribution:
 
   def getParticleAgents(self):
     return self.particles
-
-  def makeAgentsFromFile(self, fileloc):
-    agentsDict={}
-
-    scaleFactor=1
-    velScaleFactor=1
-    massScale=1
-    inFile=open(fileloc, 'r')
-
-    count=0
-    with inFile as f:
-      content=f.readlines()
-
-    for line in content:
-      stripStr=line.split()
-      massPosVel=[0,0,0,0,0,0,0]
-      massPosVel[0]=massScale*float(stripStr[0])
-
-    for index in range(1,4):
-      massPosVel[index]=scaleFactor*float(stripStr[index])
-
-    for index in range(4,7):
-      massPosVel[index]=velScaleFactor*float(stripStr[index])
-
-    count+=1
-
-    agentsDict[count]=massPosVel
-
-    for item in agentsDict:
-      ls=agentsDict[item]
-      newAgent=ParticleAgent(item, ls[1], ls[2], ls[3], ls[4], ls[5], ls[6], ls[0], False)
-      agentXML=newAgent.writeAgent()
-      self.outputFile.write(agentXML)

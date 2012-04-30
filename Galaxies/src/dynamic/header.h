@@ -30,15 +30,15 @@
 
 /* Agent population size definifions must be a multiple of THREADS_PER_TILE (defualt 64) */
 //Maximum buffer size (largest agent buffer size)
-#define buffer_size_MAX 65536
+#define buffer_size_MAX 131072
 
 //Maximum population size of xmachine_memory_Particle
-#define xmachine_memory_Particle_MAX 65536
+#define xmachine_memory_Particle_MAX 131072
   
   
 /* Message poulation size definitions */
 //Maximum population size of xmachine_mmessage_particleVariables
-#define xmachine_message_particleVariables_MAX 65536
+#define xmachine_message_particleVariables_MAX 131072
 
 
 
@@ -72,7 +72,6 @@ enum AGENT_TYPE{
  */
 struct __align__(16) xmachine_memory_Particle
 {
-    int id;    /**< X-machine memory variable id of type int.*/
     int isDark;    /**< X-machine memory variable isDark of type int.*/
     int isActive;    /**< X-machine memory variable isActive of type int.*/
     int particleGroup;    /**< X-machine memory variable particleGroup of type int.*/
@@ -83,9 +82,6 @@ struct __align__(16) xmachine_memory_Particle
     float xVel;    /**< X-machine memory variable xVel of type float.*/
     float yVel;    /**< X-machine memory variable yVel of type float.*/
     float zVel;    /**< X-machine memory variable zVel of type float.*/
-    float debug1;    /**< X-machine memory variable debug1 of type float.*/
-    float debug2;    /**< X-machine memory variable debug2 of type float.*/
-    float debug3;    /**< X-machine memory variable debug3 of type float.*/
 };
 
 
@@ -121,7 +117,6 @@ struct xmachine_memory_Particle_list
     int _position [xmachine_memory_Particle_MAX];    /**< Holds agents position in the 1D agent list */
     int _scan_input [xmachine_memory_Particle_MAX];  /**< Used during parallel prefix sum */
     
-    int id [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list id of type int.*/
     int isDark [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list isDark of type int.*/
     int isActive [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list isActive of type int.*/
     int particleGroup [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list particleGroup of type int.*/
@@ -132,9 +127,6 @@ struct xmachine_memory_Particle_list
     float xVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list xVel of type float.*/
     float yVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list yVel of type float.*/
     float zVel [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list zVel of type float.*/
-    float debug1 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug1 of type float.*/
-    float debug2 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug2 of type float.*/
-    float debug3 [xmachine_memory_Particle_MAX];    /**< X-machine memory variable list debug3 of type float.*/
 };
 
 
@@ -202,18 +194,11 @@ __FLAME_GPU_FUNC__ float rnd(RNG_rand48* rand48);
 __FLAME_GPU_FUNC__ int setIsActive(xmachine_memory_Particle* agent);
 
 /**
- * broadcastAndMoveState FLAMEGPU Agent Function
+ * broadcastVariables FLAMEGPU Agent Function
  * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
  * @param particleVariables_messages Pointer to output message list of type xmachine_message_particleVariables_list. Must be passed as an argument to the add_particleVariables_message function ??.
  */
-__FLAME_GPU_FUNC__ int broadcastAndMoveState(xmachine_memory_Particle* agent, xmachine_message_particleVariables_list* particleVariables_messages);
-
-/**
- * broadcastAndKeepState FLAMEGPU Agent Function
- * @param agent Pointer to an agent structre of type xmachine_memory_Particle. This represents a single agent instance and can be modified directly.
- 
- */
-__FLAME_GPU_FUNC__ int broadcastAndKeepState(xmachine_memory_Particle* agent);
+__FLAME_GPU_FUNC__ int broadcastVariables(xmachine_memory_Particle* agent, xmachine_message_particleVariables_list* particleVariables_messages);
 
 /**
  * updatePosition FLAMEGPU Agent Function
@@ -259,7 +244,6 @@ __FLAME_GPU_FUNC__ xmachine_message_particleVariables * get_next_particleVariabl
 /** add_Particle_agent
  * Adds a new continuous valued Particle agent to the xmachine_memory_Particle_list list using a linear mapping
  * @param agents xmachine_memory_Particle_list agent list
- * @param id	agent agent variable of type int
  * @param isDark	agent agent variable of type int
  * @param isActive	agent agent variable of type int
  * @param particleGroup	agent agent variable of type int
@@ -270,11 +254,8 @@ __FLAME_GPU_FUNC__ xmachine_message_particleVariables * get_next_particleVariabl
  * @param xVel	agent agent variable of type float
  * @param yVel	agent agent variable of type float
  * @param zVel	agent agent variable of type float
- * @param debug1	agent agent variable of type float
- * @param debug2	agent agent variable of type float
- * @param debug3	agent agent variable of type float
  */
-__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, int isDark, int isActive, int particleGroup, float mass, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3);
+__FLAME_GPU_FUNC__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int isDark, int isActive, int particleGroup, float mass, float x, float y, float z, float xVel, float yVel, float zVel);
 
 
   

@@ -25,15 +25,15 @@
 #include <globalsController.h>
 
 //Defaults
-float dt=0.001; 
-float gravConstant=1;
-float velocityDamper=0.1;
-float minInteractionRadius=0.0;
+float dt=0.001f; 
+float gravConstant=1.0f;
+float velocityDamper=0.05f;
+float minInteractionRadius=0.0f;
 int numPartitions=1;
-int itNum=1;
+int itNum=0;
 
 //Set the defaults into FLAME GPU memory 
-//Vis defaults are in customVisualisation.h, and don't need to be stored in FLAME memory
+//Vis defaults are in customVisualisation.h, and don't need to be stored in FLAME memory 
 void setSimulationDefaults(){
 	
 	set_SIMULATION_ITNUM(&itNum);
@@ -48,16 +48,20 @@ void setSimulationDefaults(){
 void updateSimulationVars(){
 
 	printf("\nInput dt\n");
-	scanf("%f", &dt);
+	dt=(float)getAndValidateDouble();
+
 	printf("\nInput gravitational constant:\n");
-	scanf("%f", &gravConstant);
+	gravConstant=(float)getAndValidateDouble();
+
 	printf("\nInput velocity dampening factor:\n");
-	scanf("%f", &velocityDamper);
-	printf("\nInput minimum radius of interraction:\n");
-	scanf("%f", &minInteractionRadius);
-	printf("\nInput number of timestep slices (optimisation):\n");
-	scanf("%d", &numPartitions);
-	
+	velocityDamper=(float)getAndValidateDouble();
+
+	printf("\nInput minimum radius of interaction:\n");
+	minInteractionRadius=(float)getAndValidateDouble();
+
+	printf("\nInput number of particle groups:\n");
+	numPartitions=(int)getAndValidateDouble();
+
 	//FLAME GPU constant functions
 	set_DELTA_T(&dt);
 	set_GRAV_CONST(&gravConstant);
@@ -70,19 +74,21 @@ void updateSimulationVars(){
 void setVisualisationVars(){
 
 	printf("\nInput near clip\n");
-	scanf("%lf", &NEAR_CLIP);
+	NEAR_CLIP=(float)getAndValidateDouble();
+	
 	printf("\nInput far clip\n");
-	scanf("%lf", &FAR_CLIP);
+	FAR_CLIP=(float)getAndValidateDouble();
 
 	printf("\nInput number of sphere slices\n");
-	scanf("%d", &SPHERE_SLICES);
+	SPHERE_SLICES=(int)getAndValidateDouble();
 	printf("\nInput number of sphere stacks\n");
-	scanf("%d", &SPHERE_STACKS);
+	SPHERE_STACKS=(int)getAndValidateDouble();
+
 	printf("\nInput sphere radius\n");
-	scanf("%lf", &SPHERE_RADIUS );
+	SPHERE_RADIUS=(float)getAndValidateDouble();
 
 	printf("\nInput initial view distance\n");
-	scanf("%lf", &VIEW_DISTANCE);
+	VIEW_DISTANCE=(float)getAndValidateDouble();
 }
 
 //Increment iteration number and write to FLAME memory
@@ -95,9 +101,9 @@ void incrementItNum(){
 void setWindowSize(){
 
 	printf("Enter window width (px):\n");
-	scanf("%d", &WINDOW_WIDTH);
+	WINDOW_WIDTH=(int)getAndValidateDouble();
 	printf("Enter window height (px):\n");
-	scanf("%d", &WINDOW_HEIGHT);
+	WINDOW_HEIGHT=(int)getAndValidateDouble();
 }
 
 //Dump simulation info to console.
@@ -111,8 +117,27 @@ void printSimulationInformation(){
 	printf("%f", gravConstant);
 	printf("\nCelocity dampening factor: ");
 	printf("%f", velocityDamper);
-	printf("\nMinimum radius of interraction: ");
+	printf("\nMinimum radius of interaction: ");
 	printf("%f", minInteractionRadius);
-	printf("\nNumber of timestep slices: ");
+	printf("\nNumber of particle groups: ");
 	printf("%d", numPartitions);
+}
+
+//Validates against the first substring of digits, then clears the buffer
+double getAndValidateDouble(){
+	int set=0;
+	double output;
+	char buf;
+	while(!set){
+		if (scanf("%lf", &output)==0){
+			//Clean before next input
+			while (getchar() != '\n');   
+			printf("\n Invalid input. Please try again\n");
+		}
+		else {
+			set=1;
+			while ((buf = getchar()) != '\n' && buf != EOF);
+		}
+	}
+  return output;
 }

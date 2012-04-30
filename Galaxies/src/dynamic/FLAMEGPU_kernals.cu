@@ -134,12 +134,12 @@ __device__ int next_cell2D(int3* relative_cell)
 }
 
 
-/** broadcastAndMoveState_function_filter
+/** broadcastVariables_function_filter
  *	Standard agent condition function. Filters agents from one state list to the next depending on the condition
  * @param currentState xmachine_memory_Particle_list representing agent i the current state
  * @param nextState xmachine_memory_Particle_list representing agent i the next state
  */
- __global__ void broadcastAndMoveState_function_filter(xmachine_memory_Particle_list* currentState, xmachine_memory_Particle_list* nextState)
+ __global__ void broadcastVariables_function_filter(xmachine_memory_Particle_list* currentState, xmachine_memory_Particle_list* nextState)
  {
 	//global thread index
 	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
@@ -150,7 +150,6 @@ __device__ int next_cell2D(int3* relative_cell)
 		//apply the filter
 		if (currentState->isActive[index]>0)
 		{	//copy agent data to newstate list
-			nextState->id[index] = currentState->id[index];
 			nextState->isDark[index] = currentState->isDark[index];
 			nextState->isActive[index] = currentState->isActive[index];
 			nextState->particleGroup[index] = currentState->particleGroup[index];
@@ -161,51 +160,6 @@ __device__ int next_cell2D(int3* relative_cell)
 			nextState->xVel[index] = currentState->xVel[index];
 			nextState->yVel[index] = currentState->yVel[index];
 			nextState->zVel[index] = currentState->zVel[index];
-			nextState->debug1[index] = currentState->debug1[index];
-			nextState->debug2[index] = currentState->debug2[index];
-			nextState->debug3[index] = currentState->debug3[index];
-			//set scan input flag to 1
-			nextState->_scan_input[index] = 1;
-		}
-		else
-		{
-			//set scan input flag of current state to 1 (keep agent)
-			currentState->_scan_input[index] = 1;
-		}
-	
-	}
- }
-
-/** broadcastAndKeepState_function_filter
- *	Standard agent condition function. Filters agents from one state list to the next depending on the condition
- * @param currentState xmachine_memory_Particle_list representing agent i the current state
- * @param nextState xmachine_memory_Particle_list representing agent i the next state
- */
- __global__ void broadcastAndKeepState_function_filter(xmachine_memory_Particle_list* currentState, xmachine_memory_Particle_list* nextState)
- {
-	//global thread index
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-	
-	//check thread max
-	if (index < d_xmachine_memory_Particle_count){
-	
-		//apply the filter
-		if (currentState->isActive[index]<1)
-		{	//copy agent data to newstate list
-			nextState->id[index] = currentState->id[index];
-			nextState->isDark[index] = currentState->isDark[index];
-			nextState->isActive[index] = currentState->isActive[index];
-			nextState->particleGroup[index] = currentState->particleGroup[index];
-			nextState->mass[index] = currentState->mass[index];
-			nextState->x[index] = currentState->x[index];
-			nextState->y[index] = currentState->y[index];
-			nextState->z[index] = currentState->z[index];
-			nextState->xVel[index] = currentState->xVel[index];
-			nextState->yVel[index] = currentState->yVel[index];
-			nextState->zVel[index] = currentState->zVel[index];
-			nextState->debug1[index] = currentState->debug1[index];
-			nextState->debug2[index] = currentState->debug2[index];
-			nextState->debug3[index] = currentState->debug3[index];
 			//set scan input flag to 1
 			nextState->_scan_input[index] = 1;
 		}
@@ -255,7 +209,6 @@ __global__ void scatter_Particle_Agents(xmachine_memory_Particle_list* agents_ds
 
 		//AoS - xmachine_message_location Un-Coalesced scattered memory write
 		agents_dst->_position[output_index] = output_index;
-		agents_dst->id[output_index] = agents_src->id[index];
 		agents_dst->isDark[output_index] = agents_src->isDark[index];
 		agents_dst->isActive[output_index] = agents_src->isActive[index];
 		agents_dst->particleGroup[output_index] = agents_src->particleGroup[index];
@@ -266,9 +219,6 @@ __global__ void scatter_Particle_Agents(xmachine_memory_Particle_list* agents_ds
 		agents_dst->xVel[output_index] = agents_src->xVel[index];
 		agents_dst->yVel[output_index] = agents_src->yVel[index];
 		agents_dst->zVel[output_index] = agents_src->zVel[index];
-		agents_dst->debug1[output_index] = agents_src->debug1[index];
-		agents_dst->debug2[output_index] = agents_src->debug2[index];
-		agents_dst->debug3[output_index] = agents_src->debug3[index];
 	}
 }
 
@@ -288,7 +238,6 @@ __global__ void append_Particle_Agents(xmachine_memory_Particle_list* agents_dst
 
 	    //AoS - xmachine_message_location Un-Coalesced scattered memory write
 	    agents_dst->_position[output_index] = output_index;
-	    agents_dst->id[output_index] = agents_src->id[index];
 	    agents_dst->isDark[output_index] = agents_src->isDark[index];
 	    agents_dst->isActive[output_index] = agents_src->isActive[index];
 	    agents_dst->particleGroup[output_index] = agents_src->particleGroup[index];
@@ -299,16 +248,12 @@ __global__ void append_Particle_Agents(xmachine_memory_Particle_list* agents_dst
 	    agents_dst->xVel[output_index] = agents_src->xVel[index];
 	    agents_dst->yVel[output_index] = agents_src->yVel[index];
 	    agents_dst->zVel[output_index] = agents_src->zVel[index];
-	    agents_dst->debug1[output_index] = agents_src->debug1[index];
-	    agents_dst->debug2[output_index] = agents_src->debug2[index];
-	    agents_dst->debug3[output_index] = agents_src->debug3[index];
     }
 }
 
 /** add_Particle_agent
  * Continuous Particle agent add agent function writes agent data to agent swap
  * @param agents xmachine_memory_Particle_list to add agents to 
- * @param id agent variable of type int
  * @param isDark agent variable of type int
  * @param isActive agent variable of type int
  * @param particleGroup agent variable of type int
@@ -319,12 +264,9 @@ __global__ void append_Particle_Agents(xmachine_memory_Particle_list* agents_dst
  * @param xVel agent variable of type float
  * @param yVel agent variable of type float
  * @param zVel agent variable of type float
- * @param debug1 agent variable of type float
- * @param debug2 agent variable of type float
- * @param debug3 agent variable of type float
  */
 template <int AGENT_TYPE>
-__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, int isDark, int isActive, int particleGroup, float mass, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3){
+__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int isDark, int isActive, int particleGroup, float mass, float x, float y, float z, float xVel, float yVel, float zVel){
 	
 	int index;
     
@@ -343,7 +285,6 @@ __device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id
 	agents->_scan_input[index] = 1;
 
 	//write data to new buffer
-	agents->id[index] = id;
 	agents->isDark[index] = isDark;
 	agents->isActive[index] = isActive;
 	agents->particleGroup[index] = particleGroup;
@@ -354,15 +295,12 @@ __device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id
 	agents->xVel[index] = xVel;
 	agents->yVel[index] = yVel;
 	agents->zVel[index] = zVel;
-	agents->debug1[index] = debug1;
-	agents->debug2[index] = debug2;
-	agents->debug3[index] = debug3;
 
 }
 
 //non templated version assumes DISCRETE_2D but works also for CONTINUOUS
-__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int id, int isDark, int isActive, int particleGroup, float mass, float x, float y, float z, float xVel, float yVel, float zVel, float debug1, float debug2, float debug3){
-    add_Particle_agent<DISCRETE_2D>(agents, id, isDark, isActive, particleGroup, mass, x, y, z, xVel, yVel, zVel, debug1, debug2, debug3);
+__device__ void add_Particle_agent(xmachine_memory_Particle_list* agents, int isDark, int isActive, int particleGroup, float mass, float x, float y, float z, float xVel, float yVel, float zVel){
+    add_Particle_agent<DISCRETE_2D>(agents, isDark, isActive, particleGroup, mass, x, y, z, xVel, yVel, zVel);
 }
 
 /** reorder_Particle_agents
@@ -378,7 +316,6 @@ __global__ void reorder_Particle_agents(unsigned int* values, xmachine_memory_Pa
 	uint old_pos = values[index];
 
 	//reorder agent data
-	ordered_agents->id[index] = unordered_agents->id[old_pos];
 	ordered_agents->isDark[index] = unordered_agents->isDark[old_pos];
 	ordered_agents->isActive[index] = unordered_agents->isActive[old_pos];
 	ordered_agents->particleGroup[index] = unordered_agents->particleGroup[old_pos];
@@ -389,9 +326,6 @@ __global__ void reorder_Particle_agents(unsigned int* values, xmachine_memory_Pa
 	ordered_agents->xVel[index] = unordered_agents->xVel[old_pos];
 	ordered_agents->yVel[index] = unordered_agents->yVel[old_pos];
 	ordered_agents->zVel[index] = unordered_agents->zVel[old_pos];
-	ordered_agents->debug1[index] = unordered_agents->debug1[old_pos];
-	ordered_agents->debug2[index] = unordered_agents->debug2[old_pos];
-	ordered_agents->debug3[index] = unordered_agents->debug3[old_pos];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -577,7 +511,6 @@ __global__ void GPUFLAME_setIsActive(xmachine_memory_Particle_list* agents){
 
 	//SoA to AoS - xmachine_memory_setIsActive Coalesced memory read
 	xmachine_memory_Particle agent;
-	agent.id = agents->id[index];
 	agent.isDark = agents->isDark[index];
 	agent.isActive = agents->isActive[index];
 	agent.particleGroup = agents->particleGroup[index];
@@ -588,9 +521,6 @@ __global__ void GPUFLAME_setIsActive(xmachine_memory_Particle_list* agents){
 	agent.xVel = agents->xVel[index];
 	agent.yVel = agents->yVel[index];
 	agent.zVel = agents->zVel[index];
-	agent.debug1 = agents->debug1[index];
-	agent.debug2 = agents->debug2[index];
-	agent.debug3 = agents->debug3[index];
 
 	//FLAME function call
 	int dead = !setIsActive(&agent);
@@ -599,7 +529,6 @@ __global__ void GPUFLAME_setIsActive(xmachine_memory_Particle_list* agents){
 	agents->_scan_input[index]  = dead; 
 
 	//AoS to SoA - xmachine_memory_setIsActive Coalesced memory write
-	agents->id[index] = agent.id;
 	agents->isDark[index] = agent.isDark;
 	agents->isActive[index] = agent.isActive;
 	agents->particleGroup[index] = agent.particleGroup;
@@ -610,15 +539,12 @@ __global__ void GPUFLAME_setIsActive(xmachine_memory_Particle_list* agents){
 	agents->xVel[index] = agent.xVel;
 	agents->yVel[index] = agent.yVel;
 	agents->zVel[index] = agent.zVel;
-	agents->debug1[index] = agent.debug1;
-	agents->debug2[index] = agent.debug2;
-	agents->debug3[index] = agent.debug3;
 }
 
 /**
  *
  */
-__global__ void GPUFLAME_broadcastAndMoveState(xmachine_memory_Particle_list* agents, xmachine_message_particleVariables_list* particleVariables_messages){
+__global__ void GPUFLAME_broadcastVariables(xmachine_memory_Particle_list* agents, xmachine_message_particleVariables_list* particleVariables_messages){
 	
 	//continuous agent: index is agent position in 1D agent list
 	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
@@ -628,9 +554,8 @@ __global__ void GPUFLAME_broadcastAndMoveState(xmachine_memory_Particle_list* ag
         return;
     
 
-	//SoA to AoS - xmachine_memory_broadcastAndMoveState Coalesced memory read
+	//SoA to AoS - xmachine_memory_broadcastVariables Coalesced memory read
 	xmachine_memory_Particle agent;
-	agent.id = agents->id[index];
 	agent.isDark = agents->isDark[index];
 	agent.isActive = agents->isActive[index];
 	agent.particleGroup = agents->particleGroup[index];
@@ -641,18 +566,14 @@ __global__ void GPUFLAME_broadcastAndMoveState(xmachine_memory_Particle_list* ag
 	agent.xVel = agents->xVel[index];
 	agent.yVel = agents->yVel[index];
 	agent.zVel = agents->zVel[index];
-	agent.debug1 = agents->debug1[index];
-	agent.debug2 = agents->debug2[index];
-	agent.debug3 = agents->debug3[index];
 
 	//FLAME function call
-	int dead = !broadcastAndMoveState(&agent, particleVariables_messages	);
+	int dead = !broadcastVariables(&agent, particleVariables_messages	);
 	
 	//continuous agent: set reallocation flag
 	agents->_scan_input[index]  = dead; 
 
-	//AoS to SoA - xmachine_memory_broadcastAndMoveState Coalesced memory write
-	agents->id[index] = agent.id;
+	//AoS to SoA - xmachine_memory_broadcastVariables Coalesced memory write
 	agents->isDark[index] = agent.isDark;
 	agents->isActive[index] = agent.isActive;
 	agents->particleGroup[index] = agent.particleGroup;
@@ -663,62 +584,6 @@ __global__ void GPUFLAME_broadcastAndMoveState(xmachine_memory_Particle_list* ag
 	agents->xVel[index] = agent.xVel;
 	agents->yVel[index] = agent.yVel;
 	agents->zVel[index] = agent.zVel;
-	agents->debug1[index] = agent.debug1;
-	agents->debug2[index] = agent.debug2;
-	agents->debug3[index] = agent.debug3;
-}
-
-/**
- *
- */
-__global__ void GPUFLAME_broadcastAndKeepState(xmachine_memory_Particle_list* agents){
-	
-	//continuous agent: index is agent position in 1D agent list
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-  
-    //For agents not using non partitioned message input check the agent bounds
-    if (index > d_xmachine_memory_Particle_count)
-        return;
-    
-
-	//SoA to AoS - xmachine_memory_broadcastAndKeepState Coalesced memory read
-	xmachine_memory_Particle agent;
-	agent.id = agents->id[index];
-	agent.isDark = agents->isDark[index];
-	agent.isActive = agents->isActive[index];
-	agent.particleGroup = agents->particleGroup[index];
-	agent.mass = agents->mass[index];
-	agent.x = agents->x[index];
-	agent.y = agents->y[index];
-	agent.z = agents->z[index];
-	agent.xVel = agents->xVel[index];
-	agent.yVel = agents->yVel[index];
-	agent.zVel = agents->zVel[index];
-	agent.debug1 = agents->debug1[index];
-	agent.debug2 = agents->debug2[index];
-	agent.debug3 = agents->debug3[index];
-
-	//FLAME function call
-	int dead = !broadcastAndKeepState(&agent);
-	
-	//continuous agent: set reallocation flag
-	agents->_scan_input[index]  = dead; 
-
-	//AoS to SoA - xmachine_memory_broadcastAndKeepState Coalesced memory write
-	agents->id[index] = agent.id;
-	agents->isDark[index] = agent.isDark;
-	agents->isActive[index] = agent.isActive;
-	agents->particleGroup[index] = agent.particleGroup;
-	agents->mass[index] = agent.mass;
-	agents->x[index] = agent.x;
-	agents->y[index] = agent.y;
-	agents->z[index] = agent.z;
-	agents->xVel[index] = agent.xVel;
-	agents->yVel[index] = agent.yVel;
-	agents->zVel[index] = agent.zVel;
-	agents->debug1[index] = agent.debug1;
-	agents->debug2[index] = agent.debug2;
-	agents->debug3[index] = agent.debug3;
 }
 
 /**
@@ -735,7 +600,6 @@ __global__ void GPUFLAME_updatePosition(xmachine_memory_Particle_list* agents, x
 
 	//SoA to AoS - xmachine_memory_updatePosition Coalesced memory read
 	xmachine_memory_Particle agent;
-	agent.id = agents->id[index];
 	agent.isDark = agents->isDark[index];
 	agent.isActive = agents->isActive[index];
 	agent.particleGroup = agents->particleGroup[index];
@@ -746,9 +610,6 @@ __global__ void GPUFLAME_updatePosition(xmachine_memory_Particle_list* agents, x
 	agent.xVel = agents->xVel[index];
 	agent.yVel = agents->yVel[index];
 	agent.zVel = agents->zVel[index];
-	agent.debug1 = agents->debug1[index];
-	agent.debug2 = agents->debug2[index];
-	agent.debug3 = agents->debug3[index];
 
 	//FLAME function call
 	int dead = !updatePosition(&agent, particleVariables_messages);
@@ -757,7 +618,6 @@ __global__ void GPUFLAME_updatePosition(xmachine_memory_Particle_list* agents, x
 	agents->_scan_input[index]  = dead; 
 
 	//AoS to SoA - xmachine_memory_updatePosition Coalesced memory write
-	agents->id[index] = agent.id;
 	agents->isDark[index] = agent.isDark;
 	agents->isActive[index] = agent.isActive;
 	agents->particleGroup[index] = agent.particleGroup;
@@ -768,9 +628,6 @@ __global__ void GPUFLAME_updatePosition(xmachine_memory_Particle_list* agents, x
 	agents->xVel[index] = agent.xVel;
 	agents->yVel[index] = agent.yVel;
 	agents->zVel[index] = agent.zVel;
-	agents->debug1[index] = agent.debug1;
-	agents->debug2[index] = agent.debug2;
-	agents->debug3[index] = agent.debug3;
 }
 
 	

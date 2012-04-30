@@ -1,5 +1,3 @@
-import sys
-sys.dont_write_bytecode=True
 from simulation import Simulation
 from probabilityDistribution import ProbabilityDistribution
 from particleDistribution import ParticleDistribution
@@ -10,16 +8,16 @@ if  __name__  ==  '__main__':
   sim=Simulation('./0.xml')
   sim.initOutput()
 
-  distrib=ParticleDistribution(16000, True, 0, 1)
-  distribMass=ProbabilityDistribution('fixed', 0.001)
-  distribPos=ProbabilityDistribution('linear', -2, 2)
+  distrib=ParticleDistribution(5000, False, 100, 2)
+  distribMass=ProbabilityDistribution('fixed', 0.030)
+  distribxPos=ProbabilityDistribution('gaussian', 0, 1.7)
   distribxVels=ProbabilityDistribution('fixed', -0.0)
   distribyVels=ProbabilityDistribution('fixed', -0.0)
   distribzVels=ProbabilityDistribution('fixed', -0.0)
 
   distrib.setMasses(distribMass)
-  distrib.setPositions(distribPos)
-  distrib.setVelocities(distribxVels,distribyVels,distribzVels) 
+  distrib.setPositions(distribxPos)
+  distrib.setVelocities(distribxVels,distribyVels,distribzVels)
   sim.writeAgents(distrib.getParticleAgents())
 
   sim.closeOutput()

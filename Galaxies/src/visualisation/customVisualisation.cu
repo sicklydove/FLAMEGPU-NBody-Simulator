@@ -54,7 +54,6 @@ GLuint Particle_outputingData_displacementTex;
 GLuint Particle_updatingPosition_tbo;
 GLuint Particle_updatingPosition_displacementTex;
 
-
 // mouse controls
 int mouse_old_x, mouse_old_y;
 int mouse_buttons = 0;
@@ -104,7 +103,6 @@ void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
 void runCuda();
 void checkGLError();
-
 
 const char vertexShaderSource[] = 
 {  
@@ -208,11 +206,14 @@ __global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agen
 void initVisualisation()
 {
 	//Allow user to set window size for different aspect ratios
+	
+	printf("%s","\nWhen taking user input, your first valid string will be used. A completely invalid string will be prompted for again.\n");
 	setWindowSize();
 	
 	//Handle defaults
 	bool set=false;
 	char input;
+	char buf;
 	printf("Use default visualisation settings? y/n \n");
 	while(!set){
 		input=getchar();
@@ -222,6 +223,7 @@ void initVisualisation()
 			set=true;
 			break;		
 		case 'n': case 'N':
+			while ((buf = getchar()) != '\n' && buf != EOF);
 			setVisualisationVars();
 			set=true;
 			break;
@@ -231,6 +233,9 @@ void initVisualisation()
 			printf("Invalid input. Use default visualisation settings? y/n \n");
 			break;
 		}
+		
+		//flush any extra input before simulation defaults
+		while ((buf = getchar()) != '\n' && buf != EOF);
 	}
 	
     //set the CUDA GL device: Will cause an error without this since CUDA 3.0
@@ -712,13 +717,13 @@ void motion(int x, int y)
     }
     //right 
     else if (mouse_buttons & 4) {
-		translate_z += dy * VIEW_DISTANCE* 0.001;
+		translate_z += dy * VIEW_DISTANCE* 0.005;
 	}
 	
 	//middle
 	else if (mouse_buttons & 3) {
 		translate_x += dx * 0.001;
-		translate_y += dy * 0.001;
+		translate_y += dy * -0.001;
 	}
 
 	mouse_old_x = x;

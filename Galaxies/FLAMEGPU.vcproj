@@ -1185,7 +1185,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\globalsController.h"
+				RelativePath=".\src\visualisation\globalsController.h"
 				>
 			</File>
 			<File
@@ -1424,222 +1424,6 @@
 					</FileConfiguration>
 				</File>
 			</Filter>
-		</Filter>
-		<Filter
-			Name="Dynamic Code"
-			>
-			<File
-				RelativePath=".\src\_README.txt"
-				>
-			</File>
-			<File
-				RelativePath=".\src\dynamic\FLAMEGPU_kernals.cu"
-				>
-				<FileConfiguration
-					Name="Debug_Console|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_Console|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_Visualisation|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_Visualisation|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Console|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Console|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Visualisation|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Visualisation|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Console|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Console|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Visualisation|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Visualisation|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\dynamic\header.h"
-				>
-				<FileConfiguration
-					Name="Debug_Console|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_Console|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_Visualisation|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_Visualisation|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Console|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Console|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Visualisation|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release_Visualisation|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Console|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Console|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Visualisation|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="EmulationDebug_Visualisation|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\dynamic\io.cu"
-				>
-			</File>
-			<File
-				RelativePath=".\src\dynamic\simulation.cu"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="FLAMEModel"
@@ -1897,6 +1681,222 @@
 						VisualisationTransform="true"
 					/>
 				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="Dynamic Code"
+			>
+			<File
+				RelativePath=".\src\_README.txt"
+				>
+			</File>
+			<File
+				RelativePath=".\src\dynamic\FLAMEGPU_kernals.cu"
+				>
+				<FileConfiguration
+					Name="Debug_Console|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_Console|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_Visualisation|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_Visualisation|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Console|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Console|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Visualisation|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Visualisation|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmulationDebug_Console|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmulationDebug_Console|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmulationDebug_Visualisation|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmulationDebug_Visualisation|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\dynamic\header.h"
+				>
+				<FileConfiguration
+					Name="Debug_Console|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_Console|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_Visualisation|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_Visualisation|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Console|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Console|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Visualisation|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_Visualisation|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmulationDebug_Console|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmulationDebug_Console|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmulationDebug_Visualisation|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="EmulationDebug_Visualisation|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\dynamic\io.cu"
+				>
+			</File>
+			<File
+				RelativePath=".\src\dynamic\simulation.cu"
+				>
 			</File>
 		</Filter>
 	</Files>

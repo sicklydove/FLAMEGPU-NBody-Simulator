@@ -56,11 +56,6 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 		fputs("<xagent>\n" , file);
 		fputs("<name>Particle</name>\n", file);
 		
-		fputs("<id>", file);
-		sprintf(data, "%i", h_Particles_testingActive->id[i]);
-		fputs(data, file);
-		fputs("</id>\n", file);
-		
 		fputs("<isDark>", file);
 		sprintf(data, "%i", h_Particles_testingActive->isDark[i]);
 		fputs(data, file);
@@ -111,32 +106,12 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 		fputs(data, file);
 		fputs("</zVel>\n", file);
 		
-		fputs("<debug1>", file);
-		sprintf(data, "%f", h_Particles_testingActive->debug1[i]);
-		fputs(data, file);
-		fputs("</debug1>\n", file);
-		
-		fputs("<debug2>", file);
-		sprintf(data, "%f", h_Particles_testingActive->debug2[i]);
-		fputs(data, file);
-		fputs("</debug2>\n", file);
-		
-		fputs("<debug3>", file);
-		sprintf(data, "%f", h_Particles_testingActive->debug3[i]);
-		fputs(data, file);
-		fputs("</debug3>\n", file);
-		
 		fputs("</xagent>\n", file);
 	}
 	//Write each Particle agent to xml
 	for (int i=0; i<h_xmachine_memory_Particle_updatingPosition_count; i++){
 		fputs("<xagent>\n" , file);
 		fputs("<name>Particle</name>\n", file);
-		
-		fputs("<id>", file);
-		sprintf(data, "%i", h_Particles_updatingPosition->id[i]);
-		fputs(data, file);
-		fputs("</id>\n", file);
 		
 		fputs("<isDark>", file);
 		sprintf(data, "%i", h_Particles_updatingPosition->isDark[i]);
@@ -188,21 +163,6 @@ void saveIterationData(char* outputpath, int iteration_number, xmachine_memory_P
 		fputs(data, file);
 		fputs("</zVel>\n", file);
 		
-		fputs("<debug1>", file);
-		sprintf(data, "%f", h_Particles_updatingPosition->debug1[i]);
-		fputs(data, file);
-		fputs("</debug1>\n", file);
-		
-		fputs("<debug2>", file);
-		sprintf(data, "%f", h_Particles_updatingPosition->debug2[i]);
-		fputs(data, file);
-		fputs("</debug2>\n", file);
-		
-		fputs("<debug3>", file);
-		sprintf(data, "%f", h_Particles_updatingPosition->debug3[i]);
-		fputs(data, file);
-		fputs("</debug3>\n", file);
-		
 		fputs("</xagent>\n", file);
 	}
 	
@@ -232,7 +192,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	/* Variables for checking tags */
 	int reading, i;
 	int in_tag, in_itno, in_name;
-	int in_Particle_id;
 	int in_Particle_isDark;
 	int in_Particle_isActive;
 	int in_Particle_particleGroup;
@@ -243,15 +202,11 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	int in_Particle_xVel;
 	int in_Particle_yVel;
 	int in_Particle_zVel;
-	int in_Particle_debug1;
-	int in_Particle_debug2;
-	int in_Particle_debug3;
 
 	/* for continuous agents: set agent count to zero */	
 	*h_xmachine_memory_Particle_count = 0;
 	
 	/* Variables for initial state data */
-	int Particle_id;
 	int Particle_isDark;
 	int Particle_isActive;
 	int Particle_particleGroup;
@@ -262,9 +217,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	float Particle_xVel;
 	float Particle_yVel;
 	float Particle_zVel;
-	float Particle_debug1;
-	float Particle_debug2;
-	float Particle_debug3;
 	
 	/* Open config file to read-only */
 	if((file = fopen(inputpath, "r"))==NULL)
@@ -285,7 +237,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	in_tag = 0;
 	in_itno = 0;
 	in_name = 0;
-	in_Particle_id = 0;
 	in_Particle_isDark = 0;
 	in_Particle_isActive = 0;
 	in_Particle_particleGroup = 0;
@@ -296,14 +247,10 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	in_Particle_xVel = 0;
 	in_Particle_yVel = 0;
 	in_Particle_zVel = 0;
-	in_Particle_debug1 = 0;
-	in_Particle_debug2 = 0;
-	in_Particle_debug3 = 0;
 	//set all Particle values to 0
 	//If this is not done then it will cause errors in emu mode where undefined memory is not 0
 	for (int k=0; k<xmachine_memory_Particle_MAX; k++)
 	{	
-		h_Particles->id[k] = 0;
 		h_Particles->isDark[k] = 0;
 		h_Particles->isActive[k] = 0;
 		h_Particles->particleGroup[k] = 0;
@@ -314,14 +261,10 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 		h_Particles->xVel[k] = 0;
 		h_Particles->yVel[k] = 0;
 		h_Particles->zVel[k] = 0;
-		h_Particles->debug1[k] = 0;
-		h_Particles->debug2[k] = 0;
-		h_Particles->debug3[k] = 0;
 	}
 	
 
 	/* Default variables for memory */
-	Particle_id = 0;
 	Particle_isDark = 0;
 	Particle_isActive = 0;
 	Particle_particleGroup = 0;
@@ -332,9 +275,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 	Particle_xVel = 0;
 	Particle_yVel = 0;
 	Particle_zVel = 0;
-	Particle_debug1 = 0;
-	Particle_debug2 = 0;
-	Particle_debug3 = 0;
 
 	/* Read file until end of xml */
 	while(reading==1)
@@ -364,8 +304,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 						fclose(file);
 						exit(0);
 					}
-                    
-					h_Particles->id[*h_xmachine_memory_Particle_count] = Particle_id;
                     
 					h_Particles->isDark[*h_xmachine_memory_Particle_count] = Particle_isDark;
                     
@@ -405,12 +343,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
                     
 					h_Particles->zVel[*h_xmachine_memory_Particle_count] = Particle_zVel;
                     
-					h_Particles->debug1[*h_xmachine_memory_Particle_count] = Particle_debug1;
-                    
-					h_Particles->debug2[*h_xmachine_memory_Particle_count] = Particle_debug2;
-                    
-					h_Particles->debug3[*h_xmachine_memory_Particle_count] = Particle_debug3;
-                    
 					(*h_xmachine_memory_Particle_count) ++;
 					
 					
@@ -423,7 +355,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 
 				
 				/* Reset xagent variables */
-				Particle_id = 0;
 				Particle_isDark = 0;
 				Particle_isActive = 0;
 				Particle_particleGroup = 0;
@@ -434,12 +365,7 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 				Particle_xVel = 0;
 				Particle_yVel = 0;
 				Particle_zVel = 0;
-				Particle_debug1 = 0;
-				Particle_debug2 = 0;
-				Particle_debug3 = 0;
 			}
-			if(strcmp(buffer, "id") == 0) in_Particle_id = 1;
-			if(strcmp(buffer, "/id") == 0) in_Particle_id = 0;
 			if(strcmp(buffer, "isDark") == 0) in_Particle_isDark = 1;
 			if(strcmp(buffer, "/isDark") == 0) in_Particle_isDark = 0;
 			if(strcmp(buffer, "isActive") == 0) in_Particle_isActive = 1;
@@ -460,12 +386,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 			if(strcmp(buffer, "/yVel") == 0) in_Particle_yVel = 0;
 			if(strcmp(buffer, "zVel") == 0) in_Particle_zVel = 1;
 			if(strcmp(buffer, "/zVel") == 0) in_Particle_zVel = 0;
-			if(strcmp(buffer, "debug1") == 0) in_Particle_debug1 = 1;
-			if(strcmp(buffer, "/debug1") == 0) in_Particle_debug1 = 0;
-			if(strcmp(buffer, "debug2") == 0) in_Particle_debug2 = 1;
-			if(strcmp(buffer, "/debug2") == 0) in_Particle_debug2 = 0;
-			if(strcmp(buffer, "debug3") == 0) in_Particle_debug3 = 1;
-			if(strcmp(buffer, "/debug3") == 0) in_Particle_debug3 = 0;
 			
 			
 			/* End of tag and reset buffer */
@@ -484,9 +404,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 			if(in_name) strcpy(agentname, buffer);
 			else
 			{
-				if(in_Particle_id){ 
-					Particle_id = (int) atoi(buffer);
-				}
 				if(in_Particle_isDark){ 
 					Particle_isDark = (int) atoi(buffer);
 				}
@@ -516,15 +433,6 @@ void readInitialStates(char* inputpath, xmachine_memory_Particle_list* h_Particl
 				}
 				if(in_Particle_zVel){ 
 					Particle_zVel = (float) atof(buffer);
-				}
-				if(in_Particle_debug1){ 
-					Particle_debug1 = (float) atof(buffer);
-				}
-				if(in_Particle_debug2){ 
-					Particle_debug2 = (float) atof(buffer);
-				}
-				if(in_Particle_debug3){ 
-					Particle_debug3 = (float) atof(buffer);
 				}
 				
 			}

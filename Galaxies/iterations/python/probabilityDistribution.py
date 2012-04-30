@@ -13,11 +13,15 @@ class ProbabilityDistribution:
         self.sigma=val2
 
     elif(distribType is ('fixed')):
-      self.distribType='fixed'
-      self.fixedVal=val1
+      if(val2):
+        print "Error: cannot define multiple variables in a fixed distribution"
+       	exit()
+      else:
+        self.distribType='fixed'
+        self.fixedVal=val1
 
-    elif(distribType is 'circle'):
-      self.distribType='circle'
+    elif(distribType is 'sphere'):
+      self.distribType='sphere'
       if(val2 is None):
         print "Error: Must define a centre (x,y,z) term and radius for a spherical distribution"
        	exit()
@@ -37,6 +41,9 @@ class ProbabilityDistribution:
   def getType(self):
     return self.distribType
 
+  def getRadius(self):
+    return self.radius
+
   def getItem(self):
     if(self.distribType is 'gaussian'):
       return random.gauss(self.mu, self.sigma)
@@ -47,39 +54,14 @@ class ProbabilityDistribution:
     elif(self.distribType is 'fixed'):
       return self.fixedVal
 
-    elif(self.distribType is 'circle'):
+    elif(self.distribType is 'sphere'):
       randRadius=random.uniform(0, self.radius)
       randTheta=random.uniform(0, 2*math.pi)
       randThetaTwo=random.uniform(0,math.pi)
       
+      #Define positions with parametric form instead of randomising one param and solving quadratic
       xPos=randRadius*(math.cos(randTheta)*math.sin(randThetaTwo))+self.centre[0]
       yPos=randRadius*(math.sin(randTheta)*math.sin(randThetaTwo))+self.centre[1]
       zPos=randRadius*math.cos(randThetaTwo)+self.centre[2]
 
       return (xPos,yPos,zPos)
-
-
-#archive code...
-    elif(self.distribType is 'oldCircle'):
-      randRadius=random.uniform(0, self.radius)
-      randxPos=random.uniform(self.centre[0]-randRadius, self.centre[0]+randRadius)
-
-      radiusSq=randRadius**2
-      xPosSq=(randxPos-self.centre[0])**2
-
-      maxY=quadratic(1, 0-(2*self.centre[1]), ((self.centre[1]**2)-(radiusSq-xPosSq))[0])
-
-      randyPos=random.uniform(self.centre[1], maxY)
-      randyPosSq=(randyPos-self.centre[1])**2
-
-      zMinusC=sqrt(radiusSq-xPosSq-randyPosSq)
-
-      #invert positions
-      if(random.random()>0.5):
-        randyPos=self.centre[1]+(self.centre[1]-randyPos)
-        zPos=zMinusC+self.centre[2]
-
-      else:
-        zPos=self.centre[2]-zMinusC
-
-      return (randxPos,randyPos,zPos)
