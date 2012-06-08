@@ -1,7 +1,0 @@
-<states>
-<itno>0</itno>
-<xagent><name>simulationVarsAgent</name><iterationNum>0</iterationNum></xagent>
-<xagent><name>Particle</name><id>0</id><mass>1</mass><isDark>0</isDark><x>0</x><y>0</y><z>0</z><xVel>0.0</xVel><yVel>0.0</yVel><zVel>0</zVel><initialOffset>0</initialOffset></xagent>
-<xagent><name>Particle</name><id>0</id><mass>0</mass><isDark>0</isDark><x>1</x><y>0</y><z>0</z><xVel>0.0</xVel><yVel>1.0</yVel><zVel>0</zVel><initialOffset>0</initialOffset></xagent>
-
-</states>

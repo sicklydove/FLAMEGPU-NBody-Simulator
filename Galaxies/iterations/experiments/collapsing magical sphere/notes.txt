@@ -1,2 +1,0 @@
-Either make seperation LARGE,
-OR make draw radius SMALL
