@@ -1,9 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <gpu:xmodel xmlns:gpu="http://www.dcs.shef.ac.uk/~paul/XMMLGPU"
         xmlns="http://www.dcs.shef.ac.uk/~paul/XMML">
-  <!-- FLAME GPU XML template for gravitational N-body simulation
-       Author: Laurence James
-       Contact: ljames1@sheffield.ac.uk or laurence.james@gmail.com
+  <!-- 
+       * FLAME GPU XML template for gravitational N-body simulation
+       * Third year dissertation; University of Sheffield Department of Computer Science
+       *
+       * Contains one 'Particle' agent type representing a single point-mass
+       * Optional isDark parameter used for visually distinguishing two particle sets
+       * ParticleGroup!=1 can be used for optimisation approximations; 
+       *    This splits particles into 'slices' (groups);  
+       *    Then only consideres inter-group interaction.
+       *
+       * Optional (Velocity damper and min Interaction Radius!=0) Used to regulate mass interactions;
+       *    Velocity damper adds a small e^2 to the distance^3 - see www.farragar.com/dissertation;
+       *    MinInteractionRad prevents any interaction between particles < this distance apart
+      * 
+       *
+       * Author: Laurence James
+       * Supervisor: Mike Stannett
+       * Contact: laurie@farragar.com
   -->
   <name>N-body Simulation</name>
   <gpu:environment>
@@ -46,7 +61,7 @@
   <xagents>
     <gpu:xagent>
       <name>Particle</name>
-      <description>Simple particle</description>
+      <description>A simple colissionless gravitationally interacting particle</description>
       <memory>
         <gpu:variable>
           <type>int</type>

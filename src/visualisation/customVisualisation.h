@@ -1,8 +1,7 @@
 #ifndef __VISUALISATION_H
 #define __VISUALISATION_H
 
-//Though these aren't changed mid-simulation, they are defined by user at the start
-//(So not constants)
+//Consts defined by user at init; defaults
 
 unsigned int WINDOW_WIDTH = 1600;
 unsigned int WINDOW_HEIGHT = 900;

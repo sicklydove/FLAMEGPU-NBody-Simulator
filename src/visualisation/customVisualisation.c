@@ -13,12 +13,10 @@
  * For terms of licence agreement please attached licence or view licence 
  * on www.flamegpu.com website.
  * 
- *
- * Custom visualisation loop for NBody simulation
- * Based on template generated visualisation.cu 
- * Adapted and modified for extra keyboard input & display features
+ 
+ * Based on templated visualisation.c, adapted and modified for gravitational N-body simulation
  * Author: Laurence James
- * Contact: laurie@farragar.com
+ * Contact: ljames1@sheffield.ac.uk or laurence.james@gmail.com
  */
 
 // includes, project
@@ -36,9 +34,7 @@
     
 #include <header.h>
 #include <customVisualisation.h>
-
-//TODO: split into .cu, .c, and inport header file
-#include <globalsController.c>
+#include "globalsController.h"
 
 
 // bo variables
@@ -95,122 +91,21 @@ bool displayingBaryonicMatter=true;
 bool paused=true;
 
 // prototypes
-CUTBoolean initGL();
+
 void initShader();
-void createVBO( GLuint* vbo, GLuint size);
-void deleteVBO( GLuint* vbo);
-void createTBO( GLuint* tbo, GLuint* tex, GLuint size);
-void deleteTBO( GLuint* tbo);
+
 void setVertexBufferData();
 void display();
 void keyboard( unsigned char key, int x, int y);
 void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
-void runCuda();
-void checkGLError();
-
-const char vertexShaderSource[] = 
-{  
-	"#extension GL_EXT_gpu_shader4 : enable										\n"
-	"uniform samplerBuffer displacementMap;										\n"
-	"attribute in float mapIndex;												\n"
-	"varying vec3 normal, lightDir;												\n"
-	"varying vec4 colour;														\n"
-	"varying vec4 ambient;														\n"
-    "void main()																\n"
-    "{																			\n"
-	"	vec4 position = gl_Vertex;											    \n"
-	"	vec4 lookup = texelFetchBuffer(displacementMap, (int)mapIndex);		    \n"
-    "	//We're only using white and red. Set mat and ambient terms accordingly	\n"
-    "	if (lookup.w > 0){	                									\n"
-    "		colour = vec4(1.0, 1.0, 1.0, 0.0);								    \n"
-	"		ambient = vec4(0.60, 0.60, 0.60, 0.0);								\n"
-	"	}																	    \n"
-    "	else{                													\n"
-	"		colour = vec4(1.0, 0.0, 0.0, 0.0);								    \n"
-	"		ambient = vec4(0.250, 0.0, 0.0, 0.0);								\n"
-	"	}																		\n"
-	"																    		\n"
-	"	lookup.w = 1.0;												    		\n"
-	"	position += lookup;											    		\n"
-	"   gl_Position = gl_ModelViewProjectionMatrix * position;		    		\n"
-	"																			\n"
-	"	vec3 mvVertex = vec3(gl_ModelViewMatrix * position);			    	\n"
-	"	lightDir = vec3(gl_LightSource[0].position.xyz - mvVertex);				\n"
-	"	normal = gl_NormalMatrix * gl_Normal;									\n"
-    "}																			\n"
-};
-
-const char fragmentShaderSource[] = 
-{  
-	"varying vec3 normal, lightDir;												\n"
-	"varying vec4 colour;														\n"
-	"varying vec4 ambient;														\n"
-	"void main (void)															\n"
-	"{																			\n"
-	"	// Defining The Material Colors											\n"
-	"	vec4 AmbientColor = ambient;											\n"
-	"	vec4 DiffuseColor = colour;					                			\n"
-	"																			\n"
-	"	// Scaling The Input Vector To Length 1									\n"
-	"	vec3 n_normal = normalize(normal);							        	\n"
-	"	vec3 n_lightDir = normalize(lightDir);	                                \n"
-	"																			\n"
-	"	// Calculating The Diffuse Term And Clamping It To [0;1]				\n"
-	"	float DiffuseTerm = clamp(dot(n_normal, n_lightDir), 0.0, 1.0);\n"
-	"																			\n"
-	"	// Calculating The Final Color											\n"
-	"	gl_FragColor = AmbientColor + DiffuseColor * DiffuseTerm;				\n"
-	"																			\n"
-	"}																			\n"
-};
-
-//GPU Kernels
-
-__global__ void output_Particle_agent_to_VBO(xmachine_memory_Particle_list* agents, float4* vbo, float3 centralise, bool displayingDarkMatter, bool displayingBaryonicMatter, float farClip){
-
-	//global thread index
-	int index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-	
-	//baryonic matter
-	if(agents->isDark[index] == 0){
-		if(displayingBaryonicMatter==true){
-			vbo[index].x = agents->x[index] - centralise.x;
-			vbo[index].y = agents->y[index] - centralise.y;
-			vbo[index].z = agents->z[index] - centralise.z;
-		}
-		//Render outside of the view frustrum if visualisation==false
-		else{
-			vbo[index].x = centralise.x+farClip;
-			vbo[index].y = centralise.y+farClip;
-			vbo[index].z = centralise.z+farClip;
-		}
-		//Set colour white
-		vbo[index].w = 1;
-	}
-	
-	//dark matter
-	else{
-		if(displayingDarkMatter==true){
-			vbo[index].x = agents->x[index] - centralise.x;
-			vbo[index].y = agents->y[index] - centralise.y;
-			vbo[index].z = agents->z[index] - centralise.z;
-		}
-		//Render outside of the view frustrum if visualisation==false
-		else{
-			vbo[index].x = centralise.x+farClip;
-			vbo[index].y = centralise.y+farClip;
-			vbo[index].z = centralise.z+farClip;
-		}
-		//Set colour red
-		vbo[index].w = 0;
-	}
-}
 
 
 void initVisualisation()
 {
 	//Allow user to set window size for different aspect ratios
+	
+	printf("%s","\nWhen taking user input, your first valid string will be used. A completely invalid string will be prompted for again.\n");
 	setWindowSize();
 	
 	//Handle defaults
@@ -242,7 +137,7 @@ void initVisualisation()
 	}
 	
     //set the CUDA GL device: Will cause an error without this since CUDA 3.0
-    cudaGLSetGLDevice(0);
+    setCudaDevice();
 
     // Create GL context
     int   argc   = 1;

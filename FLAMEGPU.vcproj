@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="FLAMEGPU_Project"
+	Name="NBody"
 	ProjectGUID="{B7DBD1CA-BABB-4F4A-8C68-AE4E53F6C5B0}"
 	RootNamespace="FLAMEGPU"
 	Keyword="Win32Proj"
@@ -621,6 +621,7 @@
 			<Tool
 				Name="FLAMEGPU Template Build Rule"
 				ExecutionBucket="2"
+				MainTransform="false"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -1186,10 +1187,6 @@
 			</File>
 			<File
 				RelativePath=".\src\visualisation\globalsController.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\dynamic\main.cu"
 				>
 			</File>
 		</Filter>
@@ -1892,6 +1889,10 @@
 			</File>
 			<File
 				RelativePath=".\src\dynamic\io.cu"
+				>
+			</File>
+			<File
+				RelativePath=".\src\dynamic\main.cu"
 				>
 			</File>
 			<File

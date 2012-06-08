@@ -7,6 +7,9 @@ Email:laurie@farragar.com
 
 For generating 0.xml initialisation files, see this respository: https://github.com/farragar/NBody-T0-generator
 
+Execution requires CUDA 3.1, and dlls for FLAME GPU 1.4 for CUDA 3.1
+
+
 DISTRIBUTED UNDER THE UNIVERSITY OF SHEFFIELD LICENSE AS A COMPONENT OF THE FLAME GPU SDK (http://www.flamegpu.com/)
 
 

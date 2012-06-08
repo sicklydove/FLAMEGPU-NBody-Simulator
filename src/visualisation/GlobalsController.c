@@ -12,10 +12,12 @@
  * For terms of licence agreement please attached licence or view licence 
  * on www.flamegpu.com website.
  * 
-
- * Globals Controller --- manages simulation and visualisation variables
- * Based on the pedestrians global controller, but all code by Laurence James
- * Contact: ljames1@sheffield.ac.uk or laurence.james@gmail.com
+ *
+ *
+ * Globals Controller --- Manages simulation and visualisation variables
+ * Called by visualisation loop, functions.c, and main.cu (if console mode)
+ * Author: Laurence James
+ * Contact: laurie@farragar.com
  */
 
 #include <stdlib.h>
@@ -92,12 +94,13 @@ void setVisualisationVars(){
 }
 
 //Increment iteration number and write to FLAME memory
+//Called by visualisation loop or main loop (console)
 void incrementItNum(){
 	itNum++;
 	set_SIMULATION_ITNUM(&itNum);
 }
 
-//For visualisation, in case of different aspect ratios
+//For visualisation, define aspect ratio
 void setWindowSize(){
 
 	printf("Enter window width (px):\n");
