@@ -1,0 +1,2 @@
+Set velocity damping factor = 0.2
+Use default parameters for the rest
