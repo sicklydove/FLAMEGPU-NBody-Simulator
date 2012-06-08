@@ -1,0 +1,13 @@
+A GRAVITATIONAL N-BODY SIMULATOR BUILT ON THE FLAME GPU FRAMEWORK
+
+Laurence James, Third year Dissertation, University of Sheffield
+Supervised by Dr Mike Stannett
+
+Email:laurie@farragar.com
+
+For generating 0.xml initialisation files, see this respository: https://github.com/farragar/NBody-T0-generator
+
+DISTRIBUTED UNDER THE UNIVERSITY OF SHEFFIELD LICENSE AS A COMPONENT OF THE FLAME GPU SDK (http://www.flamegpu.com/)
+
+
+
